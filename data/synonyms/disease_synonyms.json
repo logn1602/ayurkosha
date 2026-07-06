@@ -1,0 +1,320 @@
+{
+  "diabetes": {
+    "ayurvedic": [
+      "Prameha",
+      "Madhumeha"
+    ],
+    "modern": [
+      "Diabetes Mellitus",
+      "Type 2 Diabetes",
+      "T2DM"
+    ]
+  },
+  "arthritis": {
+    "ayurvedic": [
+      "Amavata",
+      "Sandhivata",
+      "Sandhigata Vata"
+    ],
+    "modern": [
+      "Rheumatoid Arthritis",
+      "Osteoarthritis"
+    ]
+  },
+  "gout": {
+    "ayurvedic": [
+      "Vatarakta"
+    ],
+    "modern": [
+      "Gout",
+      "Gouty Arthritis"
+    ]
+  },
+  "hypertension": {
+    "ayurvedic": [
+      "Raktachapa",
+      "Uchcha Raktachapa"
+    ],
+    "modern": [
+      "High Blood Pressure",
+      "Hypertension",
+      "HTN"
+    ]
+  },
+  "asthma": {
+    "ayurvedic": [
+      "Tamaka Shwasa",
+      "Shwasa Roga"
+    ],
+    "modern": [
+      "Bronchial Asthma"
+    ]
+  },
+  "cough": {
+    "ayurvedic": [
+      "Kasa"
+    ],
+    "modern": [
+      "Cough",
+      "Bronchitis"
+    ]
+  },
+  "anemia": {
+    "ayurvedic": [
+      "Pandu",
+      "Panduroga"
+    ],
+    "modern": [
+      "Anemia",
+      "Anaemia"
+    ]
+  },
+  "jaundice": {
+    "ayurvedic": [
+      "Kamala"
+    ],
+    "modern": [
+      "Jaundice",
+      "Hepatitis"
+    ]
+  },
+  "constipation": {
+    "ayurvedic": [
+      "Vibandha",
+      "Koshtabaddhata"
+    ],
+    "modern": [
+      "Constipation"
+    ]
+  },
+  "diarrhea": {
+    "ayurvedic": [
+      "Atisara"
+    ],
+    "modern": [
+      "Diarrhea",
+      "Diarrhoea"
+    ]
+  },
+  "malabsorption": {
+    "ayurvedic": [
+      "Grahani",
+      "Grahani Roga"
+    ],
+    "modern": [
+      "Malabsorption Syndrome",
+      "Irritable Bowel Syndrome",
+      "IBS"
+    ]
+  },
+  "indigestion": {
+    "ayurvedic": [
+      "Ajirna",
+      "Agnimandya"
+    ],
+    "modern": [
+      "Indigestion",
+      "Dyspepsia"
+    ]
+  },
+  "hyperacidity": {
+    "ayurvedic": [
+      "Amlapitta"
+    ],
+    "modern": [
+      "Hyperacidity",
+      "Acid Reflux",
+      "GERD"
+    ]
+  },
+  "obesity": {
+    "ayurvedic": [
+      "Sthaulya",
+      "Medoroga"
+    ],
+    "modern": [
+      "Obesity"
+    ]
+  },
+  "skin_disease": {
+    "ayurvedic": [
+      "Kushtha",
+      "Twak Roga"
+    ],
+    "modern": [
+      "Skin Disorders",
+      "Dermatitis",
+      "Eczema"
+    ]
+  },
+  "psoriasis": {
+    "ayurvedic": [
+      "Eka Kushtha",
+      "Kitibha"
+    ],
+    "modern": [
+      "Psoriasis"
+    ]
+  },
+  "fever": {
+    "ayurvedic": [
+      "Jwara"
+    ],
+    "modern": [
+      "Fever",
+      "Pyrexia"
+    ]
+  },
+  "headache": {
+    "ayurvedic": [
+      "Shirashula",
+      "Shiroroga"
+    ],
+    "modern": [
+      "Headache",
+      "Cephalalgia"
+    ]
+  },
+  "migraine": {
+    "ayurvedic": [
+      "Ardhavabhedaka"
+    ],
+    "modern": [
+      "Migraine"
+    ]
+  },
+  "insomnia": {
+    "ayurvedic": [
+      "Anidra",
+      "Nidranasha"
+    ],
+    "modern": [
+      "Insomnia",
+      "Sleeplessness"
+    ]
+  },
+  "epilepsy": {
+    "ayurvedic": [
+      "Apasmara"
+    ],
+    "modern": [
+      "Epilepsy",
+      "Seizure Disorder"
+    ]
+  },
+  "vertigo": {
+    "ayurvedic": [
+      "Bhrama"
+    ],
+    "modern": [
+      "Vertigo",
+      "Dizziness"
+    ]
+  },
+  "hemorrhoids": {
+    "ayurvedic": [
+      "Arsha"
+    ],
+    "modern": [
+      "Hemorrhoids",
+      "Piles"
+    ]
+  },
+  "fistula": {
+    "ayurvedic": [
+      "Bhagandara"
+    ],
+    "modern": [
+      "Anal Fistula"
+    ]
+  },
+  "dysuria": {
+    "ayurvedic": [
+      "Mutrakricchra"
+    ],
+    "modern": [
+      "Dysuria",
+      "Urinary Tract Infection",
+      "UTI"
+    ]
+  },
+  "urinary_calculi": {
+    "ayurvedic": [
+      "Ashmari"
+    ],
+    "modern": [
+      "Urinary Calculi",
+      "Kidney Stone",
+      "Renal Stone"
+    ]
+  },
+  "edema": {
+    "ayurvedic": [
+      "Shotha",
+      "Shvayathu"
+    ],
+    "modern": [
+      "Edema",
+      "Oedema",
+      "Swelling"
+    ]
+  },
+  "worm_infestation": {
+    "ayurvedic": [
+      "Krimi",
+      "Krimiroga"
+    ],
+    "modern": [
+      "Helminthiasis",
+      "Worm Infestation"
+    ]
+  },
+  "tuberculosis": {
+    "ayurvedic": [
+      "Rajayakshma",
+      "Kshaya"
+    ],
+    "modern": [
+      "Tuberculosis",
+      "TB"
+    ]
+  },
+  "bleeding_disorder": {
+    "ayurvedic": [
+      "Raktapitta"
+    ],
+    "modern": [
+      "Bleeding Disorders",
+      "Hemorrhage"
+    ]
+  },
+  "leucorrhea": {
+    "ayurvedic": [
+      "Shweta Pradara"
+    ],
+    "modern": [
+      "Leucorrhea",
+      "Leukorrhea"
+    ]
+  },
+  "menorrhagia": {
+    "ayurvedic": [
+      "Asrigdara",
+      "Raktapradara"
+    ],
+    "modern": [
+      "Menorrhagia"
+    ]
+  },
+  "alopecia": {
+    "ayurvedic": [
+      "Khalitya",
+      "Indralupta"
+    ],
+    "modern": [
+      "Alopecia",
+      "Hair Loss",
+      "Hair Fall"
+    ]
+  }
+}

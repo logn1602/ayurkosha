@@ -1,0 +1,51 @@
+# =============================================================
+# AyurKosha — Dependencies
+# Install: pip install -r requirements.txt
+# =============================================================
+
+# Core
+python-dotenv==1.1.0
+pydantic==2.11.3
+pydantic-settings==2.9.1
+
+# LLM and Embeddings
+anthropic==0.52.0
+cohere==5.13.0
+langchain==0.3.25
+langchain-anthropic==0.3.15
+langchain-cohere==0.4.3
+langchain-community==0.3.24
+langchain-experimental==0.3.4
+
+# Vector DB
+pinecone-client==6.0.2
+
+# Keyword Search
+rank-bm25==0.2.2
+nltk==3.9.1
+
+# API
+fastapi==0.115.12
+uvicorn==0.34.2
+
+# Document Processing
+pypdf==5.6.0
+python-docx==1.1.2
+unstructured==0.17.2
+beautifulsoup4==4.13.4
+
+# Numerical
+numpy==2.2.6
+
+# Caching and Storage
+redis==5.3.0
+
+# Evaluation
+ragas==0.2.15
+
+# Transliteration (Sanskrit/Devanagari)
+indic-transliteration==2.4.1
+
+# Testing
+pytest==8.4.0
+httpx==0.28.1
