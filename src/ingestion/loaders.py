@@ -104,11 +104,20 @@ def _base_metadata(path: Path, doc_type: str | None) -> dict[str, Any]:
     }
 
 
-def load_pdf(path: Path, doc_type: str | None = None) -> list[dict[str, Any]]:
+def load_pdf(
+    path: Path,
+    doc_type: str | None = None,
+    max_pages: int | None = None,
+) -> list[dict[str, Any]]:
     """Load a PDF into one record per page (1-indexed page numbers).
 
     Pages that fail to extract or are effectively empty are skipped with a
     warning; a single bad page never aborts the whole document.
+
+    Args:
+        max_pages: If set, stop after scanning this many source pages. This
+            bounds extraction cost on very large PDFs (extraction is the
+            expensive step, so the limit must be applied here, not after).
     """
     from pypdf import PdfReader
     from pypdf.errors import PdfReadError
@@ -119,8 +128,11 @@ def load_pdf(path: Path, doc_type: str | None = None) -> list[dict[str, Any]]:
         logger.error("Failed to open PDF %s: %s", path, exc)
         return []
 
+    n_pages = len(reader.pages)
     records: list[dict[str, Any]] = []
     for i, page in enumerate(reader.pages, start=1):
+        if max_pages is not None and i > max_pages:
+            break
         try:
             raw = page.extract_text() or ""
         except Exception as exc:  # pypdf raises assorted errors on bad pages
@@ -134,8 +146,9 @@ def load_pdf(path: Path, doc_type: str | None = None) -> list[dict[str, Any]]:
         meta["page"] = i
         records.append({"text": text, "metadata": meta})
 
-    logger.info("Loaded %s: %d/%d pages with content.",
-                path.name, len(records), len(reader.pages))
+    scanned = min(max_pages, n_pages) if max_pages is not None else n_pages
+    logger.info("Loaded %s: %d/%d scanned pages with content (of %d total).",
+                path.name, len(records), scanned, n_pages)
     return records
 
 
@@ -191,13 +204,19 @@ def load_text(path: Path, doc_type: str | None = None) -> list[dict[str, Any]]:
     return [{"text": text, "metadata": _base_metadata(path, doc_type)}]
 
 
-def load_document(path: str | Path, doc_type: str | None = None) -> list[dict[str, Any]]:
+def load_document(
+    path: str | Path,
+    doc_type: str | None = None,
+    max_pages: int | None = None,
+) -> list[dict[str, Any]]:
     """Dispatch to the right loader based on file extension.
 
     Args:
         path: Path to the document.
         doc_type: Override the inferred doc_type (otherwise derived from the
             parent data/raw folder).
+        max_pages: PDF-only page cap passed to load_pdf (ignored for other
+            formats, which produce a single record).
 
     Returns:
         List of records (possibly empty if the file is unsupported/unreadable).
@@ -209,7 +228,7 @@ def load_document(path: str | Path, doc_type: str | None = None) -> list[dict[st
 
     ext = path.suffix.lower()
     if ext == ".pdf":
-        return load_pdf(path, doc_type)
+        return load_pdf(path, doc_type, max_pages=max_pages)
     if ext == ".docx":
         return load_docx(path, doc_type)
     if ext in (".html", ".htm"):

@@ -18,7 +18,8 @@ langchain-community==0.3.24
 langchain-experimental==0.3.4
 
 # Vector DB
-pinecone-client==6.0.2
+# NOTE: the package was renamed from `pinecone-client` to `pinecone`.
+pinecone>=5,<7
 
 # Keyword Search
 rank-bm25==0.2.2
