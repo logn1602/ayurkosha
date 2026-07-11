@@ -47,6 +47,7 @@ def run_ingestion(
     max_pages: int | None = None,
     embed: bool = True,
     upsert: bool = True,
+    skip_existing: bool = True,
 ) -> dict[str, Any]:
     """Run the full offline ingestion pipeline.
 
@@ -57,9 +58,12 @@ def run_ingestion(
         embed: If False, skip Cohere embedding (build BM25/parent stores only —
             useful for a no-cost dry run).
         upsert: If False, embed but skip the Pinecone upsert.
+        skip_existing: If True (and upserting), skip chunks whose ids are already
+            in Pinecone so an interrupted run resumes cheaply without re-embedding.
 
     Returns:
-        Stats dict: files, pages, parents, children, embedded, upserted, seconds.
+        Stats dict: files, pages, parents, children, embedded, upserted,
+        skipped, seconds.
     """
     root = Path(data_dir) if data_dir else PROJECT_ROOT / "data" / "raw"
     if not root.is_dir():
@@ -67,7 +71,7 @@ def run_ingestion(
 
     start = time.time()
     stats = {"files": 0, "pages": 0, "parents": 0, "children": 0,
-             "embedded": 0, "upserted": 0}
+             "embedded": 0, "upserted": 0, "skipped": 0}
 
     # ── 1-3: load -> enrich metadata -> chunk (per file) ──────────────
     all_parents: list[dict[str, Any]] = []
@@ -105,17 +109,38 @@ def run_ingestion(
     bm25 = bm25_store.build_bm25_index(all_children)
     bm25_store.save_bm25_index(bm25)
 
-    # ── 5: embed children (Cohere) ────────────────────────────────────
+    # ── 5+6: embed (Cohere) and upsert (Pinecone) ─────────────────────
+    # Stream in batches so Pinecone fills incrementally (durable progress on
+    # large runs) and we never hold all embeddings in memory at once.
     if embed:
         from src.ingestion import embedder
-        embedder.embed_chunks(all_children)
-        stats["embedded"] = sum(1 for c in all_children if c.get("embedding"))
 
-        # ── 6: upsert to Pinecone ─────────────────────────────────────
         if upsert:
             from src.ingestion import pinecone_store
             index = pinecone_store.ensure_index()
-            stats["upserted"] = pinecone_store.upsert_chunks(all_children, index=index)
+            batch_size = embedder.MAX_BATCH  # 96 (Cohere per-call cap)
+            n = len(all_children)
+            for i in range(0, n, batch_size):
+                batch = all_children[i:i + batch_size]
+                if skip_existing:
+                    have = pinecone_store.fetch_existing_ids(
+                        [c["chunk_id"] for c in batch], index=index)
+                    if have:
+                        stats["skipped"] += len(have)
+                        batch = [c for c in batch if c["chunk_id"] not in have]
+                if batch:
+                    vecs = embedder.embed_documents([c.get("text", "") for c in batch])
+                    for c, v in zip(batch, vecs):
+                        c["embedding"] = v
+                    stats["embedded"] += len(vecs)
+                    stats["upserted"] += pinecone_store.upsert_chunks(batch, index=index)
+                    for c in batch:        # free embeddings to bound memory
+                        c.pop("embedding", None)
+                logger.info("Embed+upsert progress: %d/%d children (skipped %d).",
+                            min(i + batch_size, n), n, stats["skipped"])
+        else:
+            embedder.embed_chunks(all_children)
+            stats["embedded"] = sum(1 for c in all_children if c.get("embedding"))
 
     stats["seconds"] = round(time.time() - start, 1)
     logger.info("Ingestion complete: %s", stats)

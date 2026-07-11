@@ -28,10 +28,17 @@ logger = logging.getLogger(__name__)
 # Cohere accepts at most 96 texts per embed call.
 MAX_BATCH = 96
 # Retry policy for transient failures / rate limits.
-MAX_RETRIES = 5
+MAX_RETRIES = 6
 BASE_BACKOFF = 2.0  # seconds; doubles each retry
+# On a 429 (rate limit), wait at least this long — the trial limit is a rolling
+# per-minute window, so short backoffs don't clear it.
+RATE_LIMIT_WAIT = 62.0
+# Rough token estimate for client-side throttling (~4 chars/token).
+_CHARS_PER_TOKEN = 4
 
 _client = None
+# Rolling log of (timestamp, estimated_tokens) for the trailing-60s throttle.
+_token_log: list[tuple[float, int]] = []
 
 
 def _get_client():
@@ -55,9 +62,40 @@ def _batched(items: list[Any], size: int):
         yield items[i:i + size]
 
 
+def _estimate_tokens(texts: list[str]) -> int:
+    return sum(len(t) for t in texts) // _CHARS_PER_TOKEN + 1
+
+
+def _is_rate_limit(exc: Exception) -> bool:
+    s = str(exc).lower()
+    return "429" in s or "rate limit" in s or "too many requests" in s
+
+
+def _throttle(est_tokens: int) -> None:
+    """Sleep so the trailing-60s token usage stays under the configured cap."""
+    cap = settings.cohere_tokens_per_min
+    if cap <= 0:
+        return
+    while True:
+        now = time.time()
+        # Drop entries older than 60s.
+        while _token_log and now - _token_log[0][0] > 60:
+            _token_log.pop(0)
+        used = sum(t for _, t in _token_log)
+        if used + est_tokens <= cap or not _token_log:
+            break
+        # Wait until the oldest entry ages out of the window.
+        sleep_for = 60 - (now - _token_log[0][0]) + 0.5
+        logger.info("Throttling embeddings: %d tok used in last 60s, "
+                    "sleeping %.1fs to stay under %d/min.", used, sleep_for, cap)
+        time.sleep(max(sleep_for, 1.0))
+    _token_log.append((time.time(), est_tokens))
+
+
 def _embed_with_retry(texts: list[str], input_type: str) -> list[list[float]]:
-    """Embed one batch (<= MAX_BATCH texts) with exponential backoff."""
+    """Embed one batch (<= MAX_BATCH texts) with throttling + backoff."""
     client = _get_client()
+    _throttle(_estimate_tokens(texts))
     last_exc: Exception | None = None
     for attempt in range(MAX_RETRIES):
         try:
@@ -74,7 +112,8 @@ def _embed_with_retry(texts: list[str], input_type: str) -> list[list[float]]:
             return [list(vec) for vec in embeddings]
         except Exception as exc:  # noqa: BLE001 — Cohere raises varied error types
             last_exc = exc
-            wait = BASE_BACKOFF * (2 ** attempt)
+            # Rate-limit errors need a full per-minute window; others back off.
+            wait = RATE_LIMIT_WAIT if _is_rate_limit(exc) else BASE_BACKOFF * (2 ** attempt)
             logger.warning(
                 "Cohere embed failed (attempt %d/%d): %s — retrying in %.1fs",
                 attempt + 1, MAX_RETRIES, exc, wait,

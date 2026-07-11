@@ -31,8 +31,30 @@ CLOUD = "aws"
 REGION = "us-east-1"
 # Cap metadata text so a vector stays well under Pinecone's 40KB metadata limit.
 MAX_METADATA_TEXT = 4000
+# Retry transient network errors (DNS/connection blips) on Pinecone calls.
+NET_RETRIES = 5
+NET_BACKOFF = 3.0  # seconds; doubles each retry
 
 _client = None
+
+
+def _with_retry(fn, *args, what: str = "pinecone call", **kwargs):
+    """Call a Pinecone operation, retrying transient network failures.
+
+    A single DNS/connection blip should not abort a long ingest, so upserts and
+    fetches are wrapped in exponential-backoff retries.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(NET_RETRIES):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as exc:  # noqa: BLE001 — urllib3/pinecone raise varied types
+            last_exc = exc
+            wait = NET_BACKOFF * (2 ** attempt)
+            logger.warning("%s failed (attempt %d/%d): %s — retrying in %.0fs",
+                           what, attempt + 1, NET_RETRIES, exc, wait)
+            time.sleep(wait)
+    raise RuntimeError(f"{what} failed after {NET_RETRIES} attempts: {last_exc}")
 
 
 def _get_client():
@@ -149,10 +171,25 @@ def upsert_chunks(chunks: list[dict[str, Any]], index=None) -> int:
     for bi, batch in enumerate(_batched(vectors, UPSERT_BATCH), start=1):
         logger.info("Upserting to Pinecone: batch %d/%d (%d vectors).",
                     bi, total_batches, len(batch))
-        index.upsert(vectors=batch)
+        _with_retry(index.upsert, vectors=batch, what="upsert")
     logger.info("Upserted %d vectors to index '%s'.",
                 len(vectors), settings.pinecone_index_name)
     return len(vectors)
+
+
+def fetch_existing_ids(ids: list[str], index=None) -> set[str]:
+    """Return the subset of `ids` already present in the index.
+
+    Used for resumable ingestion: chunks already upserted are skipped so a
+    re-run after an interruption does not re-embed (and re-spend tokens on)
+    work already done.
+    """
+    if not ids:
+        return set()
+    index = index or ensure_index()
+    resp = _with_retry(index.fetch, ids=list(ids), what="fetch")
+    vectors = resp.get("vectors", {}) if isinstance(resp, dict) else getattr(resp, "vectors", {})
+    return set(vectors.keys())
 
 
 def query(

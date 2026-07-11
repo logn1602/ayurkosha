@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # ── Embedding ──────────────────────────────────────────
     embedding_model: str = "embed-multilingual-v3.0"
     embedding_dimensions: int = 1024
+    # Client-side throttle to respect Cohere rate limits. Trial keys allow
+    # 100k tokens/min; default leaves headroom (token estimates undercount
+    # diacritic/Devanagari text). Raise this on a production key.
+    cohere_tokens_per_min: int = 80000
 
     # ── Generation ─────────────────────────────────────────
     generation_model: str = "claude-sonnet-4-6"
