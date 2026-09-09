@@ -34,6 +34,9 @@ class Settings(BaseSettings):
 
     # ── Generation ─────────────────────────────────────────
     generation_model: str = "claude-sonnet-4-6"
+    # Output ceiling for answer generation. Cited, table-rich answers run long;
+    # 2000 truncated them mid-sentence, so give comfortable headroom.
+    generation_max_tokens: int = 4096
     # Cheap/fast model for classification-style calls (query expansion,
     # doc_type filter inference) — no need for the full generation model.
     query_expansion_model: str = "claude-haiku-4-5-20251001"

@@ -46,7 +46,7 @@ def generate_answer(query: str, context_block: str) -> str:
     client = _get_client()
     resp = client.messages.create(
         model=settings.generation_model,
-        max_tokens=2000,
+        max_tokens=settings.generation_max_tokens,
         system=AYURKOSHA_SYSTEM_PROMPT,
         messages=[{
             "role": "user",
