@@ -17,8 +17,10 @@ from src.generation.safety import (
 
 
 def test_find_mentioned_herbs_detects_known_variant():
+    # "Amla" is a Hindi name for Amalaki -> the plant is detected and reported
+    # by its canonical (Sanskrit) display name, not the raw variant.
     herbs = find_mentioned_herbs("Amla is a rich source of vitamin C.")
-    assert any(h.lower() == "amla" for h in herbs)
+    assert any("amalaki" in h.lower() for h in herbs)
 
 
 def test_find_mentioned_herbs_case_insensitive():
@@ -28,6 +30,19 @@ def test_find_mentioned_herbs_case_insensitive():
 
 def test_find_mentioned_herbs_none_for_unrelated_text():
     assert find_mentioned_herbs("This text mentions no herbs at all.") == []
+
+
+def test_find_mentioned_herbs_dedupes_variants_of_same_plant():
+    # Two names for the same plant collapse to one entry (the fix for the
+    # old "many entries per herb" explosion).
+    herbs = find_mentioned_herbs("Ashwagandha, also called Withania somnifera.")
+    assert sum("ashwagandha" in h.lower() for h in herbs) == 1
+
+
+def test_find_mentioned_herbs_ignores_short_variant_fragments():
+    # Short variants (< 4 chars) are not used as triggers, and whole-word
+    # matching prevents substring false positives.
+    assert find_mentioned_herbs("The label was unrelated and generic.") == []
 
 
 def test_relevant_sentences_picks_safety_keyword_sentences():
