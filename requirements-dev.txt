@@ -1,0 +1,6 @@
+# AyurKosha — Development / test dependencies
+# Self-contained: pulls in the runtime requirements too.
+# Install with:  pip install -r requirements-dev.txt
+-r requirements.txt
+
+pytest==8.4.0

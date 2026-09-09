@@ -2,11 +2,15 @@
 # AyurKosha — Makefile
 # =============================================================
 
-.PHONY: install setup ingest serve eval eval-retrieval eval-generation test clean
+.PHONY: install install-dev setup ingest serve eval eval-retrieval eval-generation test clean
 
 # ── Setup ──────────────────────────────────────────────────
 install:
 	pip install -r requirements.txt
+	python -c "import nltk; nltk.download('punkt')"
+
+install-dev:
+	pip install -r requirements-dev.txt
 	python -c "import nltk; nltk.download('punkt')"
 
 setup: install
