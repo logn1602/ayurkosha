@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     # Skip Charaka Samhita at ingestion: the scan's text layer is unusable
     # (English translation OCR'd as Devanagari). Re-enable after re-OCR.
     exclude_charaka: bool = True
+    # Ashtanga Hridaya volumes no English query can match (audit in
+    # docs/corpus_text_fixes.md): Srikantha Murthy vol 1 is an English book
+    # OCR'd with a Hindi engine; the Sanskrit commentaries are Devanagari-only.
+    exclude_ah_srikantha_murthy: bool = True
+    exclude_ah_sanskrit_commentaries: bool = True
 
     # ── Reranking (eval path) ──────────────────────────────
     # The eval reranks with retry + client-side pacing so every question is

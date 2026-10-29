@@ -1,15 +1,16 @@
 # Corpus Text Fixes — Proposal
 
-Status: **code in place, not applied.** Each fix is behind a setting and takes
-effect only on the next ingestion. Nothing has been re-ingested.
+Status: **approved 2026-10-29; all fixes on by default.** They take effect on the
+next ingestion (`scripts/reingest.py`). Nothing has been re-ingested yet.
 
-| Fix | Setting | Default | Needs your OK |
-|---|---|---|---|
-| 3a. Legacy-font → IAST character map | `apply_font_char_map` | `False` | **yes**: confirm the table below |
-| 3a. Diacritic folding in the BM25 tokenizer | `bm25_fold_diacritics` | `False` | turn on together with the char map |
-| 3b. Split run-together OCR words (BM25 text only) | `split_glued_ocr_words` | `False` | **yes**: review the samples |
-| 3c. Contextual chunk headers (embedding + rerank text) | `contextual_chunk_headers` | `True` | no |
-| 3d. Exclude Charaka Samhita | `exclude_charaka` | `True` | no |
+| Fix | Setting | Default |
+|---|---|---|
+| 3a. Legacy-font → IAST character map | `apply_font_char_map` | `True` (approved) |
+| 3a. Diacritic folding + romanization keys (BM25 docs, queries, synonym lookups) | `bm25_fold_diacritics` | `True` (approved) |
+| 3b. Split run-together OCR words (BM25 text only) | `split_glued_ocr_words` | `True` (approved) |
+| 3c. Contextual chunk headers (embedding + rerank text) | `contextual_chunk_headers` | `True` |
+| 3d. Exclude Charaka Samhita | `exclude_charaka` | `True` |
+| 3d. Exclude AH Srikantha Murthy vol 1 / Sanskrit commentaries | `exclude_ah_srikantha_murthy`, `exclude_ah_sanskrit_commentaries` | `True` |
 
 ---
 
@@ -109,8 +110,32 @@ would tokenize to `['vagandh']`. `bm25_fold_diacritics` folds Latin diacritics
 untouched: its vowel signs are combining marks too, and folding them would
 corrupt the text.
 
-**To confirm:** the table above, especially the *medium* and *low* rows. Then set
-`APPLY_FONT_CHAR_MAP=true` and `BM25_FOLD_DIACRITICS=true` before re-ingesting.
+### Romanization keys (added when folding was enabled)
+
+Folding alone doesn't make "Ashwagandha" match "Aśvagandhā": the synonym
+dictionaries are popular romanization ("Ashwagandha", "Shatavari", "Guduchi"),
+while folded IAST and the Formulary's ASCII write "asvagandha", "satavari",
+"guduci". `src/utils/transliterate.romanization_key` collapses the popular-vs-IAST
+letter choices (sh/s, ch/c, w/v, ri/ṛ, doubled vowels):
+
+```
+ashwagandha / asvagandha / aśvagandhā  -> asvagandha
+shatavari   / satavari   / śatāvarī    -> satavar
+guduchi     / guduci     / guḍūcī      -> guduci
+```
+
+With `bm25_fold_diacritics` on:
+- the tokenizer adds the key after each Latin token, for documents and queries
+  alike (both go through `tokenize_ayurvedic`);
+- synonym-dictionary variants are folded and keyed the same way;
+- `get_synonyms` also looks terms up by key, so "asvagandha" finds the
+  "Ashwagandha" entry.
+
+`tests/test_romanization.py` pins this down, including the case where an
+"Ashwagandha" query retrieves a chunk that only says "Aśvagandhā", and the same
+case failing with folding off.
+
+**Approved 2026-10-29** with no exceptions; both settings now default to `True`.
 
 ---
 
@@ -203,8 +228,8 @@ AFTER:  A Kushtha-patient desirous of being perfectly cured should constantly us
 "haemoptys is", "digest ant", "CHIKITSA STHANA M", "in u his on" (an OCR-garbled
 phrase), "Iv d kolyadi" (an OCR-garbled name).
 
-**To confirm:** the samples above. Then set `SPLIT_GLUED_OCR_WORDS=true` before
-re-ingesting. Adds `wordninja==2.0.0` to requirements.
+**Approved 2026-10-29**; `split_glued_ocr_words` now defaults to `True`. Adds
+`wordninja==2.0.0` to requirements.
 
 ---
 
@@ -303,8 +328,9 @@ children).
   Sanskrit, but English queries can't match it lexically, and it adds 15k chunks of
   semantic near-misses. Revisit if Devanagari queries are supported.
 
-These two exclusions are not implemented yet. They're one line each, the same as
-`exclude_charaka`, once you agree.
+**Approved 2026-10-29:** both are excluded behind `exclude_ah_srikantha_murthy` and
+`exclude_ah_sanskrit_commentaries` (default `True`), alongside `exclude_charaka`.
+`pipeline.excluded_reason(filename)` gives the reason for each skipped file.
 
 ---
 

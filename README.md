@@ -21,10 +21,17 @@ Query → Expansion → Semantic + BM25 → RRF Fusion → Cohere Rerank → MMR
 | Sushruta Samhita | Bhishagratna English translation, vols 1–3 | indexed |
 | Ayurvedic Pharmacopoeia of India (API) | official monographs | indexed |
 | Ayurvedic Formulary of India (AFI) | parts 1–2 | indexed |
-| Ashtanga Hridaya | Vidyanath illustrated (English, Sūtrasthāna); Sanskrit commentaries; Srikantha Murthy vol 1 | indexed; see note |
+| Ashtanga Hridaya | Vidyanath illustrated (English, Sūtrasthāna) | indexed |
+| Ashtanga Hridaya | Srikantha Murthy vol 1 | **excluded pending re-OCR** (`EXCLUDE_AH_SRIKANTHA_MURTHY`, default on) |
+| Ashtanga Hridaya | Sanskrit commentaries | **excluded** (`EXCLUDE_AH_SANSKRIT_COMMENTARIES`, default on) |
 | Charaka Samhita | P.V. Sharma | **excluded pending re-OCR** (`EXCLUDE_CHARAKA`, default on) |
 
-Charaka Samhita is excluded because the scan's text layer is unusable: the English translation was OCR'd with a Devanagari engine, so only the Sanskrit verses are legible. It will be re-added once the PDF has proper Devanagari + English OCR. In Ashtanga Hridaya, only the Vidyanath volume is readable English; the other two are Sanskrit-only or garbled OCR (see `docs/corpus_text_fixes.md`).
+The excluded volumes have text layers no English query can match:
+- **Charaka Samhita**: the English translation was OCR'd with a Devanagari engine, so only the Sanskrit verses are legible.
+- **Srikantha Murthy vol 1**: an English book OCR'd with a Hindi engine, so the whole text layer is garbage.
+- **Sanskrit commentaries**: legible, but Devanagari-only.
+
+Each comes back by turning its flag off, after re-OCR or once Devanagari queries are supported. Audit numbers are in `docs/corpus_text_fixes.md`.
 
 ## Evaluation & Results
 

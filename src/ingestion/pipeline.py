@@ -36,6 +36,18 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+def excluded_reason(filename: str) -> str | None:
+    """Why a source file is skipped at ingestion (per the exclude_* settings), or None."""
+    name = filename.lower()
+    if settings.exclude_charaka and metadata.infer_text_name(name) == "Charaka Samhita":
+        return "exclude_charaka: English translation OCR'd as Devanagari; needs re-OCR"
+    if settings.exclude_ah_srikantha_murthy and name.startswith("ashtanga_hridaya_srikantha_murthy"):
+        return "exclude_ah_srikantha_murthy: English book OCR'd with a Hindi engine (unusable text layer)"
+    if settings.exclude_ah_sanskrit_commentaries and name.startswith("ashtanga_hridaya_sanskrit_commentaries"):
+        return "exclude_ah_sanskrit_commentaries: Devanagari-only; English queries can't match it"
+    return None
+
+
 def _iter_source_files(root: Path):
     for path in sorted(root.glob("**/*")):
         if path.is_file() and path.suffix.lower() in loaders.SUPPORTED_EXTENSIONS:
@@ -81,8 +93,9 @@ def run_ingestion(
     for path in _iter_source_files(root):
         if max_files is not None and stats["files"] >= max_files:
             break
-        if settings.exclude_charaka and metadata.infer_text_name(path.name) == "Charaka Samhita":
-            logger.info("Skipping %s (exclude_charaka: text layer needs re-OCR).", path.name)
+        reason = excluded_reason(path.name)
+        if reason:
+            logger.info("Skipping %s (%s).", path.name, reason)
             stats["excluded_files"] += 1
             continue
         records = loaders.load_document(path, max_pages=max_pages)
