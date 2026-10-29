@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     # so "Ashwagandha" matches "Aśvagandhā". Applies to documents and queries.
     bm25_fold_diacritics: bool = True
     # Split run-together OCR words in BM25 text (Sushruta vol 1-2). Display,
-    # citations, and embeddings keep the original text. Review the samples in
-    # docs/corpus_text_fixes.md before enabling.
-    split_glued_ocr_words: bool = False
+    # citations, and embeddings keep the original text. Approved 2026-10-29
+    # (samples in docs/corpus_text_fixes.md).
+    split_glued_ocr_words: bool = True
     # Prepend "[Work] > [Section] > [Herb/Formulation]" to the text used for
     # embedding and reranking (src/ingestion/context_headers.py). Raw text is
     # kept for display/citations. Needs a full re-embed to take effect.
