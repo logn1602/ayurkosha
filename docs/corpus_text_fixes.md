@@ -293,8 +293,7 @@ ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0_C0
 
 `contextual_chunk_headers` defaults to `True`, but it only takes effect on
 re-ingestion. Because the embedded text changes, **every vector must be
-re-embedded**: run ingestion with `skip_existing=False` (chunk ids are unchanged,
-so a resume would keep the stale vectors).
+re-embedded**. `scripts/reingest.py` does this into a fresh index (see 3e).
 
 ---
 
@@ -355,11 +354,17 @@ chunk (the most in Vidyanath and API, the least where there's no structure).
   - B (425) + the clean comparison (~420, see `scripts/run_comparison.py`) ≈ 845,
     which fits only with little room for retries.
   - C (238) + 420 ≈ 660 leaves margin.
-- **Procedure notes:**
-  - Run with `skip_existing=False`: chunk ids are unchanged but the embedded text
-    isn't, so a resume would keep stale vectors.
-  - Delete the excluded sources' vectors from Pinecone first
-    (`pinecone_store.delete_by_source`); skipping a file at ingestion doesn't remove
-    vectors that are already indexed.
-  - Rebuild the eval embedding cache: query keys are unchanged, but MMR candidate
-    texts change.
+- **Procedure: `scripts/reingest.py`, blue/green.** This corrects earlier notes here
+  that suggested an in-place rebuild with `skip_existing=False` and
+  `delete_by_source`.
+  - The rebuild goes into a **new** Pinecone index. Serverless indexes can't delete
+    by metadata filter, so `delete_by_source` couldn't remove excluded sources in
+    place.
+  - In an empty index, `skip_existing` makes the run resumable: if it stops on a
+    Cohere quota error, re-running the same command embeds only what's missing.
+  - BM25/parent stores are staged in `data/cache/staging/<index>/` and promoted,
+    with a timestamped backup of the old ones, only once the new index's vector
+    count matches the chunk count. Then set `PINECONE_INDEX_NAME` to the new index.
+  - The live index and stores stay untouched until then.
+  - The eval embedding cache needs no rebuild: it's keyed by text, and changed
+    texts simply miss.
