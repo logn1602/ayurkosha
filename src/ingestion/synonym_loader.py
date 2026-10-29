@@ -27,6 +27,8 @@ import json
 import logging
 from pathlib import Path
 
+from config.settings import settings
+
 logger = logging.getLogger(__name__)
 
 # Project root: src/ingestion/synonym_loader.py -> parents[2] == project root.
@@ -42,6 +44,8 @@ _VARIANT_KEYS = ("sanskrit", "latin", "hindi", "english", "ayurvedic", "modern")
 
 # Module-level cache: variant token -> frozenset of all synonym strings.
 _synonym_index: dict[str, frozenset[str]] | None = None
+# Same index keyed by folded romanization key (see _variant_key).
+_synonym_key_index: dict[str, frozenset[str]] = {}
 
 
 def _load_json(path: Path) -> dict:
@@ -95,6 +99,22 @@ def _build_index(*dictionaries: dict) -> dict[str, frozenset[str]]:
     return {key: frozenset(values) for key, values in index.items()}
 
 
+def _variant_key(word: str) -> str:
+    """Folded, romanization-keyed lookup form ("Ashwagandha" / "Aśvagandhā" -> "asvagandha")."""
+    from src.ingestion.text_cleanup import fold_diacritics
+    from src.utils.transliterate import romanization_key
+
+    return romanization_key(fold_diacritics(word).lower())
+
+
+def _build_key_index(index: dict[str, frozenset[str]]) -> dict[str, frozenset[str]]:
+    """Re-key the variant index by ``_variant_key`` (merging on collision)."""
+    keyed: dict[str, set[str]] = {}
+    for word, variants in index.items():
+        keyed.setdefault(_variant_key(word), set()).update(variants)
+    return {key: frozenset(values) for key, values in keyed.items()}
+
+
 def load_synonym_index(force_reload: bool = False) -> dict[str, frozenset[str]]:
     """Load (and cache) the synonym lookup index.
 
@@ -105,13 +125,14 @@ def load_synonym_index(force_reload: bool = False) -> dict[str, frozenset[str]]:
         Mapping of lowercased single-word variant -> frozenset of all variant
         strings for that entry. Empty if no synonym files are present.
     """
-    global _synonym_index
+    global _synonym_index, _synonym_key_index
     if _synonym_index is not None and not force_reload:
         return _synonym_index
 
     herbs = _load_json(SYNONYMS_DIR / HERB_FILE)
     diseases = _load_json(SYNONYMS_DIR / DISEASE_FILE)
     _synonym_index = _build_index(herbs, diseases)
+    _synonym_key_index = _build_key_index(_synonym_index)
     logger.info("Loaded synonym index with %d variant keys.", len(_synonym_index))
     return _synonym_index
 
@@ -119,8 +140,10 @@ def load_synonym_index(force_reload: bool = False) -> dict[str, frozenset[str]]:
 def get_synonyms(term: str) -> set[str]:
     """Return all known synonyms for a term, including the term itself.
 
-    Lookup is case-insensitive. If the term is unknown, a single-element set
-    containing the original term is returned (never raises).
+    Lookup is case-insensitive. With ``settings.bm25_fold_diacritics`` on, it
+    is also diacritic- and romanization-insensitive: "asvagandha" (folded
+    IAST) finds the "Ashwagandha" entry. If the term is unknown, a
+    single-element set containing the original term is returned (never raises).
 
     Args:
         term: A single word (already tokenized). Multi-word input is not
@@ -133,7 +156,9 @@ def get_synonyms(term: str) -> set[str]:
     if not term:
         return set()
     index = load_synonym_index()
-    matches = index.get(term.lower())
-    if matches is None:
+    matches = set(index.get(term.lower(), ()))
+    if settings.bm25_fold_diacritics:
+        matches |= _synonym_key_index.get(_variant_key(term), frozenset())
+    if not matches:
         return {term}
-    return set(matches) | {term}
+    return matches | {term}

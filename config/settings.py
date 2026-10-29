@@ -33,12 +33,13 @@ class Settings(BaseSettings):
     cohere_tokens_per_min: int = 80000
 
     # ── Corpus text fixes (take effect on the next ingestion) ──
-    # Legacy-font -> IAST character maps (src/ingestion/text_cleanup.py).
-    # PROPOSED mapping; flip on once confirmed (docs/corpus_text_fixes.md).
-    apply_font_char_map: bool = False
-    # Fold Latin diacritics in the BM25 tokenizer (ā->a) so IAST words stay
-    # whole. Enable together with apply_font_char_map.
-    bm25_fold_diacritics: bool = False
+    # Legacy-font -> IAST character maps (src/ingestion/text_cleanup.py),
+    # confirmed 2026-10-29 (docs/corpus_text_fixes.md).
+    apply_font_char_map: bool = True
+    # BM25 tokenizer + synonym lookup: fold Latin diacritics (ā->a) so IAST
+    # words stay whole, and add romanization keys (src/utils/transliterate.py)
+    # so "Ashwagandha" matches "Aśvagandhā". Applies to documents and queries.
+    bm25_fold_diacritics: bool = True
     # Split run-together OCR words in BM25 text (Sushruta vol 1-2). Display,
     # citations, and embeddings keep the original text. Review the samples in
     # docs/corpus_text_fixes.md before enabling.

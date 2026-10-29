@@ -34,6 +34,7 @@ import re
 from config.settings import settings
 from src.ingestion.synonym_loader import get_synonyms
 from src.ingestion.text_cleanup import fold_diacritics
+from src.utils.transliterate import romanization_key
 
 logger = logging.getLogger(__name__)
 
@@ -86,13 +87,34 @@ def _is_devanagari(token: str) -> bool:
     return bool(_DEVANAGARI_RE.search(token))
 
 
+def _with_keys(tokens: list[str]) -> list[str]:
+    """Add each Latin token's romanization key right after it, when it differs.
+
+    "ashwagandha" -> ["ashwagandha", "asvagandha"], so a document spelling the
+    word in IAST ("Aśvagandhā" -> "asvagandha") matches. See
+    src/utils/transliterate.py.
+    """
+    out: list[str] = []
+    for token in tokens:
+        out.append(token)
+        if _is_devanagari(token) or token in DOMAIN_ACRONYMS:
+            continue
+        key = romanization_key(token)
+        if key != token:
+            out.append(key)
+    return out
+
+
 def _split_variant(variant: str) -> list[str]:
     """Lowercase a synonym variant and split it into word tokens.
 
-    Uses the same token regex as the main tokenizer so that multi-word variants
+    Uses the same token regex (and, when folding is on, the same folding and
+    romanization keys) as the main tokenizer so that multi-word variants
     (e.g. "emblica officinalis") become the same tokens a document would
     produce for that phrase.
     """
+    if settings.bm25_fold_diacritics:
+        return _with_keys(_TOKEN_RE.findall(fold_diacritics(variant).lower()))
     return _TOKEN_RE.findall(variant.lower())
 
 
@@ -124,8 +146,11 @@ def tokenize_ayurvedic(
     text = text.lower()
     raw_tokens = _TOKEN_RE.findall(text)
 
-    # Stage 1: surface tokens with stopwords removed.
+    # Stage 1: surface tokens with stopwords removed. With folding on, each is
+    # followed by its romanization key, so popular and IAST spellings meet.
     surface: list[str] = [t for t in raw_tokens if t not in STOPWORDS]
+    if settings.bm25_fold_diacritics:
+        surface = _with_keys(surface)
 
     # Stage 2: synonym expansion (Latin tokens only; Devanagari and protected
     # acronyms pass through unchanged).
