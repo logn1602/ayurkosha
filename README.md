@@ -68,7 +68,7 @@ Rasa Shastra (mineral/metallic) preparations always trigger a supervision warnin
 
 ```bash
 # Full cited answer (requires API keys + credits)
-python scripts/demo_query.py --question "What is the Ayurvedic treatment for Amavata?"
+python scripts/demo_query.py --question "Which classical formulations are indicated for Āmavāta?"
 
 # Retrieval + context assembly only — zero API cost
 python scripts/dry_run_query.py
@@ -111,7 +111,7 @@ make serve
 # 7. Query
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
-  -d '{"question": "What is the Ayurvedic treatment for Amavata?"}'
+  -d '{"question": "Which classical formulations are indicated for Āmavāta?"}'
 ```
 
 ## Project Structure

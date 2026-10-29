@@ -35,7 +35,7 @@ from api.schemas import QueryRequest
 
 BAR = "=" * 68
 RULE = "-" * 68
-DEFAULT_QUESTION = "What is the Ayurvedic treatment for Amavata?"
+DEFAULT_QUESTION = "Which classical formulations are indicated for Āmavāta?"
 
 
 def main():

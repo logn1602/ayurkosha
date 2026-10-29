@@ -337,8 +337,8 @@
   },
   {
     "id": "eval_017",
-    "question": "What is the Ayurvedic treatment for Amavata (Rheumatoid Arthritis)?",
-    "gold_answer": "Amavata management begins with Langhana (fasting) and Deepana-Pachana to digest Ama, Swedana, and Vata-pacifying Guggulu formulations such as Amavatari Rasa and Rasnadi.",
+    "question": "Which classical formulations are indicated for Āmavāta?",
+    "gold_answer": "The Ayurvedic Formulary of India lists Āmavāta among the therapeutic uses of Yogarāja Guggulu and Āmavātāri Rasa (both from Bhaiṣajya Ratnāvalī, Āmavātādhikāra), Vātāri Guggulu, Mahā Rāsnādi Kvātha Cūrṇa, Vāsāguḍūcyādi Kvātha Cūrṇa, Vyoṣādi Guggulu, Ānandabhairava Rasa and Nimbādi Cūrṇa.",
     "gold_sources": [
       "afi"
     ],
@@ -350,8 +350,13 @@
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
-        "afi_part1_pdf_121_P0",
-        "afi_part2_pdf_234_P0"
+        "afi_part2_pdf_234_P0",
+        "afi_part1_pdf_112_P1",
+        "afi_part1_pdf_122_P1",
+        "afi_part1_pdf_113_P0",
+        "afi_part1_pdf_122_P0",
+        "afi_part1_pdf_310_P0",
+        "afi_part1_pdf_164_P0"
       ],
       "reviewed_by": "logn1602"
     }
