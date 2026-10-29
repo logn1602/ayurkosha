@@ -49,7 +49,7 @@ def estimate_calls(configs: list[str], runs: int, n_questions: int, cached_queri
     """Estimate API calls for the plan (embedding cache on).
 
     Per question: query embed (once ever — cached afterwards, shared by every
-    config and by MMR's own query embed); rerank (every run, every config but
+    config; MMR needs none since it uses rerank scores); rerank (every run, every config but
     rrf); MMR candidate embed batch (first rerank_mmr run only — candidates are
     deterministic, so later runs hit the cache); HyDE passage embed + Claude
     call (every hyde run — passages differ per run, so they never hit).

@@ -54,3 +54,41 @@ def test_mmr_top_k_bounded_by_candidates():
 
 def test_mmr_empty():
     assert mmr([1.0, 0.0], [], top_k=5) == []
+
+
+# ── MMR relevance = rerank score ──────────────────────────────────────
+
+def test_mmr_relevance_scores_override_query_cosine():
+    query = [1.0, 0.0]
+    cands = [[0.0, 1.0], [1.0, 0.0]]          # cosine prefers candidate 1
+    order = mmr(query, cands, top_k=1, relevance=[0.9, 0.1])
+    assert order == [0]
+
+
+def test_mmr_rerank_first_pick_is_always_rerank_rank1(monkeypatch):
+    """Even when the rank-1 passage is the *least* similar to the query by
+    embedding, MMR must keep it first once rerank scores are present."""
+    from src.ingestion import embedder
+    from src.reranking import mmr as mmr_mod
+
+    vecs = {"a": [0.0, 1.0], "b": [1.0, 0.0], "c": [0.9, 0.1], "d": [0.8, 0.2]}
+    monkeypatch.setattr(embedder, "embed_documents", lambda texts: [vecs[t] for t in texts])
+    monkeypatch.setattr(embedder, "embed_query",
+                        lambda q: (_ for _ in ()).throw(AssertionError("no query embed needed")))
+    reranked = [{"chunk_id": t, "text": t, "rerank_score": s}
+                for t, s in [("a", 0.95), ("b", 0.60), ("c", 0.55), ("d", 0.50)]]
+    out = mmr_mod.mmr_rerank("q", reranked, top_k=2)
+    assert out[0]["chunk_id"] == "a"
+    assert out[0]["rank"] == 0
+
+
+def test_mmr_rerank_falls_back_to_query_cosine_without_rerank_scores(monkeypatch):
+    from src.ingestion import embedder
+    from src.reranking import mmr as mmr_mod
+
+    vecs = {"a": [0.0, 1.0], "b": [1.0, 0.0], "c": [0.9, 0.1]}
+    monkeypatch.setattr(embedder, "embed_documents", lambda texts: [vecs[t] for t in texts])
+    monkeypatch.setattr(embedder, "embed_query", lambda q: [1.0, 0.0])
+    results = [{"chunk_id": t, "text": t} for t in "abc"]
+    out = mmr_mod.mmr_rerank("q", results, top_k=2)
+    assert out[0]["chunk_id"] == "b"
