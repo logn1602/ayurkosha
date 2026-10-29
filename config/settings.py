@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     # diacritic/Devanagari text). Raise this on a production key.
     cohere_tokens_per_min: int = 80000
 
+    # ── Reranking (eval path) ──────────────────────────────
+    # The eval reranks with retry + client-side pacing so every question is
+    # actually reranked. Trial keys allow 10 rerank calls/min; raise this on a
+    # production key (0 disables pacing).
+    cohere_rerank_calls_per_min: int = 10
+    rerank_max_retries: int = 5
+    rerank_backoff_base: float = 6.0  # seconds; doubles each retry
+
     # ── Generation ─────────────────────────────────────────
     generation_model: str = "claude-sonnet-4-6"
     # Output ceiling for answer generation. Cited, table-rich answers run long;

@@ -31,7 +31,7 @@ from src.context.parent_expand import expand_to_parents
 from src.context.reorder import reorder_chunks
 from src.evaluation import generation_metrics, retrieval_metrics
 from src.ingestion.parent_store import load_parent_store
-from src.reranking.cohere_rerank import rerank
+from src.reranking.cohere_rerank import rerank_with_retry
 from src.reranking.mmr import mmr_rerank
 from src.retrieval.fusion import reciprocal_rank_fusion
 from src.retrieval.keyword import keyword_search
@@ -69,7 +69,7 @@ def _retrieve(question: str, k: int, parent_store, use_hyde: bool = False) -> di
     )
     keyword_results = keyword_search(variants)
     fused = reciprocal_rank_fusion([semantic_results, keyword_results])
-    reranked = rerank(question, fused)
+    reranked, _ = rerank_with_retry(question, fused)
     diverse = mmr_rerank(question, reranked, top_k=k)
     expanded = expand_to_parents(diverse, parent_store)
     ordered = reorder_chunks(expanded)
