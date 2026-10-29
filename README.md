@@ -22,9 +22,9 @@ AyurKosha ships with a **30-question evaluation harness** (`scripts/run_eval.py`
 
 | Metric | Score |
 |---|---|
-| Hit rate (gold source in top-6) | **~0.90** |
-| Recall@6 | **~0.73** |
-| MRR | **~0.67** |
+| Hit rate (gold source in top-6) | **0.87** |
+| Recall@6 | **0.68** |
+| MRR | **0.61** |
 
 **Answer quality** — Claude LLM-as-judge, 0–10, across 30 questions:
 
@@ -36,7 +36,7 @@ AyurKosha ships with a **30-question evaluation harness** (`scripts/run_eval.py`
 | Citation accuracy | **100%** — 0 hallucinated citations |
 | Safety disclaimer present | **100%** |
 
-> *Retrieval figures are averaged over runs and vary by ±~0.05 due to reranker and vector-search nondeterminism. Gold sources are matched at the work level from keyword evidence; single-herb monograph retrieval (pharmacopoeia) is the current soft spot (MRR ≈ 0.5).*
+> *Retrieval figures are the mean of 3 clean runs (spread 0.00 — identical every run) with 0/30 questions skipping the reranker. The eval paces and retries Cohere rerank calls and marks any run where a question falls back to unranked results as INVALID; earlier, higher figures (~0.90 / 0.73 / 0.67, "±0.05 noise") came from trial-key rate limits silently skipping the reranker on up to 20/30 questions. Gold sources are matched at the work level from keyword evidence; clinical (MRR 0.51, hit 0.71) and single-herb monograph / pharmacopoeia (MRR 0.52) retrieval are the current soft spots.*
 
 ```bash
 make eval-retrieval                   # offline, no API cost
