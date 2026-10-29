@@ -148,8 +148,8 @@ def _run_with_skips(monkeypatch, tmp_path, skipped_flags):
     monkeypatch.setattr(re_mod, "load_parent_store", lambda: None)
     monkeypatch.setattr(re_mod.embedder, "enable_embedding_cache", lambda *a: None)
     monkeypatch.setattr(re_mod.embedder, "save_embedding_cache", lambda: None)
-    monkeypatch.setattr(re_mod, "_retrieve", lambda q, k, ps, use_hyde=False: {
-        "reranked": [], "context_block": "", "sources": [], "final_passages": [],
+    monkeypatch.setattr(re_mod, "_retrieve", lambda q, k, ps, **kw: {
+        "scored": [], "context_block": "", "sources": [], "final_passages": [],
         "rerank_skipped": next(flags),
     })
     return re_mod.run_eval(path, tmp_path / "out", mode="retrieval", k=6)
@@ -166,3 +166,48 @@ def test_run_eval_invalid_when_any_rerank_skipped(monkeypatch, tmp_path):
     assert payload["status"] == "INVALID"
     assert payload["summary"]["rerank_skips"] == 2
     assert [r["rerank_skipped"] for r in payload["results"]] == [False, True, True]
+
+
+# ── pipeline selection in _retrieve (all stages faked) ────────────────
+
+def _fake_stages(monkeypatch):
+    from src.evaluation import run_eval as re_mod
+    calls = []
+    fused = [{"chunk_id": f"c{i}"} for i in range(20)]
+    monkeypatch.setattr(re_mod, "semantic_search", lambda v, hyde_passages=None: [])
+    monkeypatch.setattr(re_mod, "keyword_search", lambda v: [])
+    monkeypatch.setattr(re_mod, "reciprocal_rank_fusion", lambda lists: list(fused))
+
+    def fake_rerank(q, results):
+        calls.append("rerank")
+        return list(reversed(results))[:15], False
+
+    def fake_mmr(q, results, top_k):
+        calls.append("mmr")
+        return results[1:top_k + 1]
+
+    monkeypatch.setattr(re_mod, "rerank_with_retry", fake_rerank)
+    monkeypatch.setattr(re_mod, "mmr_rerank", fake_mmr)
+    return re_mod, calls
+
+
+def test_retrieve_rrf_pipeline_skips_rerank_and_mmr(monkeypatch):
+    re_mod, calls = _fake_stages(monkeypatch)
+    out = re_mod._retrieve("q", 6, None, pipeline="rrf", need_context=False)
+    assert calls == []
+    assert [r["chunk_id"] for r in out["scored"]][:2] == ["c0", "c1"]
+    assert len(out["scored"]) == 15
+
+
+def test_retrieve_rerank_pipeline_retrieval_only_skips_mmr(monkeypatch):
+    re_mod, calls = _fake_stages(monkeypatch)
+    out = re_mod._retrieve("q", 6, None, pipeline="rerank", need_context=False)
+    assert calls == ["rerank"]
+    assert out["scored"][0]["chunk_id"] == "c19"
+
+
+def test_retrieve_rerank_mmr_pipeline_scores_mmr_output(monkeypatch):
+    re_mod, calls = _fake_stages(monkeypatch)
+    out = re_mod._retrieve("q", 6, None, pipeline="rerank_mmr", need_context=False)
+    assert calls == ["rerank", "mmr"]
+    assert [r["chunk_id"] for r in out["scored"]] == ["c18", "c17", "c16", "c15", "c14", "c13"]

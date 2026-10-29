@@ -14,6 +14,14 @@ expansion / filter inference are skipped) so the measured retrieval quality
 is reproducible and doesn't depend on paid calls. The optional LLM judge
 (--judge) adds Claude-scored faithfulness/relevance/completeness.
 
+Which ranked list retrieval metrics score is set by ``pipeline``:
+  - "rrf"        : RRF-fused semantic + BM25, top rerank_first_pass_n (no rerank)
+  - "rerank"     : Cohere-reranked top rerank_first_pass_n (default — the
+                   historical eval definition)
+  - "rerank_mmr" : the final top-k after MMR (what generation actually sees)
+MMR only runs when it is scored or when generation needs context, so
+retrieval-only "rrf"/"rerank" runs spend no MMR embed calls.
+
 Build this in: Phase 6
 """
 
@@ -41,6 +49,8 @@ from src.retrieval.semantic import semantic_search
 
 logger = logging.getLogger(__name__)
 
+PIPELINES = ("rrf", "rerank", "rerank_mmr")
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "eval" / "eval_dataset.json"
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data" / "eval" / "eval_results"
@@ -56,12 +66,21 @@ def load_dataset(path: str | Path = DEFAULT_DATASET) -> list[dict[str, Any]]:
     return data
 
 
-def _retrieve(question: str, k: int, parent_store, use_hyde: bool = False) -> dict[str, Any]:
-    """Run retrieval for one question; return ranked list + generation context.
+def _retrieve(
+    question: str,
+    k: int,
+    parent_store,
+    use_hyde: bool = False,
+    pipeline: str = "rerank",
+    need_context: bool = True,
+) -> dict[str, Any]:
+    """Run retrieval for one question; return the scored list + generation context.
 
     Skips query expansion / filter inference (no Anthropic) — uses the raw
     question as the single variant, mirroring scripts/dry_run_query.py.
     With ``use_hyde``, also searches a HyDE passage (one cheap Claude call).
+    ``pipeline`` picks the ranked list returned as ``scored`` (see module
+    docstring); context is only assembled when ``need_context``.
     """
     variants = [question]
     hyde_passage = generate_hypothetical_document(question) if use_hyde else None
@@ -70,13 +89,22 @@ def _retrieve(question: str, k: int, parent_store, use_hyde: bool = False) -> di
     )
     keyword_results = keyword_search(variants)
     fused = reciprocal_rank_fusion([semantic_results, keyword_results])
-    reranked, rerank_skipped = rerank_with_retry(question, fused)
-    diverse = mmr_rerank(question, reranked, top_k=k)
-    expanded = expand_to_parents(diverse, parent_store)
-    ordered = reorder_chunks(expanded)
-    context_block, sources = build_context(ordered)
+    if pipeline == "rrf":
+        ranked, rerank_skipped = fused[:settings.rerank_first_pass_n], False
+    else:
+        ranked, rerank_skipped = rerank_with_retry(question, fused)
+
+    diverse = None
+    if pipeline == "rerank_mmr" or need_context:
+        diverse = mmr_rerank(question, ranked, top_k=k)
+    scored = diverse if pipeline == "rerank_mmr" else ranked
+
+    context_block, sources, ordered = "", [], []
+    if need_context:
+        ordered = reorder_chunks(expand_to_parents(diverse, parent_store))
+        context_block, sources = build_context(ordered)
     return {
-        "reranked": reranked,      # ranked list for recall/precision/mrr
+        "scored": scored,          # ranked list for recall/precision/mrr
         "rerank_skipped": rerank_skipped,
         "context_block": context_block,
         "sources": sources,
@@ -91,13 +119,15 @@ def evaluate_item(
     judge: bool,
     parent_store,
     use_hyde: bool = False,
+    pipeline: str = "rerank",
 ) -> dict[str, Any]:
     """Evaluate one dataset item and return its per-question result record."""
     question = item["question"]
     gold_sources = item.get("gold_sources", [])
     gold_answer = item.get("gold_answer", "")
 
-    retrieved = _retrieve(question, k, parent_store, use_hyde=use_hyde)
+    retrieved = _retrieve(question, k, parent_store, use_hyde=use_hyde, pipeline=pipeline,
+                          need_context=mode in ("generation", "both"))
     record: dict[str, Any] = {
         "id": item.get("id"),
         "question": question,
@@ -108,7 +138,7 @@ def evaluate_item(
 
     if mode in ("retrieval", "both"):
         record["retrieval"] = retrieval_metrics.score_retrieval(
-            retrieved["reranked"], gold_sources, k
+            retrieved["scored"], gold_sources, k
         )
 
     if mode in ("generation", "both"):
@@ -204,6 +234,7 @@ def run_eval(
     k: int | None = None,
     use_hyde: bool = False,
     embed_cache: bool = True,
+    pipeline: str = "rerank",
 ) -> dict[str, Any]:
     """Run the evaluation suite and save timestamped results.
 
@@ -217,16 +248,19 @@ def run_eval(
 
     Returns the summary payload (also written to ``output_dir``).
     """
+    if pipeline not in PIPELINES:
+        raise ValueError(f"pipeline must be one of {PIPELINES}, got {pipeline!r}")
     k = k or settings.top_k_final
     dataset = load_dataset(dataset_path)
     parent_store = load_parent_store()
 
-    logger.info("Evaluating %d questions (mode=%s, k=%d, judge=%s, hyde=%s).",
-                len(dataset), mode, k, judge, use_hyde)
+    logger.info("Evaluating %d questions (mode=%s, pipeline=%s, k=%d, judge=%s, hyde=%s).",
+                len(dataset), mode, pipeline, k, judge, use_hyde)
     if embed_cache:
         embedder.enable_embedding_cache()
     try:
-        results = [evaluate_item(item, k, mode, judge, parent_store, use_hyde=use_hyde)
+        results = [evaluate_item(item, k, mode, judge, parent_store,
+                                 use_hyde=use_hyde, pipeline=pipeline)
                    for item in dataset]
     finally:
         # Save even on a crash (e.g. quota exhausted) so finished work is kept.
@@ -242,6 +276,7 @@ def run_eval(
         "status": "INVALID" if summary["rerank_skips"] else "VALID",
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "mode": mode,
+        "pipeline": pipeline,
         "k": k,
         "judge": judge,
         "hyde": use_hyde,

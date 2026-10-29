@@ -27,6 +27,7 @@ except (AttributeError, ValueError):  # pragma: no cover
 from src.evaluation.run_eval import (
     DEFAULT_DATASET,
     DEFAULT_OUTPUT_DIR,
+    PIPELINES,
     run_eval,
 )
 
@@ -49,6 +50,8 @@ def main():
                         help="Exit 0 even if some questions skipped rerank (run is still marked INVALID).")
     parser.add_argument("--no-embed-cache", action="store_true",
                         help="Don't use the disk embedding cache (data/cache/embedding_cache.json).")
+    parser.add_argument("--pipeline", choices=PIPELINES, default="rerank",
+                        help="Ranked list to score: RRF only, + Cohere rerank (default), or + MMR.")
     parser.add_argument("--top-k", type=int, default=None,
                         help="Retrieval cutoff k (default settings.top_k_final).")
     args = parser.parse_args()
@@ -69,7 +72,7 @@ def main():
 
     print("AyurKosha — Evaluation Suite")
     print("=" * 50)
-    print(f"Mode: {mode}  |  Judge: {args.judge}  |  HyDE: {args.hyde}")
+    print(f"Mode: {mode}  |  Pipeline: {args.pipeline}  |  Judge: {args.judge}  |  HyDE: {args.hyde}")
     print("=" * 50)
 
     payload = run_eval(
@@ -80,6 +83,7 @@ def main():
         k=args.top_k,
         use_hyde=args.hyde,
         embed_cache=not args.no_embed_cache,
+        pipeline=args.pipeline,
     )
 
     print("\nSUMMARY")
