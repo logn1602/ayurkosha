@@ -305,3 +305,35 @@ children).
 
 These two exclusions are not implemented yet. They're one line each, the same as
 `exclude_charaka`, once you agree.
+
+---
+
+## 3e. Re-ingestion cost estimate
+
+Computed offline: the corpus was re-chunked from the parent store with the font map
+and headers applied (`chunk_record` + `contextual_text`). Embedding runs in batches
+of 96 children per Cohere call (`embedder.MAX_BATCH`). Headers add 16–91 chars per
+chunk (the most in Vidyanath and API, the least where there's no structure).
+
+| Scenario | Children | **Cohere embed calls** | ≈ Tokens | Time (throttle-bound at 80k tok/min) |
+|---|---|---|---|---|
+| A. All sources | 46,948 | 490 | 4.7M | ~58 min |
+| **B. Charaka excluded (current default)** | 40,780 | **425** | 4.1M | ~51 min |
+| C. B + Srikantha Murthy & Sanskrit commentaries excluded (recommended) | 22,842 | **238** | 2.4M | ~30 min |
+
+- Token counts use ~4 chars/token, which undercounts Devanagari. Scenario A/B times
+  are therefore optimistic; C is mostly Latin text.
+- **No Claude calls.** BM25, the parent store, OCR splitting, headers and the font
+  map are all local.
+- **Quota fit (trial key, 1,000 calls/month):**
+  - B (425) + the clean comparison (~420, see `scripts/run_comparison.py`) ≈ 845,
+    which fits only with little room for retries.
+  - C (238) + 420 ≈ 660 leaves margin.
+- **Procedure notes:**
+  - Run with `skip_existing=False`: chunk ids are unchanged but the embedded text
+    isn't, so a resume would keep stale vectors.
+  - Delete the excluded sources' vectors from Pinecone first
+    (`pinecone_store.delete_by_source`); skipping a file at ingestion doesn't remove
+    vectors that are already indexed.
+  - Rebuild the eval embedding cache: query keys are unchanged, but MMR candidate
+    texts change.
