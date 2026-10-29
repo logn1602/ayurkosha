@@ -26,6 +26,7 @@ import time
 from typing import Any
 
 from config.settings import settings
+from src.ingestion.context_headers import contextual_text
 from src.ingestion.embedder import _is_rate_limit, raise_if_quota_exhausted
 
 logger = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ def _call_rerank(
     client = _get_client()
     resp = client.rerank(
         query=query,
-        documents=[r.get("text", "") for r in results],
+        documents=[contextual_text(r) for r in results],   # header + text when present
         top_n=keep,
         model=model,
     )

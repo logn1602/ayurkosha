@@ -255,7 +255,9 @@ def embed_chunks(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     Returns:
         The same chunk dicts, each with a new ``embedding`` key (in place).
     """
-    texts = [c.get("text", "") for c in chunks]
+    from src.ingestion.context_headers import contextual_text
+
+    texts = [contextual_text(c) for c in chunks]   # header + text when present
     vectors = embed_documents(texts)
     for chunk, vec in zip(chunks, vectors):
         chunk["embedding"] = vec

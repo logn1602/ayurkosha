@@ -29,6 +29,7 @@ from typing import Any
 
 from config.settings import settings
 from src.ingestion import loaders, metadata, chunkers, bm25_store, parent_store, text_cleanup
+from src.ingestion.context_headers import annotate_context, contextual_text
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ def run_ingestion(
             continue
         text_cleanup.apply_font_fixes(records)   # before enrichment: headings/properties see IAST
         metadata.enrich_records(records)
+        annotate_context(records)                # [Work] > [Section] > [Item] markers, if enabled
         chunked = chunkers.chunk_records(records)
         all_parents.extend(chunked["parents"])
         all_children.extend(chunked["children"])
@@ -131,7 +133,7 @@ def run_ingestion(
                         stats["skipped"] += len(have)
                         batch = [c for c in batch if c["chunk_id"] not in have]
                 if batch:
-                    vecs = embedder.embed_documents([c.get("text", "") for c in batch])
+                    vecs = embedder.embed_documents([contextual_text(c) for c in batch])
                     for c, v in zip(batch, vecs):
                         c["embedding"] = v
                     stats["embedded"] += len(vecs)

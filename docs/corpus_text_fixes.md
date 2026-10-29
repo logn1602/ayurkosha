@@ -205,3 +205,68 @@ phrase), "Iv d kolyadi" (an OCR-garbled name).
 
 **To confirm:** the samples above. Then set `SPLIT_GLUED_OCR_WORDS=true` before
 re-ingesting. Adds `wordninja==2.0.0` to requirements.
+
+---
+
+## 3c. Contextual chunk headers
+
+Each child chunk gets `metadata["context_header"]` = `[Work] > [Section/Chapter] > [Herb/Formulation]`.
+`contextual_text()` prepends it to the text used for **embedding** (ingestion) and
+**reranking** (`cohere_rerank`). `text` itself is unchanged, so display, citations,
+the parent store and BM25 all keep the raw page text.
+
+Why it matters: a 450-char child often lacks the words that identify it. The
+Pharmacopoeia's `Rasa : Tikta, Kaṣāya …` block never names its herb (the name is on
+the monograph's first page), and a Sushruta passage doesn't say which chapter or
+disease it belongs to.
+
+### How structure is read (`src/ingestion/context_headers.py`)
+
+| Work | Item marker | Section marker |
+|---|---|---|
+| Pharmacopoeia | `10. Asvagandha (Rt.)`, the monograph's opening line | PROPERTIES AND ACTION, SYNONYMS, … |
+| Formulary | `5:2 KAISORA GUGGULU (Bhaisajyaratnavali…)` | `GROUP No. 5 GUGGULU` |
+| Sushruta | — | sthāna + chapter from the running head `Chap.IX.]CHIKITSASTHANAM`, or the opening `CHAPTER XLIV. Now we shall discourse…` |
+| Ashtanga Hridaya (English) | `Amalaki (Emblica officinalis):` drug entries | `Dinacarya Adhyaya : 2` running head + sthāna |
+
+Items and sections **carry forward across pages** until the next marker. A chunk
+takes the header in effect at its midpoint, located by word sequence because chunks
+are re-joined with single spaces and so aren't verbatim substrings of the page.
+
+The Sushruta OCR needed most of the work:
+- Chapters may only move **forward** within a sthāna. Running heads may step 0–3.
+  A chapter opening may jump any distance (OCR lost some headings), but never back.
+- OCR numeral slips (`XVIIl`, `XXXILI`, `XLY`, `XHI`, `XL1I`, letter-spaced
+  `C H A P T E R X L .`) are normalized. Only canonical numerals are accepted, and
+  when two readings are valid (`XL` = 40 vs XI), the one nearest the next expected
+  chapter wins.
+- Cross-references ("see Chap. X", "as in the Sutrasthana") are ignored: only
+  capitalized running heads and chapter openings count.
+- Table-of-contents pages are ignored. A sthāna change clears the chapter count.
+
+### Results
+
+| Work | Chunks with section or item | All three levels |
+|---|---|---|
+| Pharmacopoeia | 99% | 92% |
+| Formulary | 91% | 35% (group headings are sparse) |
+| Sushruta | 95% | n/a (no item level) |
+| Ashtanga Hridaya | 15% | 14% (only the English Vidyanath volume has markers) |
+
+All **20 Sushruta pages cited in `relabel_review.md`** carry the right sthāna and
+chapter, e.g. vol2 p535 → *Chikitsasthana, Chapter 24* (hygiene), vol3 p204 →
+*Uttaratantra, Chapter 39* (fever), vol3 p347 → *Uttaratantra, Chapter 52* (cough).
+
+Examples:
+```
+api_all_volume_pdf_40_P0_C0   Ayurvedic Pharmacopoeia of India > Properties and Action > Asvagandha (Rt.)
+afi_part1_pdf_162_P0_C2       Ayurvedic Formulary of India > Triphala Curna
+sushruta_samhita_vol_2_pdf_416_P0_C0   Sushruta Samhita > Chikitsasthana, Chapter 9
+ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0_C0
+                              Ashtanga Hridaya > Sutrasthana, Annasvarupa Vijnaniya Adhyaya (6) > Amalaki (Emblicaofficinalis)
+```
+
+`contextual_chunk_headers` defaults to `True`, but it only takes effect on
+re-ingestion. Because the embedded text changes, **every vector must be
+re-embedded**: run ingestion with `skip_existing=False` (chunk ids are unchanged,
+so a resume would keep the stale vectors).

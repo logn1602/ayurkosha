@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # citations, and embeddings keep the original text. Review the samples in
     # docs/corpus_text_fixes.md before enabling.
     split_glued_ocr_words: bool = False
+    # Prepend "[Work] > [Section] > [Herb/Formulation]" to the text used for
+    # embedding and reranking (src/ingestion/context_headers.py). Raw text is
+    # kept for display/citations. Needs a full re-embed to take effect.
+    contextual_chunk_headers: bool = True
 
     # ── Reranking (eval path) ──────────────────────────────
     # The eval reranks with retry + client-side pacing so every question is

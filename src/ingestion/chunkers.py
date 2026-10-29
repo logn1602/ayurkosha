@@ -36,6 +36,8 @@ import logging
 import re
 from typing import Any
 
+from src.ingestion.context_headers import header_at
+
 logger = logging.getLogger(__name__)
 
 # Sizes in characters (~4 chars/token). Tune from eval results later.
@@ -137,6 +139,43 @@ def _parent_metadata(base: dict[str, Any], parent_id: str) -> dict[str, Any]:
     return meta
 
 
+_WORD_RE = re.compile(r"\w+")
+
+
+class _WordLocator:
+    """Finds where a chunk sits in its page by word sequence.
+
+    split_text re-joins atomic units with single spaces, so a chunk's text is
+    usually not a verbatim substring of the page; its word sequence is.
+    Lookups move forward through the page (chunks come in reading order).
+    The overlap seed can make a chunk's first words match the previous chunk's
+    tail, which only shifts the midpoint slightly.
+    """
+
+    _PROBE = 6   # words matched to anchor a chunk
+
+    def __init__(self, text: str):
+        self._offsets: list[int] = []
+        self._words: list[str] = []
+        for m in _WORD_RE.finditer(text):
+            self._offsets.append(m.start())
+            self._words.append(m.group().lower())
+        self._cursor = 0
+
+    def midpoint(self, chunk_text: str) -> int:
+        """Char offset (in the page) of the chunk's middle word; best effort."""
+        words = [w.lower() for w in _WORD_RE.findall(chunk_text)]
+        if not words or not self._words:
+            return 0
+        probe = words[:self._PROBE]
+        last = len(self._words) - len(probe)
+        start = next((i for i in range(self._cursor, last + 1) if self._words[i:i + len(probe)] == probe), None)
+        if start is None:
+            start = min(self._cursor, len(self._words) - 1)
+        self._cursor = start
+        return self._offsets[min(start + len(words) // 2, len(self._words) - 1)]
+
+
 def chunk_record(record: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Split one enriched loader record into parent and child chunks.
 
@@ -153,6 +192,8 @@ def chunk_record(record: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
 
     parents: list[dict[str, Any]] = []
     children: list[dict[str, Any]] = []
+    context = record.get("context")   # from context_headers.annotate_context, if enabled
+    locate = _WordLocator(text) if context else None
 
     parent_texts = split_text(text, PARENT_CHUNK_SIZE, PARENT_OVERLAP)
     for pi, parent_text in enumerate(parent_texts):
@@ -166,11 +207,17 @@ def chunk_record(record: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
         child_texts = split_text(parent_text, CHILD_CHUNK_SIZE, CHILD_OVERLAP)
         for ci, child_text in enumerate(child_texts):
             child_id = f"{parent_id}_C{ci}"
+            child_meta = _child_metadata(base_meta, parent_id, child_id)
+            if locate:
+                # Midpoint: a chunk that opens with a new heading belongs to it.
+                header = header_at(context, locate.midpoint(child_text))
+                if header:
+                    child_meta["context_header"] = header
             children.append({
                 "chunk_id": child_id,
                 "parent_id": parent_id,
                 "text": child_text,
-                "metadata": _child_metadata(base_meta, parent_id, child_id),
+                "metadata": child_meta,
             })
 
     return {"parents": parents, "children": children}
