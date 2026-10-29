@@ -111,3 +111,97 @@ corrupt the text.
 
 **To confirm:** the table above, especially the *medium* and *low* rows. Then set
 `APPLY_FONT_CHAR_MAP=true` and `BM25_FOLD_DIACRITICS=true` before re-ingesting.
+
+---
+
+## 3b. Splitting run-together OCR words (BM25 text only)
+
+### Where the problem is
+
+Measured per source (`text_cleanup.glued_run_ratio`: share of letter runs of 15+ chars):
+
+| Source | Glued runs | Latin text inside glued runs |
+|---|---|---|
+| sushruta_samhita_vol_1.pdf | **51.3%** | **85%** |
+| sushruta_samhita_vol_2.pdf | **46.0%** | **83%** |
+| sushruta_samhita_vol_3.pdf | 0.0% | 0% |
+| afi_part1/2.pdf | 1.4–1.5% | 4–5% |
+| api_all_volume.pdf | 0.2% | 1% |
+| ashtanga_hridaya_vidyanath_illustrated.pdf | 0.3% | 1% |
+
+Vols 1–2 hold Sushruta's Sūtra-, Nidāna-, Śārīra- and Cikitsā-sthāna, which is
+where 14 of the proposed gold labels point (`data/eval/relabel_review.md`).
+
+### Method (`text_cleanup.GluedWordSplitter`)
+
+1. **Language model** = wordninja's English frequency list merged with a
+   **protected vocabulary** learned from the corpus's properly spaced sources
+   (glued-run ratio ≤ 5%) plus the synonym dictionaries: 14,530 words, mostly
+   Sanskrit/IAST terms (folded to ASCII). Glued sources never teach vocabulary,
+   so fragments like "andthe" can't become words.
+2. Letter runs are first cut at lowercase→Uppercase boundaries. The translation
+   capitalizes Sanskrit names, so a case change marks a word start.
+3. Only runs of 8+ characters that aren't already known words are candidates.
+4. **Short capitalized words** (< 15 chars) are treated as names and kept whole,
+   unless they open with a glued function word ("Amedicated" → "A medicated")
+   or end with one ("Indivaraand" → "Indivara and").
+5. Pieces the model isn't confident about are glued back to their unknown
+   neighbours, so unrecognized Sanskrit stays whole ("Prithak", not "Pr it hak").
+   A split is kept only when known words cover ≥ 60% of the run, or exactly one
+   word-sized gap remains.
+
+Only `bm25_text` changes. `text` (display, citations, embeddings, rerank) is
+untouched.
+
+### Results on the corpus
+
+| Source | Glued-run ratio | Synonym-dictionary terms found as BM25 tokens | Time |
+|---|---|---|---|
+| Sushruta vol 1 | 51.4% → **0.1%** | 405 → **2,073** | 9.3s |
+| Sushruta vol 2 | 46.0% → **0.1%** | 719 → **3,024** | 12.8s |
+| Sushruta vol 3 (control: already spaced) | 0.0% → 0.0% | 2,138 → 2,142 | 0.5s |
+| Pharmacopoeia (control) | 0.3% → 0.0% | 5,583 → 5,610 | 1.1s |
+
+### Before / after samples
+
+`sushruta_samhita_vol_2_pdf_371_P0` (Arśas, four modalities: gold for eval_024)
+```
+BEFORE: CHAPTERVI.NowweshalldiscourseonthemedicaltreatmentofHaemorrhoids(Arsas).i . Theremedialmeasuresin
+        haemorrhoidsmaybegroupedunderfoursubheads;namely,theemploymentof(active)medicinalremedies,...
+AFTER:  CHAPTERVI.Now we shall discourse on the medical treatment of Haemorrhoids(Arsas).i . The remedial
+        measures in haemorrhoids maybe grouped under four subheads;namely,the employment of(active)
+        medicinal remedies,the application"^of an alkali(into the seat of the disease),actual cauterization
+        (of the polyp ii)and surgical operation.
+```
+
+`sushruta_samhita_vol_1_pdf_614_P0` (Sanskrit names must survive)
+```
+BEFORE: Pindaluka,Madhviluka,Hastyaluka,KastMluka,ShankhSluka,Rakteluka,IndivaraandUtpalaetc.alleviatehaemoptysis,
+        arecoolingintheirpotency,sweetintheirtasteandheavyofdigestion.Theytendtoincreasethesemen...
+AFTER:  Pindaluka,Madhviluka,Hastyaluka,Kast Mluka,Shankh Sluka,Rakteluka,Indivara and Utpala etc.alleviate
+        haemoptys is,are cooling in their potency,sweet in their taste and heavy of digestion.They tend to
+        increase the semen...
+```
+
+`sushruta_samhita_vol_1_pdf_423_P0` (OCR-garbled names in a list)
+```
+BEFORE: AmedicatedGhritam,preparedwiththePrithak-parni,Atmagupbt,Haridra,Daruharidra,Malati,Sita,anddrugs
+        belongingtotheIvdkolyadigroup,isrenownedforitshealingproperties.AmedicatedoilpreparedwithKjtldnusari,
+AFTER:  A medicated Ghritam,prepared with the Prithak-parni,Atmagupbt,Haridra,Daruharidra,Malati,Sita,and drugs
+        belonging to the Iv d kolyadi group,is renowned for its healing properties.A medicated oil prepared
+        with Kjtldnusari,
+```
+
+`sushruta_samhita_vol_2_pdf_416_P0` (Kuṣṭha treatment: gold for eval_025)
+```
+BEFORE: AKushtha-patientdesirousofbeingperfectlycuredshouldconstantlyusepreparationsofKhadirainhisdrinks,
+AFTER:  A Kushtha-patient desirous of being perfectly cured should constantly use preparations of Khadira in
+        his drinks,
+```
+
+**Known residual errors** (rare, and still better than the glued run for BM25):
+"haemoptys is", "digest ant", "CHIKITSA STHANA M", "in u his on" (an OCR-garbled
+phrase), "Iv d kolyadi" (an OCR-garbled name).
+
+**To confirm:** the samples above. Then set `SPLIT_GLUED_OCR_WORDS=true` before
+re-ingesting. Adds `wordninja==2.0.0` to requirements.

@@ -107,6 +107,7 @@ def run_ingestion(
     parent_store.save_parent_store(pstore)
 
     # ── 7: BM25 store (no API cost) ───────────────────────────────────
+    text_cleanup.add_bm25_text(all_children)   # glue-split matching text, if enabled
     bm25 = bm25_store.build_bm25_index(all_children)
     bm25_store.save_bm25_index(bm25)
 

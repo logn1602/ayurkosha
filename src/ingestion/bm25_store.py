@@ -90,7 +90,8 @@ def build_bm25_index(children: list[dict[str, Any]]) -> BM25Index:
     payloads: list[dict[str, Any]] = []
     for chunk in children:
         text = chunk.get("text", "")
-        tokens = tokenize_ayurvedic(text)
+        # bm25_text: OCR-repaired text for matching only (text_cleanup.add_bm25_text).
+        tokens = tokenize_ayurvedic(chunk.get("bm25_text") or text)
         if not tokens:
             continue
         corpus_tokens.append(tokens)

@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # Fold Latin diacritics in the BM25 tokenizer (ā->a) so IAST words stay
     # whole. Enable together with apply_font_char_map.
     bm25_fold_diacritics: bool = False
+    # Split run-together OCR words in BM25 text (Sushruta vol 1-2). Display,
+    # citations, and embeddings keep the original text. Review the samples in
+    # docs/corpus_text_fixes.md before enabling.
+    split_glued_ocr_words: bool = False
 
     # ── Reranking (eval path) ──────────────────────────────
     # The eval reranks with retry + client-side pacing so every question is
