@@ -1,0 +1,55 @@
+# Eval Relabel Review
+
+Proposed gold works for each of the 30 questions in `eval_dataset.json`, labeled under
+[`LABELING_CRITERIA.md`](LABELING_CRITERIA.md). **Nothing in the dataset has been changed.**
+
+## How these were produced
+
+- Evidence came from plain text search of the corpus (parent chunks in `data/cache/parent_store.json`),
+  with Pharmacopoeia font artifacts mapped and diacritics folded so names like `A¿vagandh¡` match. For each question,
+  the topic term was searched alongside substantive cue words (properties / composition / treatment / procedure),
+  and the matching passages were read.
+- **No retrieval-system output and no eval result was consulted.**
+- Charaka Samhita was not evaluated: its text is unreadable Devanagari OCR, so it can't be judged (see criteria §4).
+- Ashtanga Hridaya evidence is limited to its English Sūtrasthāna volumes; the clinical chapters are only in Devanagari.
+- Supporting ids are **parent chunk ids**. A question's evidence may span neighbouring parents.
+- **20/30** questions would change label.
+
+| ID | Question | Current gold | Proposed gold | Reason | Supporting chunk ids | Borderline / notes |
+|---|---|---|---|---|---|---|
+| eval_001 | What are the Rasa, Guna, Virya, and Vipaka of Ashwagandha? | afi, api | api **(changed)** | API monograph gives Rasa/Guna/Vīrya/Vipāka/Karma; AFI only lists it as an ingredient; no classical work describes its properties. | `api_all_volume_pdf_40_P0` |  |
+| eval_002 | What are the Rasa, Guna, Virya, and Vipaka of Bibhitaka? | api | api, ashtanga_hridaya **(changed)** | API monograph + AH Sūtrasthāna dravya section gives Vibhītakī rasa/guna/vīrya/vipāka; AFI only uses it as an ingredient. | `api_all_volume_pdf_57_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0` | SS vol1 p535 describes Vibhītaka *oil*, not the fruit. |
+| eval_003 | What are the properties and therapeutic actions of Pippali? | afi, sushruta | api, ashtanga_hridaya **(changed)** | API monograph + AH gives Pippalī (fresh/dry) rasa/guna/vīrya/vipāka; SS only ranks it "best of pungents"; AFI is ingredient lists. | `api_all_volume_pdf_959_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_164_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0` |  |
+| eval_004 | What are the therapeutic actions of Punarnava? | afi | api **(changed)** | API Rakta/Śveta-punarnavā monographs give properties and karma; others only mention it in groups or recipes. | `api_all_volume_pdf_724_P0`<br>`api_all_volume_pdf_1295_P1` | SS vol1 p604 gives potency/taste of Punarnavā *leaves* jointly with other pot-herbs (group-level). |
+| eval_005 | What is the classical action of Brahmi described as Medhya? | afi | api, sushruta **(changed)** | API Brāhmī karma lists Medhya; SS Cikitsā Brāhmī-ghṛta rasāyana describes the memory/intellect-promoting action. | `api_all_volume_pdf_278_P0`<br>`sushruta_samhita_vol_2_pdf_580_P0` |  |
+| eval_006 | What are the properties of Gokshura and its action on the urinary system? | sushruta, api | api **(changed)** | API Gokṣura (root, fruit) monographs give properties and urinary karma (mūtrakṛcchra, aśmarīhara, vastiśodhana). | `api_all_volume_pdf_78_P0`<br>`api_all_volume_pdf_80_P0` | AH p166/p488 give properties of laghu-pañcamūla as a group, Gokṣura included. |
+| eval_007 | What are the properties and actions of Guduchi? | sushruta | api **(changed)** | API Guḍūcī monograph gives properties and karma; SS/AH only name it in groups and recipes. | `api_all_volume_pdf_84_P0` | SS vol1 p607: bitter taste/doṣa action of a group of herbs incl. Guḍūcī. |
+| eval_008 | What are the properties and actions of Shatavari? | sushruta, api | api, sushruta | API Śatāvarī monograph; SS Sūtrasthāna 46 gives Śatāvarī-specific taste and action. | `api_all_volume_pdf_984_P0`<br>`sushruta_samhita_vol_1_pdf_614_P0` | AH p149 describes Śatāvarī *sprouts* (tikta rasa, aphrodisiac). |
+| eval_009 | What are the Rasa and Vipaka of Haritaki? | afi, sushruta | api, ashtanga_hridaya **(changed)** | API Harītakī monograph + AH dravya list gives Harītakī rasa and madhura vipāka explicitly. | `api_all_volume_pdf_93_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_487_P0` | SS vol1 p503 gives the collective taste of Triphalā, not Harītakī alone. |
+| eval_010 | What are the ingredients and indications of Yogaraja Guggulu? | afi | afi | AFI monograph gives ingredients, dose and therapeutic uses; API only lists it as an "important formulation". | `afi_part1_pdf_121_P0` |  |
+| eval_011 | What are the ingredients and dose of Amavatari Rasa? | afi | afi | AFI monograph (Bhaiṣajya Ratnāvalī, Āmavātādhikāra) gives ingredients and dose; no other work has it. | `afi_part2_pdf_234_P0` |  |
+| eval_012 | What are the ingredients of Sitopaladi Churna and what is it used for? | afi, sushruta | afi **(changed)** | AFI monograph gives ingredients and uses; SS never mentions it (later Śārṅgadhara formulation); API only lists the name. | `afi_part1_pdf_168_P0` |  |
+| eval_013 | What is Kaishora Guggulu used for? | sushruta, afi | afi **(changed)** | AFI monograph gives ingredients and uses; SS never mentions it (Bhaiṣajya Ratnāvalī formulation). | `afi_part1_pdf_119_P0` |  |
+| eval_014 | What is the principal herb and indication of Rasnadi Kwatha Churna? | afi | afi | AFI gives Rāsnādi Kvātha Cūrṇa (Sahasrayoga) with Rāsnā as the lead ingredient, plus the Mahā variant. | `afi_part1_pdf_112_P0` |  |
+| eval_015 | What is Vyoshadi Guggulu indicated for? | sushruta, afi | afi **(changed)** | AFI monograph gives ingredients and uses; its source (AH Cikitsā 21) is not in the English AH volumes; SS never mentions it. | `afi_part1_pdf_122_P0` | AH p262 "Vyoṣādi yoga" is a different obesity preparation. |
+| eval_016 | What are the three ingredients of Triphala and its uses? | sushruta, afi | afi, sushruta | AFI Triphalā Cūrṇa gives ingredients, dose and uses; SS defines the Triphalā group and its actions. | `afi_part1_pdf_162_P0`<br>`sushruta_samhita_vol_1_pdf_442_P0`<br>`sushruta_samhita_vol_1_pdf_503_P0` | AH p62 lists Triphalā ingredients only as a tooth-cleaning paste. |
+| eval_017 | What is the Ayurvedic treatment for Amavata (Rheumatoid Arthritis)? | afi | afi | Only AFI covers Āmavāta (formulations from Āmavātādhikāra); no work in the corpus describes its management. | `afi_part1_pdf_121_P0`<br>`afi_part2_pdf_234_P0` | FLAG: AFI is formulations-only, so the label is weak under the criteria. Consider rewording to "Which formulations are indicated for Āmavāta?" or dropping the question. |
+| eval_018 | What is the initial line of treatment for Jwara (fever) in Ayurveda? | sushruta | sushruta | SS Uttara-tantra 39 gives the general line of fever treatment incl. fasting (laṅghana) and when it is prohibited. | `sushruta_samhita_vol_3_pdf_203_P0`<br>`sushruta_samhita_vol_3_pdf_204_P0` | AFI/API list Jvara only as an indication. |
+| eval_019 | How is Prameha classified and managed in Ayurveda? | api | sushruta **(changed)** | SS Nidāna 6 classifies Prameha; SS Cikitsā 11–12 gives management; API only lists it as a therapeutic use. | `sushruta_samhita_vol_2_pdf_100_P0`<br>`sushruta_samhita_vol_2_pdf_427_P0`<br>`sushruta_samhita_vol_2_pdf_434_P0` |  |
+| eval_020 | What is the cause and treatment of Grahani in Ayurveda? | afi, sushruta | sushruta **(changed)** | SS Uttara-tantra 40 gives causes, doṣa types, treatment and diet for Grahaṇī; AFI only lists it as an indication. | `sushruta_samhita_vol_3_pdf_256_P0`<br>`sushruta_samhita_vol_3_pdf_257_P0` |  |
+| eval_021 | How is Atisara (diarrhoea) treated according to its stage? | afi, sushruta | sushruta **(changed)** | SS Uttara-tantra 40 gives the types and stage-wise treatment of Atisāra (incl. āma); AFI only lists it as an indication. | `sushruta_samhita_vol_3_pdf_253_P0` |  |
+| eval_022 | What is the Ayurvedic approach to Pandu (anaemia)? | afi | sushruta **(changed)** | SS Uttara-tantra 44 (Pāṇḍu-roga pratiṣedha) gives etiology and treatment; AFI only lists it as an indication. | `sushruta_samhita_vol_3_pdf_290_P0`<br>`sushruta_samhita_vol_3_pdf_296_P0` |  |
+| eval_023 | How is Kasa (cough) treated in Ayurveda? | afi, sushruta | sushruta **(changed)** | SS Uttara-tantra 52 (Kāsa pratiṣedha) gives etiology, classification and treatment. | `sushruta_samhita_vol_3_pdf_347_P0` | AH p91 covers suppressing the urge to cough, not treating Kāsa. |
+| eval_024 | What are the four therapeutic modalities for Arsha (haemorrhoids) in Sushruta? | sushruta, ashtanga_hridaya | sushruta **(changed)** | SS Cikitsā 6 names the four modalities (medicine, kṣāra, cautery, surgery); the question is Sushruta-specific. | `sushruta_samhita_vol_2_pdf_371_P0` | AH p449 describes only kṣāra application in Arśas. |
+| eval_025 | How is Kushtha (skin disease) managed in classical Ayurveda? | sushruta | sushruta | SS Nidāna 5 classifies Kuṣṭha; SS Cikitsā 9–10 gives management (e.g. khadira regimen); AFI only lists it as an indication. | `sushruta_samhita_vol_2_pdf_415_P0`<br>`sushruta_samhita_vol_2_pdf_416_P0` |  |
+| eval_026 | What is Vamana Karma and when is it indicated? | ashtanga_hridaya | ashtanga_hridaya, sushruta **(changed)** | AH Sūtrasthāna 18 lists the indications for emesis; SS Cikitsā 33 gives the vamana procedure and indications. | `ashtanga_hridaya_vidyanath_illustrated_pdf_311_P0`<br>`sushruta_samhita_vol_2_pdf_621_P0` |  |
+| eval_027 | What is Virechana Karma and what does it eliminate? | ashtanga_hridaya | ashtanga_hridaya, sushruta **(changed)** | AH Sūtrasthāna 18 defines virecana and what it eliminates; SS Cikitsā 33 gives the purgation procedure. | `ashtanga_hridaya_vidyanath_illustrated_pdf_310_P0`<br>`sushruta_samhita_vol_2_pdf_625_P0` |  |
+| eval_028 | Why is Basti considered the foremost treatment for Vata? | sushruta | sushruta, ashtanga_hridaya **(changed)** | SS Cikitsā 35 holds vasti the best of all measures and explains why; AH Sūtrasthāna 1 names vasti the best treatment for Vāta. | `sushruta_samhita_vol_2_pdf_645_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_53_P0` |  |
+| eval_029 | What is Nasya Karma and for which disorders is it used? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 20 gives the nasya types and indications; SS Cikitsā 40 gives the kinds of nasya and doses. | `ashtanga_hridaya_vidyanath_illustrated_pdf_345_P0`<br>`sushruta_samhita_vol_2_pdf_714_P0` |  |
+| eval_030 | What does Dinacharya (daily regimen) include in Ayurveda? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 2 (Dinacaryā) and SS Cikitsā 24 (hygiene: tooth-brushing, collyrium, etc.) both cover the daily regimen. | `ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0`<br>`sushruta_samhita_vol_2_pdf_535_P0`<br>`sushruta_samhita_vol_2_pdf_536_P0` | SS never uses the word "dinacharya" but covers the topic in full. |
+
+## To approve
+
+Reply with approvals or edits per row (e.g. "approve all except eval_017: drop question").
+Approved labels will then be written to `eval_dataset.json` with a `provenance` record per item
+(`method: corpus-evidence-v1`, the criteria version, the supporting chunk ids, and the reviewer).

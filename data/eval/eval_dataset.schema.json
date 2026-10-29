@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AyurKosha eval dataset",
+  "description": "List of eval questions. gold_sources are work-level labels; see LABELING_CRITERIA.md.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "question", "gold_answer", "gold_sources", "category", "difficulty", "provenance"],
+    "properties": {
+      "id": {"type": "string", "pattern": "^eval_\\d{3}$"},
+      "question": {"type": "string", "minLength": 1},
+      "gold_answer": {"type": "string"},
+      "gold_sources": {
+        "type": "array",
+        "items": {"enum": ["api", "afi", "sushruta", "ashtanga_hridaya", "charaka"]},
+        "uniqueItems": true
+      },
+      "category": {"enum": ["pharmacopoeia", "formulation", "clinical", "classical"]},
+      "difficulty": {"enum": ["easy", "medium", "hard"]},
+      "provenance": {
+        "type": "object",
+        "required": ["method", "criteria_version", "labeled_on", "source_commit", "supporting_chunk_ids", "reviewed_by"],
+        "properties": {
+          "method": {"enum": ["bm25-keyword-evidence", "corpus-evidence-v1"]},
+          "criteria_version": {"type": ["string", "null"]},
+          "labeled_on": {"type": "string", "format": "date"},
+          "source_commit": {"type": "string"},
+          "supporting_chunk_ids": {"type": "array", "items": {"type": "string"}},
+          "reviewed_by": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+}

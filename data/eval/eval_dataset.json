@@ -8,7 +8,15 @@
       "api"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_002",
@@ -18,7 +26,15 @@
       "api"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_003",
@@ -29,7 +45,15 @@
       "sushruta"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_004",
@@ -39,7 +63,15 @@
       "afi"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_005",
@@ -49,7 +81,15 @@
       "afi"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_006",
@@ -60,7 +100,15 @@
       "api"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_007",
@@ -70,7 +118,15 @@
       "sushruta"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_008",
@@ -81,7 +137,15 @@
       "api"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_009",
@@ -92,7 +156,15 @@
       "sushruta"
     ],
     "category": "pharmacopoeia",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_010",
@@ -102,7 +174,15 @@
       "afi"
     ],
     "category": "formulation",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_011",
@@ -112,7 +192,15 @@
       "afi"
     ],
     "category": "formulation",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_012",
@@ -123,7 +211,15 @@
       "sushruta"
     ],
     "category": "formulation",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_013",
@@ -134,7 +230,15 @@
       "afi"
     ],
     "category": "formulation",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_014",
@@ -144,7 +248,15 @@
       "afi"
     ],
     "category": "formulation",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_015",
@@ -155,7 +267,15 @@
       "afi"
     ],
     "category": "formulation",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_016",
@@ -166,7 +286,15 @@
       "afi"
     ],
     "category": "formulation",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_017",
@@ -176,7 +304,15 @@
       "afi"
     ],
     "category": "clinical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_018",
@@ -186,7 +322,15 @@
       "sushruta"
     ],
     "category": "clinical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_019",
@@ -196,7 +340,15 @@
       "api"
     ],
     "category": "clinical",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_020",
@@ -207,7 +359,15 @@
       "sushruta"
     ],
     "category": "clinical",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_021",
@@ -218,7 +378,15 @@
       "sushruta"
     ],
     "category": "clinical",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_022",
@@ -228,7 +396,15 @@
       "afi"
     ],
     "category": "clinical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_023",
@@ -239,7 +415,15 @@
       "sushruta"
     ],
     "category": "clinical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_024",
@@ -250,7 +434,15 @@
       "ashtanga_hridaya"
     ],
     "category": "classical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_025",
@@ -260,7 +452,15 @@
       "sushruta"
     ],
     "category": "classical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_026",
@@ -270,7 +470,15 @@
       "ashtanga_hridaya"
     ],
     "category": "classical",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_027",
@@ -280,7 +488,15 @@
       "ashtanga_hridaya"
     ],
     "category": "classical",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_028",
@@ -290,7 +506,15 @@
       "sushruta"
     ],
     "category": "classical",
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_029",
@@ -301,7 +525,15 @@
       "sushruta"
     ],
     "category": "classical",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   },
   {
     "id": "eval_030",
@@ -312,6 +544,14 @@
       "sushruta"
     ],
     "category": "classical",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "provenance": {
+      "method": "bm25-keyword-evidence",
+      "criteria_version": null,
+      "labeled_on": "2026-09-09",
+      "source_commit": "a11f0d9",
+      "supporting_chunk_ids": [],
+      "reviewed_by": null
+    }
   }
 ]
