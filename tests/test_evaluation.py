@@ -132,3 +132,35 @@ def test_has_safety_disclaimer():
         "... under qualified practitioner (Vaidya) guidance."
     ) is True
     assert has_safety_disclaimer("No disclaimer present.") is False
+
+
+# ── rerank-skip validity gate (run_eval with faked retrieval) ─────────
+
+def _run_with_skips(monkeypatch, tmp_path, skipped_flags):
+    import json
+    from src.evaluation import run_eval as re_mod
+
+    dataset = [{"id": f"q{i}", "question": f"question {i}", "gold_sources": []}
+               for i in range(len(skipped_flags))]
+    path = tmp_path / "ds.json"
+    path.write_text(json.dumps(dataset), encoding="utf-8")
+    flags = iter(skipped_flags)
+    monkeypatch.setattr(re_mod, "load_parent_store", lambda: None)
+    monkeypatch.setattr(re_mod, "_retrieve", lambda q, k, ps, use_hyde=False: {
+        "reranked": [], "context_block": "", "sources": [], "final_passages": [],
+        "rerank_skipped": next(flags),
+    })
+    return re_mod.run_eval(path, tmp_path / "out", mode="retrieval", k=6)
+
+
+def test_run_eval_valid_when_no_rerank_skips(monkeypatch, tmp_path):
+    payload = _run_with_skips(monkeypatch, tmp_path, [False, False])
+    assert payload["status"] == "VALID"
+    assert payload["summary"]["rerank_skips"] == 0
+
+
+def test_run_eval_invalid_when_any_rerank_skipped(monkeypatch, tmp_path):
+    payload = _run_with_skips(monkeypatch, tmp_path, [False, True, True])
+    assert payload["status"] == "INVALID"
+    assert payload["summary"]["rerank_skips"] == 2
+    assert [r["rerank_skipped"] for r in payload["results"]] == [False, True, True]

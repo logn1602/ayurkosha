@@ -45,6 +45,8 @@ def main():
                         help="Also run the Claude LLM judge (needs credits).")
     parser.add_argument("--hyde", action="store_true",
                         help="Add a HyDE passage to semantic retrieval (one cheap Claude call per question).")
+    parser.add_argument("--allow-rerank-skips", action="store_true",
+                        help="Exit 0 even if some questions skipped rerank (run is still marked INVALID).")
     parser.add_argument("--top-k", type=int, default=None,
                         help="Retrieval cutoff k (default settings.top_k_final).")
     args = parser.parse_args()
@@ -80,6 +82,13 @@ def main():
     print("\nSUMMARY")
     print(json.dumps(payload["summary"], ensure_ascii=False, indent=2))
     print(f"\nSaved to: {payload['saved_to']}")
+
+    skips = payload["summary"]["rerank_skips"]
+    print(f"Rerank skips: {skips}/{payload['summary']['n_questions']}  |  Status: {payload['status']}")
+    if payload["status"] == "INVALID" and not args.allow_rerank_skips:
+        print("Run INVALID: some questions were scored on unranked results. "
+              "Re-run, or pass --allow-rerank-skips to accept.", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -69,13 +69,14 @@ def _retrieve(question: str, k: int, parent_store, use_hyde: bool = False) -> di
     )
     keyword_results = keyword_search(variants)
     fused = reciprocal_rank_fusion([semantic_results, keyword_results])
-    reranked, _ = rerank_with_retry(question, fused)
+    reranked, rerank_skipped = rerank_with_retry(question, fused)
     diverse = mmr_rerank(question, reranked, top_k=k)
     expanded = expand_to_parents(diverse, parent_store)
     ordered = reorder_chunks(expanded)
     context_block, sources = build_context(ordered)
     return {
         "reranked": reranked,      # ranked list for recall/precision/mrr
+        "rerank_skipped": rerank_skipped,
         "context_block": context_block,
         "sources": sources,
         "final_passages": ordered,
@@ -101,6 +102,7 @@ def evaluate_item(
         "question": question,
         "category": item.get("category"),
         "difficulty": item.get("difficulty"),
+        "rerank_skipped": retrieved["rerank_skipped"],
     }
 
     if mode in ("retrieval", "both"):
@@ -140,7 +142,10 @@ def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
                 if section in r and isinstance(r[section].get(field), (int, float))]
         return round(sum(vals) / len(vals), 4) if vals else None
 
-    summary: dict[str, Any] = {"n_questions": len(results)}
+    summary: dict[str, Any] = {
+        "n_questions": len(results),
+        "rerank_skips": sum(1 for r in results if r.get("rerank_skipped")),
+    }
     if any("retrieval" in r for r in results):
         summary["retrieval"] = {
             "recall_at_k": _avg("retrieval", "recall_at_k"),
@@ -200,6 +205,10 @@ def run_eval(
 ) -> dict[str, Any]:
     """Run the evaluation suite and save timestamped results.
 
+    A run where any question fell back to unranked results (rerank skipped
+    after all retries) is marked ``"status": "INVALID"`` — its retrieval
+    metrics don't reflect the real pipeline.
+
     Returns the summary payload (also written to ``output_dir``).
     """
     k = k or settings.top_k_final
@@ -212,7 +221,11 @@ def run_eval(
                for item in dataset]
 
     summary = _aggregate(results)
+    if summary["rerank_skips"]:
+        logger.warning("%d/%d question(s) skipped rerank after retries — run is INVALID.",
+                       summary["rerank_skips"], len(results))
     payload = {
+        "status": "INVALID" if summary["rerank_skips"] else "VALID",
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "mode": mode,
         "k": k,
