@@ -13,7 +13,8 @@ gracefully instead of breaking.
 The eval uses ``rerank_with_retry`` instead: it paces calls under
 settings.cohere_rerank_calls_per_min and retries 429s with exponential
 backoff, and reports whether reranking was ultimately skipped — an unranked
-fallback silently contaminates retrieval metrics.
+fallback silently contaminates retrieval metrics. A monthly-quota 429 raises
+CohereQuotaExhausted immediately (no retries) so the eval aborts clearly.
 
 Build this in: Phase 3, Step 4
 """
@@ -25,7 +26,7 @@ import time
 from typing import Any
 
 from config.settings import settings
-from src.ingestion.embedder import _is_rate_limit
+from src.ingestion.embedder import _is_rate_limit, raise_if_quota_exhausted
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,9 @@ def rerank_with_retry(
         ``(results, skipped)``. ``skipped`` is True when reranking failed after
         all retries (or on a non-rate-limit error) and the unranked top_n
         fallback was returned instead.
+
+    Raises:
+        CohereQuotaExhausted: the key's monthly quota is used up.
     """
     top_n = top_n or settings.rerank_first_pass_n
     if not results:
@@ -107,6 +111,7 @@ def rerank_with_retry(
         try:
             return _call_rerank(query, results, keep, model), False
         except Exception as exc:  # noqa: BLE001 — Cohere raises varied error types
+            raise_if_quota_exhausted(exc, "rerank")
             if not _is_rate_limit(exc) or attempt == retries:
                 logger.warning("Cohere rerank failed after %d attempt(s) (%s); "
                                "returning unranked top %d.", attempt + 1, exc, keep)

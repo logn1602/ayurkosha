@@ -10,7 +10,8 @@ documents are long/declarative. Both sides land in the same 1024-dim space.
 - Model: embed-multilingual-v3.0 (Sanskrit/Hindi/English) — from settings.
 - Batching: documents are embedded in groups of 96 (Cohere's per-call cap).
 - Resilience: transient errors / rate limits are retried with exponential
-  backoff.
+  backoff. A monthly/trial *quota* 429 is not transient — it raises
+  CohereQuotaExhausted immediately instead of burning minutes on retries.
 
 Build this in: Phase 2, Step 5
 """
@@ -66,9 +67,30 @@ def _estimate_tokens(texts: list[str]) -> int:
     return sum(len(t) for t in texts) // _CHARS_PER_TOKEN + 1
 
 
+class CohereQuotaExhausted(RuntimeError):
+    """The Cohere key's monthly/trial call quota is used up; retrying won't help."""
+
+
 def _is_rate_limit(exc: Exception) -> bool:
     s = str(exc).lower()
     return "429" in s or "rate limit" in s or "too many requests" in s
+
+
+def _is_quota_exhausted(exc: Exception) -> bool:
+    """True for a 429 caused by the monthly quota (e.g. "1000 API calls / month"),
+    as opposed to the per-minute limit that clears with backoff."""
+    s = str(exc).lower()
+    return _is_rate_limit(exc) and ("/ month" in s or "per month" in s or "monthly" in s)
+
+
+def raise_if_quota_exhausted(exc: Exception, operation: str) -> None:
+    """Re-raise a monthly-quota 429 as CohereQuotaExhausted with a clear message."""
+    if _is_quota_exhausted(exc):
+        raise CohereQuotaExhausted(
+            f"Cohere {operation} failed: the API key's monthly call quota is exhausted "
+            f"(trial keys allow 1000 calls/month). Wait for the quota to reset or use a "
+            f"production key. Original error: {exc}"
+        ) from exc
 
 
 def _throttle(est_tokens: int) -> None:
@@ -112,6 +134,7 @@ def _embed_with_retry(texts: list[str], input_type: str) -> list[list[float]]:
             return [list(vec) for vec in embeddings]
         except Exception as exc:  # noqa: BLE001 — Cohere raises varied error types
             last_exc = exc
+            raise_if_quota_exhausted(exc, "embed")
             # Rate-limit errors need a full per-minute window; others back off.
             wait = RATE_LIMIT_WAIT if _is_rate_limit(exc) else BASE_BACKOFF * (2 ** attempt)
             logger.warning(

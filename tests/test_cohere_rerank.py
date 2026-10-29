@@ -107,3 +107,41 @@ def test_production_skip_warning_includes_query_id(fake, caplog):
         cr.rerank("q", CANDIDATES, top_n=2, query_id="abc123")
     assert "query_id=abc123" in caplog.text
     assert "SKIPPED" in caplog.text
+
+
+# ── monthly-quota 429s fail fast ──────────────────────────────────────
+
+def _monthly_quota():
+    return RuntimeError("status_code: 429, You are using a Trial key, which is limited "
+                        "to 1000 API calls / month.")
+
+
+def test_rerank_with_retry_raises_immediately_on_monthly_quota(fake):
+    from src.ingestion.embedder import CohereQuotaExhausted
+    client = fake([_monthly_quota()])
+    with pytest.raises(CohereQuotaExhausted, match="monthly call quota"):
+        cr.rerank_with_retry("q", CANDIDATES)
+    assert client.calls == 1
+    assert fake.sleeps == []
+
+
+def test_embed_raises_immediately_on_monthly_quota(monkeypatch):
+    from src.ingestion import embedder
+    calls = []
+
+    class _Client:
+        def embed(self, **kwargs):
+            calls.append(kwargs)
+            raise _monthly_quota()
+
+    monkeypatch.setattr(embedder, "_get_client", lambda: _Client())
+    monkeypatch.setattr(embedder.time, "sleep", lambda s: pytest.fail("should not sleep"))
+    with pytest.raises(embedder.CohereQuotaExhausted):
+        embedder.embed_query("joint pain")
+    assert len(calls) == 1
+
+
+def test_per_minute_limit_is_not_treated_as_quota():
+    from src.ingestion.embedder import _is_quota_exhausted
+    assert not _is_quota_exhausted(_rate_limit())
+    assert _is_quota_exhausted(_monthly_quota())
