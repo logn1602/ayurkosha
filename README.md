@@ -12,7 +12,7 @@ Ask any Ayurvedic question → get a direct, cited answer traceable to the exact
 Query → Expansion → Semantic + BM25 → RRF Fusion → Cohere Rerank → MMR → Context Assembly → Claude → Citation Verify → Answer
 ```
 
-**8 RAG patterns:** Hybrid Search, RAG-Fusion, Reranking, Query Transformation, Parent-Child Retrieval, Self-Corrective, Graph (planned), Adaptive (planned).
+**6 RAG patterns implemented** (Graph, Adaptive planned): Hybrid Search, RAG-Fusion, Reranking, Query Transformation, Parent-Child Retrieval, Self-Corrective.
 
 ## Corpus
 
