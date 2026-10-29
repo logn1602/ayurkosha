@@ -8,6 +8,7 @@ Build this in: Phase 5
 from __future__ import annotations
 
 import logging
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -46,6 +47,7 @@ def run_query_pipeline(request: QueryRequest, parent_store: ParentStore) -> Quer
     7. Citation verification
     8. Safety checks
     """
+    query_id = uuid.uuid4().hex
     doc_type_filter = request.doc_type_filter or infer_doc_type_filter(request.question)
     variants = expand_query(request.question)
     hyde_passage = generate_hypothetical_document(request.question) if request.use_hyde else None
@@ -58,7 +60,7 @@ def run_query_pipeline(request: QueryRequest, parent_store: ParentStore) -> Quer
     keyword_results = keyword_search(variants)
     fused = reciprocal_rank_fusion([semantic_results, keyword_results])
 
-    reranked = rerank(request.question, fused)
+    reranked = rerank(request.question, fused, query_id=query_id)
     diverse = mmr_rerank(request.question, reranked, top_k=request.top_k)
 
     expanded = expand_to_parents(diverse, parent_store)
@@ -73,6 +75,7 @@ def run_query_pipeline(request: QueryRequest, parent_store: ParentStore) -> Quer
     final_answer = apply_safety_checks(verified["answer"], sources)
 
     return QueryResponse(
+        query_id=query_id,
         answer=final_answer,
         sources=[SourceInfo(**s) for s in verified["used_sources"]],
         hallucinated_citations=verified["hallucinated_citations"],

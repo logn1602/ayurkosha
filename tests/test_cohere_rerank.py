@@ -99,3 +99,11 @@ def test_production_rerank_still_falls_back_without_retry(fake):
 
 def test_empty_results(fake):
     assert cr.rerank_with_retry("q", []) == ([], False)
+
+
+def test_production_skip_warning_includes_query_id(fake, caplog):
+    fake([_rate_limit()])
+    with caplog.at_level("WARNING", logger=cr.logger.name):
+        cr.rerank("q", CANDIDATES, top_n=2, query_id="abc123")
+    assert "query_id=abc123" in caplog.text
+    assert "SKIPPED" in caplog.text

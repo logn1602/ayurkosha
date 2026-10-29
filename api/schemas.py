@@ -20,6 +20,7 @@ class SourceInfo(BaseModel):
 
 
 class QueryResponse(BaseModel):
+    query_id: str
     answer: str
     sources: list[SourceInfo]
     hallucinated_citations: list[int]

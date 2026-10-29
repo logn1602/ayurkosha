@@ -53,6 +53,7 @@ def rerank(
     results: list[dict[str, Any]],
     top_n: int | None = None,
     model: str = RERANK_MODEL,
+    query_id: str | None = None,
 ) -> list[dict[str, Any]]:
     """Rerank candidate results against the query with a Cohere cross-encoder.
 
@@ -61,6 +62,8 @@ def rerank(
         results: Candidate result dicts, each with a ``text`` field.
         top_n: Keep this many after reranking (default settings.rerank_first_pass_n).
         model: Cohere rerank model id.
+        query_id: Request id included in the skip warning, so a degraded
+            answer can be traced back to its request.
 
     Returns:
         Reranked result dicts (<= top_n), each with an added ``rerank_score``
@@ -75,8 +78,8 @@ def rerank(
     try:
         return _call_rerank(query, results, keep, model)
     except Exception as exc:  # noqa: BLE001 — degrade gracefully on any failure
-        logger.warning("Cohere rerank failed (%s); returning unranked top %d.",
-                       exc, keep)
+        logger.warning("Rerank SKIPPED for query_id=%s: Cohere rerank failed (%s); "
+                       "returning unranked top %d.", query_id or "-", exc, keep)
         return results[:keep]
 
 
