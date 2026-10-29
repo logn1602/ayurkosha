@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from config.settings import settings
-from src.ingestion import loaders, metadata, chunkers, bm25_store, parent_store
+from src.ingestion import loaders, metadata, chunkers, bm25_store, parent_store, text_cleanup
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,7 @@ def run_ingestion(
         records = loaders.load_document(path, max_pages=max_pages)
         if not records:
             continue
+        text_cleanup.apply_font_fixes(records)   # before enrichment: headings/properties see IAST
         metadata.enrich_records(records)
         chunked = chunkers.chunk_records(records)
         all_parents.extend(chunked["parents"])

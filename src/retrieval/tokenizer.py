@@ -31,7 +31,9 @@ from __future__ import annotations
 import logging
 import re
 
+from config.settings import settings
 from src.ingestion.synonym_loader import get_synonyms
+from src.ingestion.text_cleanup import fold_diacritics
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +119,8 @@ def tokenize_ayurvedic(
     if not text:
         return []
 
+    if settings.bm25_fold_diacritics:
+        text = fold_diacritics(text)
     text = text.lower()
     raw_tokens = _TOKEN_RE.findall(text)
 
