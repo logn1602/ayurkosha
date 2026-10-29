@@ -35,6 +35,7 @@ from src.reranking.cohere_rerank import rerank
 from src.reranking.mmr import mmr_rerank
 from src.retrieval.fusion import reciprocal_rank_fusion
 from src.retrieval.keyword import keyword_search
+from src.query.hyde import generate_hypothetical_document
 from src.retrieval.semantic import semantic_search
 
 logger = logging.getLogger(__name__)
@@ -54,14 +55,18 @@ def load_dataset(path: str | Path = DEFAULT_DATASET) -> list[dict[str, Any]]:
     return data
 
 
-def _retrieve(question: str, k: int, parent_store) -> dict[str, Any]:
+def _retrieve(question: str, k: int, parent_store, use_hyde: bool = False) -> dict[str, Any]:
     """Run retrieval for one question; return ranked list + generation context.
 
     Skips query expansion / filter inference (no Anthropic) — uses the raw
     question as the single variant, mirroring scripts/dry_run_query.py.
+    With ``use_hyde``, also searches a HyDE passage (one cheap Claude call).
     """
     variants = [question]
-    semantic_results = semantic_search(variants)
+    hyde_passage = generate_hypothetical_document(question) if use_hyde else None
+    semantic_results = semantic_search(
+        variants, hyde_passages=[hyde_passage] if hyde_passage else None
+    )
     keyword_results = keyword_search(variants)
     fused = reciprocal_rank_fusion([semantic_results, keyword_results])
     reranked = rerank(question, fused)
@@ -83,13 +88,14 @@ def evaluate_item(
     mode: str,
     judge: bool,
     parent_store,
+    use_hyde: bool = False,
 ) -> dict[str, Any]:
     """Evaluate one dataset item and return its per-question result record."""
     question = item["question"]
     gold_sources = item.get("gold_sources", [])
     gold_answer = item.get("gold_answer", "")
 
-    retrieved = _retrieve(question, k, parent_store)
+    retrieved = _retrieve(question, k, parent_store, use_hyde=use_hyde)
     record: dict[str, Any] = {
         "id": item.get("id"),
         "question": question,
@@ -190,6 +196,7 @@ def run_eval(
     mode: str = "both",
     judge: bool = False,
     k: int | None = None,
+    use_hyde: bool = False,
 ) -> dict[str, Any]:
     """Run the evaluation suite and save timestamped results.
 
@@ -199,9 +206,10 @@ def run_eval(
     dataset = load_dataset(dataset_path)
     parent_store = load_parent_store()
 
-    logger.info("Evaluating %d questions (mode=%s, k=%d, judge=%s).",
-                len(dataset), mode, k, judge)
-    results = [evaluate_item(item, k, mode, judge, parent_store) for item in dataset]
+    logger.info("Evaluating %d questions (mode=%s, k=%d, judge=%s, hyde=%s).",
+                len(dataset), mode, k, judge, use_hyde)
+    results = [evaluate_item(item, k, mode, judge, parent_store, use_hyde=use_hyde)
+               for item in dataset]
 
     summary = _aggregate(results)
     payload = {
@@ -209,6 +217,7 @@ def run_eval(
         "mode": mode,
         "k": k,
         "judge": judge,
+        "hyde": use_hyde,
         "summary": summary,
         "results": results,
     }

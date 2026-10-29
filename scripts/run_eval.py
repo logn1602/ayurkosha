@@ -43,6 +43,8 @@ def main():
                         help="Only generation metrics (needs Anthropic credits).")
     parser.add_argument("--judge", action="store_true",
                         help="Also run the Claude LLM judge (needs credits).")
+    parser.add_argument("--hyde", action="store_true",
+                        help="Add a HyDE passage to semantic retrieval (one cheap Claude call per question).")
     parser.add_argument("--top-k", type=int, default=None,
                         help="Retrieval cutoff k (default settings.top_k_final).")
     args = parser.parse_args()
@@ -63,7 +65,7 @@ def main():
 
     print("AyurKosha — Evaluation Suite")
     print("=" * 50)
-    print(f"Mode: {mode}  |  Judge: {args.judge}")
+    print(f"Mode: {mode}  |  Judge: {args.judge}  |  HyDE: {args.hyde}")
     print("=" * 50)
 
     payload = run_eval(
@@ -72,6 +74,7 @@ def main():
         mode=mode,
         judge=args.judge,
         k=args.top_k,
+        use_hyde=args.hyde,
     )
 
     print("\nSUMMARY")

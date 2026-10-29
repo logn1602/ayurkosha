@@ -24,6 +24,7 @@ class QueryResponse(BaseModel):
     sources: list[SourceInfo]
     hallucinated_citations: list[int]
     query_variants: list[str]
+    hyde_passage: str | None = None
 
 
 class IngestRequest(BaseModel):

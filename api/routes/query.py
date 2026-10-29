@@ -22,6 +22,7 @@ from src.generation.safety import apply_safety_checks
 from src.ingestion.parent_store import ParentStore
 from src.query.expander import expand_query
 from src.query.filter_inference import infer_doc_type_filter
+from src.query.hyde import generate_hypothetical_document
 from src.reranking.cohere_rerank import rerank
 from src.reranking.mmr import mmr_rerank
 from src.retrieval.fusion import reciprocal_rank_fusion
@@ -36,7 +37,7 @@ router = APIRouter()
 def run_query_pipeline(request: QueryRequest, parent_store: ParentStore) -> QueryResponse:
     """Run the full AyurKosha pipeline for one query.
 
-    1. Query expansion
+    1. Query expansion (+ optional HyDE passage)
     2. Dual retrieval (semantic + BM25)
     3. Reciprocal Rank Fusion
     4. Cohere reranking + MMR
@@ -47,8 +48,13 @@ def run_query_pipeline(request: QueryRequest, parent_store: ParentStore) -> Quer
     """
     doc_type_filter = request.doc_type_filter or infer_doc_type_filter(request.question)
     variants = expand_query(request.question)
+    hyde_passage = generate_hypothetical_document(request.question) if request.use_hyde else None
 
-    semantic_results = semantic_search(variants, doc_type_filter=doc_type_filter)
+    semantic_results = semantic_search(
+        variants,
+        doc_type_filter=doc_type_filter,
+        hyde_passages=[hyde_passage] if hyde_passage else None,
+    )
     keyword_results = keyword_search(variants)
     fused = reciprocal_rank_fusion([semantic_results, keyword_results])
 
@@ -71,6 +77,7 @@ def run_query_pipeline(request: QueryRequest, parent_store: ParentStore) -> Quer
         sources=[SourceInfo(**s) for s in verified["used_sources"]],
         hallucinated_citations=verified["hallucinated_citations"],
         query_variants=variants,
+        hyde_passage=hyde_passage,
     )
 
 
