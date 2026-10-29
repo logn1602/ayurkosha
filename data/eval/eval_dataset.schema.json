@@ -5,28 +5,99 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["id", "question", "gold_answer", "gold_sources", "category", "difficulty", "provenance"],
+    "required": [
+      "id",
+      "question",
+      "gold_answer",
+      "gold_sources",
+      "category",
+      "difficulty",
+      "provenance"
+    ],
     "properties": {
-      "id": {"type": "string", "pattern": "^eval_\\d{3}$"},
-      "question": {"type": "string", "minLength": 1},
-      "gold_answer": {"type": "string"},
+      "id": {
+        "type": "string",
+        "pattern": "^eval_\\d{3}$"
+      },
+      "question": {
+        "type": "string",
+        "minLength": 1
+      },
+      "gold_answer": {
+        "type": "string"
+      },
       "gold_sources": {
         "type": "array",
-        "items": {"enum": ["api", "afi", "sushruta", "ashtanga_hridaya", "charaka"]},
+        "items": {
+          "enum": [
+            "api",
+            "afi",
+            "sushruta",
+            "ashtanga_hridaya",
+            "charaka"
+          ]
+        },
         "uniqueItems": true
       },
-      "category": {"enum": ["pharmacopoeia", "formulation", "clinical", "classical"]},
-      "difficulty": {"enum": ["easy", "medium", "hard"]},
+      "category": {
+        "enum": [
+          "pharmacopoeia",
+          "formulation",
+          "clinical",
+          "classical"
+        ]
+      },
+      "difficulty": {
+        "enum": [
+          "easy",
+          "medium",
+          "hard"
+        ]
+      },
       "provenance": {
         "type": "object",
-        "required": ["method", "criteria_version", "labeled_on", "source_commit", "supporting_chunk_ids", "reviewed_by"],
+        "required": [
+          "method",
+          "criteria_version",
+          "labeled_on",
+          "source_commit",
+          "supporting_chunk_ids",
+          "reviewed_by"
+        ],
         "properties": {
-          "method": {"enum": ["bm25-keyword-evidence", "corpus-evidence-v1"]},
-          "criteria_version": {"type": ["string", "null"]},
-          "labeled_on": {"type": "string", "format": "date"},
-          "source_commit": {"type": "string"},
-          "supporting_chunk_ids": {"type": "array", "items": {"type": "string"}},
-          "reviewed_by": {"type": ["string", "null"]}
+          "method": {
+            "enum": [
+              "bm25-keyword-evidence",
+              "corpus-evidence-v1",
+              "agent-proposed from corpus text, human-reviewed"
+            ]
+          },
+          "criteria_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labeled_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "source_commit": {
+            "type": "string",
+            "description": "commit holding the proposal the labels come from"
+          },
+          "supporting_chunk_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewed_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         },
         "additionalProperties": false
       }

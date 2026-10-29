@@ -41,7 +41,7 @@ def test_provenance_records():
         assert set(prov) == set(PROV["required"]), item["id"]
         assert prov["method"] in PROV["properties"]["method"]["enum"]
         assert isinstance(prov["supporting_chunk_ids"], list)
-        if prov["method"] == "corpus-evidence-v1":    # criteria-based labels must cite evidence
+        if prov["method"] != "bm25-keyword-evidence":   # criteria-based labels must cite evidence
             assert prov["criteria_version"] and prov["supporting_chunk_ids"], item["id"]
 
 
