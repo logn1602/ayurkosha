@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # embedding and reranking (src/ingestion/context_headers.py). Raw text is
     # kept for display/citations. Needs a full re-embed to take effect.
     contextual_chunk_headers: bool = True
+    # Skip Charaka Samhita at ingestion: the scan's text layer is unusable
+    # (English translation OCR'd as Devanagari). Re-enable after re-OCR.
+    exclude_charaka: bool = True
 
     # ── Reranking (eval path) ──────────────────────────────
     # The eval reranks with retry + client-side pacing so every question is

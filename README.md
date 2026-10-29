@@ -14,6 +14,18 @@ Query → Expansion → Semantic + BM25 → RRF Fusion → Cohere Rerank → MMR
 
 **8 RAG patterns:** Hybrid Search, RAG-Fusion, Reranking, Query Transformation, Parent-Child Retrieval, Self-Corrective, Graph (planned), Adaptive (planned).
 
+## Corpus
+
+| Work | Edition (source files) | Status |
+|---|---|---|
+| Sushruta Samhita | Bhishagratna English translation, vols 1–3 | indexed |
+| Ayurvedic Pharmacopoeia of India (API) | official monographs | indexed |
+| Ayurvedic Formulary of India (AFI) | parts 1–2 | indexed |
+| Ashtanga Hridaya | Vidyanath illustrated (English, Sūtrasthāna); Sanskrit commentaries; Srikantha Murthy vol 1 | indexed; see note |
+| Charaka Samhita | P.V. Sharma | **excluded pending re-OCR** (`EXCLUDE_CHARAKA`, default on) |
+
+Charaka Samhita is excluded because the scan's text layer is unusable: the English translation was OCR'd with a Devanagari engine, so only the Sanskrit verses are legible. It will be re-added once the PDF has proper Devanagari + English OCR. In Ashtanga Hridaya, only the Vidyanath volume is readable English; the other two are Sanskrit-only or garbled OCR (see `docs/corpus_text_fixes.md`).
+
 ## Evaluation & Results
 
 AyurKosha ships with a **30-question evaluation harness** (`scripts/run_eval.py`) spanning pharmacopoeia, formulation, clinical, and classical categories, with gold sources grounded in the actual corpus. Retrieval metrics run fully offline (no LLM cost); an optional Claude LLM-judge scores answer quality.

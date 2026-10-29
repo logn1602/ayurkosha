@@ -270,3 +270,38 @@ ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0_C0
 re-ingestion. Because the embedded text changes, **every vector must be
 re-embedded**: run ingestion with `skip_existing=False` (chunk ids are unchanged,
 so a resume would keep the stale vectors).
+
+---
+
+## 3d. Charaka Samhita excluded; Ashtanga Hridaya audit
+
+`settings.exclude_charaka` (default `True`): ingestion skips Charaka Samhita and
+reports it in `stats["excluded_files"]`. The current index still contains it until
+the next re-ingest.
+
+Text-layer quality per file (parent store; "readable English" = a parent with 40+
+Latin words, > 60% of them English):
+
+| Source | Parents | Latin | Devanagari | Readable-English parents | Verdict |
+|---|---|---|---|---|---|
+| charaka_samhita_pv_sharma.pdf | 1,626 | 0% | 56% | 0 (0%) | English translation OCR'd as Devanagari; only the Sanskrit verses are legible. **Excluded.** |
+| ashtanga_hridaya_vidyanath_illustrated.pdf | 951 | 77% | 0% | 492 (52%) | Good English (Sūtrasthāna) |
+| ashtanga_hridaya_sanskrit_commentaries.pdf | 3,266 | 0% | 80% | 0 | Legible Sanskrit commentary, Devanagari only |
+| ashtanga_hridaya_srikantha_murthy_vol1.pdf | 1,219 | 0% | 42% | 0 | **Garbage**: an English book OCR'd with a Hindi engine (`€0712178 121 2764 …`) |
+
+**Ashtanga Hridaya overall: 492 / 5,436 parents (9%) are readable English**, all of
+them from the Vidyanath volume. Yet AH is 45% of the index (21,140 of 46,826
+children).
+
+**Recommendation: keep Ashtanga Hridaya, but only the Vidyanath volume.**
+- *Vidyanath*: keep. It's the only English AH text, and it's gold for 9 proposed
+  labels (Dinacaryā, vamana/virecana, nasya, vasti, dravya properties).
+- *Srikantha Murthy vol 1*: exclude now. Its text layer can't be matched by any
+  query, and it holds 26% of AH's chunks. It's worth re-OCRing with an English engine,
+  since it covers Sūtra- and Śārīrasthāna.
+- *Sanskrit commentaries*: exclude for this English-question eval. It's real
+  Sanskrit, but English queries can't match it lexically, and it adds 15k chunks of
+  semantic near-misses. Revisit if Devanagari queries are supported.
+
+These two exclusions are not implemented yet. They're one line each, the same as
+`exclude_charaka`, once you agree.

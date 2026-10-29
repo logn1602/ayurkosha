@@ -72,7 +72,7 @@ def run_ingestion(
 
     start = time.time()
     stats = {"files": 0, "pages": 0, "parents": 0, "children": 0,
-             "embedded": 0, "upserted": 0, "skipped": 0}
+             "embedded": 0, "upserted": 0, "skipped": 0, "excluded_files": 0}
 
     # ── 1-3: load -> enrich metadata -> chunk (per file) ──────────────
     all_parents: list[dict[str, Any]] = []
@@ -81,6 +81,10 @@ def run_ingestion(
     for path in _iter_source_files(root):
         if max_files is not None and stats["files"] >= max_files:
             break
+        if settings.exclude_charaka and metadata.infer_text_name(path.name) == "Charaka Samhita":
+            logger.info("Skipping %s (exclude_charaka: text layer needs re-OCR).", path.name)
+            stats["excluded_files"] += 1
+            continue
         records = loaders.load_document(path, max_pages=max_pages)
         if not records:
             continue
