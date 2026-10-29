@@ -30,6 +30,7 @@ from src.context.builder import build_context
 from src.context.parent_expand import expand_to_parents
 from src.context.reorder import reorder_chunks
 from src.evaluation import generation_metrics, retrieval_metrics
+from src.ingestion import embedder
 from src.ingestion.parent_store import load_parent_store
 from src.reranking.cohere_rerank import rerank_with_retry
 from src.reranking.mmr import mmr_rerank
@@ -202,8 +203,13 @@ def run_eval(
     judge: bool = False,
     k: int | None = None,
     use_hyde: bool = False,
+    embed_cache: bool = True,
 ) -> dict[str, Any]:
     """Run the evaluation suite and save timestamped results.
+
+    With ``embed_cache`` (default), Cohere embeddings are served from / saved
+    to data/cache/embedding_cache.json, so reruns over the same questions
+    don't spend embed calls (HyDE passages differ per run and still miss).
 
     A run where any question fell back to unranked results (rerank skipped
     after all retries) is marked ``"status": "INVALID"`` — its retrieval
@@ -217,8 +223,16 @@ def run_eval(
 
     logger.info("Evaluating %d questions (mode=%s, k=%d, judge=%s, hyde=%s).",
                 len(dataset), mode, k, judge, use_hyde)
-    results = [evaluate_item(item, k, mode, judge, parent_store, use_hyde=use_hyde)
-               for item in dataset]
+    if embed_cache:
+        embedder.enable_embedding_cache()
+    try:
+        results = [evaluate_item(item, k, mode, judge, parent_store, use_hyde=use_hyde)
+                   for item in dataset]
+    finally:
+        # Save even on a crash (e.g. quota exhausted) so finished work is kept.
+        if embed_cache:
+            embedder.save_embedding_cache()
+            embedder.disable_embedding_cache()
 
     summary = _aggregate(results)
     if summary["rerank_skips"]:

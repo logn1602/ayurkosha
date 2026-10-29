@@ -146,6 +146,8 @@ def _run_with_skips(monkeypatch, tmp_path, skipped_flags):
     path.write_text(json.dumps(dataset), encoding="utf-8")
     flags = iter(skipped_flags)
     monkeypatch.setattr(re_mod, "load_parent_store", lambda: None)
+    monkeypatch.setattr(re_mod.embedder, "enable_embedding_cache", lambda *a: None)
+    monkeypatch.setattr(re_mod.embedder, "save_embedding_cache", lambda: None)
     monkeypatch.setattr(re_mod, "_retrieve", lambda q, k, ps, use_hyde=False: {
         "reranked": [], "context_block": "", "sources": [], "final_passages": [],
         "rerank_skipped": next(flags),

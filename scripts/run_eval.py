@@ -47,6 +47,8 @@ def main():
                         help="Add a HyDE passage to semantic retrieval (one cheap Claude call per question).")
     parser.add_argument("--allow-rerank-skips", action="store_true",
                         help="Exit 0 even if some questions skipped rerank (run is still marked INVALID).")
+    parser.add_argument("--no-embed-cache", action="store_true",
+                        help="Don't use the disk embedding cache (data/cache/embedding_cache.json).")
     parser.add_argument("--top-k", type=int, default=None,
                         help="Retrieval cutoff k (default settings.top_k_final).")
     args = parser.parse_args()
@@ -77,6 +79,7 @@ def main():
         judge=args.judge,
         k=args.top_k,
         use_hyde=args.hyde,
+        embed_cache=not args.no_embed_cache,
     )
 
     print("\nSUMMARY")

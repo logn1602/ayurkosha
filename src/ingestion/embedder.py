@@ -12,14 +12,21 @@ documents are long/declarative. Both sides land in the same 1024-dim space.
 - Resilience: transient errors / rate limits are retried with exponential
   backoff. A monthly/trial *quota* 429 is not transient — it raises
   CohereQuotaExhausted immediately instead of burning minutes on retries.
+- Optional disk cache (``enable_embedding_cache``), keyed by model +
+  input_type + exact text. Off by default; the eval turns it on so reruns
+  over the same questions don't spend Cohere calls. (src/utils/cache.py is an
+  unimplemented Redis *response* cache stub, so it isn't reused here.)
 
 Build this in: Phase 2, Step 5
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import time
+from pathlib import Path
 from typing import Any
 
 from config.settings import settings
@@ -37,7 +44,14 @@ RATE_LIMIT_WAIT = 62.0
 # Rough token estimate for client-side throttling (~4 chars/token).
 _CHARS_PER_TOKEN = 4
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_EMBED_CACHE_PATH = PROJECT_ROOT / "data" / "cache" / "embedding_cache.json"
+
 _client = None
+# Disk embedding cache: key -> vector. None = disabled.
+_cache: dict[str, list[float]] | None = None
+_cache_path: Path | None = None
+_cache_dirty = False
 # Rolling log of (timestamp, estimated_tokens) for the trailing-60s throttle.
 _token_log: list[tuple[float, int]] = []
 
@@ -147,6 +161,69 @@ def _embed_with_retry(texts: list[str], input_type: str) -> list[list[float]]:
     )
 
 
+def enable_embedding_cache(path: str | Path = DEFAULT_EMBED_CACHE_PATH) -> None:
+    """Turn on the disk embedding cache, loading any existing entries."""
+    global _cache, _cache_path, _cache_dirty
+    _cache_path = Path(path)
+    _cache = {}
+    if _cache_path.exists():
+        with open(_cache_path, "r", encoding="utf-8") as f:
+            _cache = json.load(f)
+    _cache_dirty = False
+    logger.info("Embedding cache enabled (%d entries) at %s.", len(_cache), _cache_path)
+
+
+def save_embedding_cache() -> None:
+    """Write the disk embedding cache if it gained entries."""
+    global _cache_dirty
+    if _cache is None or _cache_path is None or not _cache_dirty:
+        return
+    _cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(_cache_path, "w", encoding="utf-8") as f:
+        json.dump(_cache, f)
+    _cache_dirty = False
+    logger.info("Saved embedding cache (%d entries) to %s.", len(_cache), _cache_path)
+
+
+def disable_embedding_cache() -> None:
+    """Turn the disk embedding cache off (does not save)."""
+    global _cache, _cache_path, _cache_dirty
+    _cache, _cache_path, _cache_dirty = None, None, False
+
+
+def _cache_key(text: str, input_type: str) -> str:
+    raw = f"{settings.embedding_model}|{input_type}|{text}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _embed_cached(texts: list[str], input_type: str) -> list[list[float]]:
+    """Embed texts, serving hits from the disk cache and embedding only misses."""
+    global _cache_dirty
+    if _cache is None:
+        return _embed_uncached(texts, input_type)
+    keys = [_cache_key(t, input_type) for t in texts]
+    misses = [i for i, k in enumerate(keys) if k not in _cache]
+    if misses:
+        fresh = _embed_uncached([texts[i] for i in misses], input_type)
+        for i, vec in zip(misses, fresh):
+            _cache[keys[i]] = vec
+        _cache_dirty = True
+    logger.debug("Embedding cache: %d hit(s), %d miss(es).", len(texts) - len(misses), len(misses))
+    return [_cache[k] for k in keys]
+
+
+def _embed_uncached(texts: list[str], input_type: str) -> list[list[float]]:
+    """Embed texts in batches of MAX_BATCH (no cache)."""
+    vectors: list[list[float]] = []
+    total_batches = (len(texts) + MAX_BATCH - 1) // MAX_BATCH
+    for bi, batch in enumerate(_batched(texts, MAX_BATCH), start=1):
+        if input_type == "search_document":
+            logger.info("Embedding documents: batch %d/%d (%d texts).",
+                        bi, total_batches, len(batch))
+        vectors.extend(_embed_with_retry(batch, input_type))
+    return vectors
+
+
 def embed_documents(texts: list[str]) -> list[list[float]]:
     """Embed document texts (input_type='search_document').
 
@@ -155,12 +232,7 @@ def embed_documents(texts: list[str]) -> list[list[float]]:
     """
     if not texts:
         return []
-    vectors: list[list[float]] = []
-    total_batches = (len(texts) + MAX_BATCH - 1) // MAX_BATCH
-    for bi, batch in enumerate(_batched(texts, MAX_BATCH), start=1):
-        logger.info("Embedding documents: batch %d/%d (%d texts).",
-                    bi, total_batches, len(batch))
-        vectors.extend(_embed_with_retry(batch, "search_document"))
+    vectors = _embed_cached(texts, "search_document")
     if vectors and len(vectors[0]) != settings.embedding_dimensions:
         logger.warning("Embedding dim %d != configured %d.",
                        len(vectors[0]), settings.embedding_dimensions)
@@ -171,7 +243,7 @@ def embed_query(query: str) -> list[float]:
     """Embed a single query (input_type='search_query'). Returns one vector."""
     if not query or not query.strip():
         raise ValueError("Cannot embed an empty query.")
-    return _embed_with_retry([query], "search_query")[0]
+    return _embed_cached([query], "search_query")[0]
 
 
 def embed_chunks(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:

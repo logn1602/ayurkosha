@@ -83,3 +83,48 @@ def test_to_vector_truncates_long_text():
              "metadata": {}}
     vec = _to_vector(chunk)
     assert len(vec["metadata"]["text"]) == MAX_METADATA_TEXT
+
+
+# ── disk embedding cache ──────────────────────────────────────────────
+
+def _fake_embed(monkeypatch):
+    from src.ingestion import embedder
+    calls = []
+
+    def fake(texts, input_type):
+        calls.append((input_type, list(texts)))
+        return [[float(len(t)), 1.0 if input_type == "search_query" else 0.0] for t in texts]
+
+    monkeypatch.setattr(embedder, "_embed_with_retry", fake)
+    return embedder, calls
+
+
+def test_embedding_cache_serves_hits_and_persists(monkeypatch, tmp_path):
+    embedder, calls = _fake_embed(monkeypatch)
+    path = tmp_path / "cache.json"
+    embedder.enable_embedding_cache(path)
+    try:
+        first = embedder.embed_query("joint pain")
+        again = embedder.embed_query("joint pain")
+        docs = embedder.embed_documents(["joint pain", "fever"])
+        assert first == again
+        assert docs[0] != first                 # input_type is part of the key
+        assert calls == [("search_query", ["joint pain"]),
+                         ("search_document", ["joint pain", "fever"])]
+        embedder.save_embedding_cache()
+    finally:
+        embedder.disable_embedding_cache()
+
+    embedder.enable_embedding_cache(path)       # fresh process: load from disk
+    try:
+        assert embedder.embed_documents(["fever", "cough"])[0] == docs[1]
+        assert calls[-1] == ("search_document", ["cough"])   # only the miss
+    finally:
+        embedder.disable_embedding_cache()
+
+
+def test_embedding_cache_disabled_by_default(monkeypatch):
+    embedder, calls = _fake_embed(monkeypatch)
+    embedder.embed_query("joint pain")
+    embedder.embed_query("joint pain")
+    assert len(calls) == 2
