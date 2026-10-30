@@ -299,13 +299,51 @@ The Sushruta OCR needed most of the work:
 | Work | Chunks with section or item | All three levels |
 |---|---|---|
 | Pharmacopoeia | 99% | 92% |
-| Formulary | 91% | 35% (group headings are sparse) |
+| Formulary | 44% item level (was 91%, mostly wrong; see below) | — |
 | Sushruta | 95% | n/a (no item level) |
 | Ashtanga Hridaya | 15% | 14% (only the English Vidyanath volume has markers) |
 
 All **20 Sushruta pages cited in `relabel_review.md`** carry the right sthāna and
 chapter, e.g. vol2 p535 → *Chikitsasthana, Chapter 24* (hygiene), vol3 p204 →
 *Uttaratantra, Chapter 39* (fever), vol3 p347 → *Uttaratantra, Chapter 52* (cough).
+
+### Formulary item headers: fixed 2026-10-29
+
+The first version found a formulation title only as "G:I TITLE (", and carried
+the last name forward otherwise. It missed 260 of 568 titles, so chunks from about
+46% of monographs, and every index, appendix and glossary page, got the *previous*
+formulation's name. The fix:
+- **Titles** are the upper-case run (≤ 6 words) after the number, in any OCR form:
+  `16:3`, `1 : 9`, `1 ; 14`, `7.2`, or `3:17PUGA`, with or without the "(" that
+  follows. When OCR garbled the number, a title is still found from the
+  upper-case run right before its classical source reference ("fe LASUNADI
+  GHRTA (Astangahrdaya…"). The source list (24 works, plus OCR variants) was taken
+  from the reference heads that follow parsed titles.
+- **No carry-forward across unreadable boundaries** (a wrong header is worse than
+  none). The item goes blank:
+  - at a source reference with no title before it (a monograph whose title is
+    unreadable, or a citation stranded by the two-column layout);
+  - at the top of a page that doesn't continue a monograph (no quantities, dose,
+    anupāna or uses before its first title);
+  - on index and summary-table pages (≥ 12 bare section numbers; monograph pages
+    have ≤ 9).
+
+Item-level coverage over 4,090 chunks went from 91.1% to **43.8%**:
+
+| Chunks now | Count | Share | Named before |
+|---|---|---|---|
+| named | 1,790 | 43.8% | 1,786 (925 unchanged, 861 renamed) |
+| blank: non-monograph page (front matter, glossary, appendix, garbage OCR) | 1,206 | 29.5% | 897 (wrong before) |
+| blank: index / summary-table page | 467 | 11.4% | 467 (wrong before) |
+| blank: formulation content, title unreadable (**miss**) | 435 | 10.6% | 416 |
+| blank: verse / OCR-noise chunk on a monograph page | 192 | 4.7% | 161 |
+
+The old 91% was mostly carry-forward error: at least 1,364 of its 3,726 named
+chunks sat on non-monograph pages, and 861 are renamed. Spot check of 10 changed
+headers: 7 correct, 2 straddle a monograph boundary (the header names the
+monograph at the chunk's midpoint), and 1 was wrong (a summary-table page), which
+the table-page rule now blanks. The remaining misses (10.6%) are formulation
+content whose title OCR made unreadable.
 
 Examples:
 ```

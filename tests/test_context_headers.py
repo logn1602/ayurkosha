@@ -118,3 +118,40 @@ def test_rerank_sends_header_plus_text(monkeypatch):
                            "metadata": {"context_header": "API > Asvagandha (Rt.)"}}], top_n=1)
     assert sent["docs"] == ["API > Asvagandha (Rt.)\nRasa : Tikta"]
     assert out[0]["text"] == "Rasa : Tikta"                      # raw text kept for display
+
+
+# ── Formulary titles: OCR variants seen in the corpus ─────────────────
+
+@pytest.mark.parametrize("text, title", [
+    # no "(" after the title (the old pattern required one)
+    ("25. Vidari (Rt.Tr.) 48 g. 3:28 SIVA GUTIKA 26. Ksiravidari (Rt. Tr.) 48 g. 27. Vira (Rt.) 48 g. "
+     "(Astangasangraha, Uttarasthana, Va", "Siva Gutika"),
+    ("prameha; Slipada. 5:12 SIMHANADA GUGGULU _ (Bhaisajyaratnavali, Amavatadhikara; 130-131.) पलत्रयं",
+     "Simhanada Guggulu"),
+    ("44. Sukumara Ghrta Sahasrayoga, < Ghrtaprakarana 6:1 AMRTA GHRTA 1. Jivanti (Cakradatta, Amavatacikitsa; 58.)",
+     "Amrta Ghrta"),
+    ("Ot BESO ett Ne\n16:3 AMAVATARI RASA\nTat wet aa aay: erated: |\nuaewsdetst VET FT TIGA 11180",
+     "Amavatari Rasa"),
+    # spaced / semicolon numbers, and a number glued to the title
+    ("kasa; Svasa. 1 : 9 KANAKASAVA (Bhaisajyaratnavali, Hikkasvasadhikara; 98-101)", "Kanakasava"),
+    ("पिप्पलीं wer । 1 ; 14 KHADIRARISTA पर्पट मधुक रास्नां", "Khadirarista"),
+    ("ksaya; daurbalya. 3:17PUGA KHANDA (Bhaisajyaratnavali, Sularogadhik", "Puga Khanda"),
+    # garbled number: the title is found by its source reference
+    ("fe LASUNADI GHRTA (Astangahrdaya, Cikitsasthana, Adhyaya 14; 22-25.) तुला", "Lasunadi Ghrta"),
+])
+def test_afi_titles_found_in_ocr_variants(text, title):
+    rec = annotate_context(_pages(AFI, [text]))[0]
+    assert header_at(rec["context"], len(text)) == f"{AFI} > {title}"
+
+
+def test_afi_unparseable_monograph_start_blanks_the_item():
+    """A source reference with no readable title before it starts a new monograph: the
+    previous name must not carry on (a wrong header is worse than none)."""
+    recs = annotate_context(_pages(AFI, [
+        "5:12 SIMHANADA GUGGULU (Bhaisajyaratnavali, Amavatadhikara; 130-131.) 1. Triphala 3 parts",
+        "% ^ 17 ¢ (Bhaisajyaratnavali, Murccha ra; 13-17) 28. Maksika (madhu) 2.400 kg.",
+        "Dosage : 12 to 24 ml. Important therapeutic uses : murccha.",
+    ]))
+    assert _header_end(recs[0]) == f"{AFI} > Simhanada Guggulu"
+    assert _header_end(recs[1]) == AFI          # blank from the stranded reference on
+    assert _header_end(recs[2]) == AFI          # ... and not revived on later pages

@@ -39,7 +39,35 @@ from src.ingestion.metadata import MONOGRAPH_SECTION_HEADERS, _roman_to_int
 
 # ── Markers per work ──────────────────────────────────────────────────
 _API_MONOGRAPH_RE = re.compile(r"^\s*\d{1,3}\.\s+([A-Z][A-Za-z\- ]{2,40}?)\s*\(([A-Za-z. \-]{2,25})\)\s*$", re.M)
-_AFI_ITEM_RE = re.compile(r"\b\d{1,2}:\d{1,3}\s+([A-Z][A-Z()\-' ]{2,60}?)\s*\(")
+# Formulary monograph openers. A title is a run of upper-case words, found either
+# after its number "G:I" (OCR writes "16:3", "1 : 9", "1 ; 14", "3:17PUGA" and
+# often drops the "(" that follows) or, when OCR garbled the number ("fe LASUNADI
+# GHRTA", "=e | YOGARAJA GUGGULU"), right before its classical source reference.
+_AFI_UPPER_RUN = r"[A-Z][A-Z\-']*(?:[ \t]+[A-Z][A-Z\-']*)*"
+# Classical works the Formulary cites, from the reference heads that follow its titles.
+_AFI_SOURCES = (r"(?i:bhaisajya|ast?angahrd|asfangahrd|ast?angasa|sahasrayog|rasendra|yogaratnak|sar\w{0,2}gadhar|"
+                r"siddhayog|cakradatt|susruta|rasatarang|rasamrt|bhavaprak|vaidya|siddhabhai|ayurveda(?:prak|sa)|"
+                r"arkaprak|bharatabhai|caraka|rasaratnasam|rasahrdaya|dravyaguna|rasoddhar|rasayogasag|"
+                r"[bv]asavarajiy|rasatantra)")
+_AFI_NUM_TITLE_RE = re.compile(r"(?<![\d:.])\d{1,2}[ \t]?[:;.][ \t]?\d{1,3}[ \t]*(" + _AFI_UPPER_RUN + ")")
+_AFI_REF_TITLE_RE = re.compile("(" + _AFI_UPPER_RUN + r")\s*\(\s*" + _AFI_SOURCES)
+_AFI_SOURCE_REF_RE = re.compile(r"\(\s*" + _AFI_SOURCES)
+_AFI_MIN_TITLE_LETTERS = 4
+_AFI_MAX_TITLE_WORDS = 6          # longer upper-case runs are index lists, not titles
+# A monograph name only carries onto a page that continues a monograph: one
+# showing ingredient quantities, dose, anupana or uses before its first title.
+# Index, glossary and appendix pages (about 150 after the last monograph) don't.
+_AFI_CONTENT_RE = re.compile(r"\d\s*(?:g|kg|ml|mg|parts?)\b|Dosage|Anup\w*na|therapeutic\s+uses?|"
+                             r"\((?:Rt|Fr|Lf|Pl|Sd|Rz|Fl|St)\b", re.I)
+# Index and summary-table pages list many bare section numbers ("20:25 20:26 …");
+# monograph pages carry at most ~9 (verse and chapter references). On a table
+# page no single title names the content, so the item is blank for the page.
+_AFI_BARE_NUM_RE = re.compile(r"(?<![\d:.])\d{1,2}\s?[:;]\s?\d{1,3}(?![\d:])(?!\s*[A-Z])")
+_AFI_TABLE_PAGE_NUMBERS = 12
+# A source reference with no title in the chars before it marks a monograph whose
+# title couldn't be parsed (or a reference the two-column layout stranded).
+# Either way the previous name must not carry on: the item goes blank there.
+_AFI_TITLE_WINDOW = 160
 _AFI_GROUP_RE = re.compile(r"\bGROUP\s+No\.?\s*(\d{1,2})\s*[—-]*\s*([A-Z][A-Z\-]+(?:\s[A-Z][A-Z\-]+)?)")
 _SS_CHAPTER_RE = re.compile(r"\bCHAP(?:TER|[.,])?\s*([IVXLC]{1,8})\b\.?", re.I)   # "Chap,VI." occurs too
 # Only a *heading* ("CHAPTER XLIV.", "CHIKITSASTHANAM") or the running head
@@ -86,6 +114,35 @@ def _sthana(match_text: str) -> str:
     return _title(match_text)
 
 
+def _afi_titles(text: str) -> list[tuple[int, str]]:
+    """(offset, title) of every parsable Formulary monograph title on a page."""
+    def ok(run: str) -> bool:
+        return (sum(c.isupper() for c in run) >= _AFI_MIN_TITLE_LETTERS
+                and len(run.split()) <= _AFI_MAX_TITLE_WORDS)
+
+    found = [(m.start(), m.group(1)) for m in _AFI_NUM_TITLE_RE.finditer(text) if ok(m.group(1))]
+    spans = [(m.start(), m.end()) for m in _AFI_NUM_TITLE_RE.finditer(text)]
+    for m in _AFI_REF_TITLE_RE.finditer(text):
+        if ok(m.group(1)) and not any(a <= m.start(1) < b for a, b in spans):
+            found.append((m.start(1), m.group(1)))
+    return sorted((off, _title(" ".join(run.split()))) for off, run in found)
+
+
+def _afi_items(text: str) -> list[tuple[int, str]]:
+    """Formulary item marks: titles, plus blank marks where a monograph starts unreadably,
+    and at the top of a page that doesn't continue a monograph. Header marks are
+    deliberately conservative (see afi_monograph_spans for the inclusive version)."""
+    if len(_AFI_BARE_NUM_RE.findall(text)) >= _AFI_TABLE_PAGE_NUMBERS:
+        return [(0, "")]                         # index / summary-table page
+    titles = _afi_titles(text)
+    blanks = [(m.start(), "") for m in _AFI_SOURCE_REF_RE.finditer(text)
+              if not any(0 <= m.start() - off <= _AFI_TITLE_WINDOW for off, _ in titles)]
+    first = titles[0][0] if titles else len(text)
+    if not _AFI_CONTENT_RE.search(text[:first]):
+        blanks.append((0, ""))
+    return sorted(set(titles + blanks), key=lambda mark: (mark[0], mark[1] != ""))
+
+
 def _marks(text: str, text_name: str | None) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
     """(section_marks, item_marks): (offset, label) lists for one page."""
     sections: list[tuple[int, str]] = []
@@ -96,7 +153,7 @@ def _marks(text: str, text_name: str | None) -> tuple[list[tuple[int, str]], lis
         # A new monograph resets the section until its first heading.
         sections += [(off, "") for off, _ in items]
     elif text_name == "Ayurvedic Formulary of India":
-        items = [(m.start(), _title(m.group(1).strip())) for m in _AFI_ITEM_RE.finditer(text)]
+        items = _afi_items(text)
         sections = [(m.start(), f"Group {int(m.group(1))}: {_title(m.group(2))}") for m in _AFI_GROUP_RE.finditer(text)]
     elif text_name == "Sushruta Samhita":
         # Running heads print the sthana in capitals; mixed case is body text.
