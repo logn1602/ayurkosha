@@ -76,6 +76,29 @@ def test_formulary_sets_are_passage_gold_only_where_formulations_are_asked_for()
         assert any(c.startswith("afi") for c in rows[qid]["provenance"]["supporting_chunk_ids"]), qid
 
 
+def _chunk_on(parent_id, text_name):
+    stem, page = parse_support_id(parent_id)
+    return {"chunk_id": f"{parent_id}_C0", "parent_id": parent_id,
+            "metadata": {"source": stem[: -len("_pdf")] + ".pdf", "page": page, "text_name": text_name}}
+
+
+def test_eval_018_passage_scoring_ignores_formulary_chunks_but_work_level_counts_them():
+    from src.evaluation import traces
+    from src.evaluation.retrieval_metrics import score_passages, score_retrieval
+
+    path = EVAL_DIR / "eval_dataset.json"
+    works, passages = traces.load_labels(path)["eval_018"], traces.load_gold_passages(path)["eval_018"]
+    item = next(i for i in DATASET if i["id"] == "eval_018")
+    afi_evidence = next(c for c in item["provenance"]["supporting_chunk_ids"] if c.startswith("afi"))
+    formulary = [_chunk_on(afi_evidence, "Ayurvedic Formulary of India")]   # a monograph in the Jvara set
+
+    assert score_retrieval(formulary, works, k=6)["hit"] == 1.0             # work level: the Formulary is gold
+    assert score_passages(formulary, passages, k=6)["hit"] == 0.0           # passage level: not a strict answer
+    sushruta = _chunk_on(passages[0], "Sushruta Samhita")
+    scores = score_passages(formulary + [sushruta], passages, k=6)
+    assert scores["hit"] == 1.0 and scores["mrr_at_k"] == 0.5               # the Sushruta chunk, at rank 2
+
+
 def test_gold_labels_resolve_to_canonical_works():
     canonical = set(_CANONICAL_BY_LOWER.values())
     for item in DATASET:
