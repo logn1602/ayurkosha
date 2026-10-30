@@ -1,9 +1,8 @@
 # Eval Relabel Review
 
-**Status: reviewed by logn1602 on 2026-10-29.** All rows approved except **eval_003** and
-**eval_008**, which await the reviewer's decision on the re-check findings (see the section below).
-Approved rows carry provenance `agent-proposed from corpus text, human-reviewed` with `reviewed_by: logn1602`;
-the two held rows stay `…: pending` with `reviewed_by: null`. Labels follow
+**Status: reviewed by logn1602 on 2026-10-29. All 30 rows approved**, eval_003 and eval_008 after
+a re-check (see the section below). Every row carries provenance
+`agent-proposed from corpus text, human-reviewed` with `reviewed_by: logn1602`. Labels follow
 [`LABELING_CRITERIA.md`](LABELING_CRITERIA.md) **v2**.
 
 Reviewer decisions so far (these are the reviewer's, not row approvals):
@@ -12,8 +11,8 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
   indicated for the disease). 7 rows were re-checked and gained `afi` under it; `eval_024`
   stays Sushruta-only because the question names Sushruta.
 - `eval_017` was reworded by the reviewer to "Which classical formulations are indicated for Amavata?" (gold: Formulary).
-- All other rows are the agent's v1 proposals, approved in the reviewer's row review on 2026-10-29
-(except eval_003 and eval_008).
+- All other rows are the agent's v1 proposals, approved in the reviewer's row review on 2026-10-29.
+- eval_003 and eval_008 were re-checked at the reviewer's request and decided as recorded below.
 - Evidence came from plain text search of the corpus (parent chunks), never from retrieval or eval
   output. Formulary evidence is a monograph whose title and "Important therapeutic uses" list sit in
   the same chunk.
@@ -24,12 +23,12 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
 |---|---|---|---|---|---|---|
 | eval_001 | What are the Rasa, Guna, Virya, and Vipaka of Ashwagandha? | afi, api | api | API monograph gives Rasa/Guna/Vīrya/Vipāka/Karma; AFI only lists it as an ingredient; no classical work describes its properties. | `api_all_volume_pdf_40_P0` |  |
 | eval_002 | What are the Rasa, Guna, Virya, and Vipaka of Bibhitaka? | api | api, ashtanga_hridaya | API monograph + AH Sūtrasthāna dravya section gives Vibhītakī rasa/guna/vīrya/vipāka; AFI only uses it as an ingredient. | `api_all_volume_pdf_57_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0` | SS vol1 p535 describes Vibhītaka *oil*, not the fruit. |
-| eval_003 | What are the properties and therapeutic actions of Pippali? | afi, sushruta | api, ashtanga_hridaya | API monograph + AH gives Pippalī (fresh/dry) rasa/guna/vīrya/vipāka; SS only ranks it "best of pungents"; AFI is ingredient lists. | `api_all_volume_pdf_959_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_164_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0` |  |
+| eval_003 | What are the properties and therapeutic actions of Pippali? | afi, sushruta | api, ashtanga_hridaya, sushruta **(re-checked)** | API monograph + AH gives Pippalī (fresh/dry) rasa/guna/vīrya/vipāka; SS only ranks it "best of pungents"; AFI is ingredient lists. | `api_all_volume_pdf_959_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_164_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0`<br>`sushruta_samhita_vol_1_pdf_599_P0` | Reviewer re-check: SS Sūtrasthāna 46 p599 gives Pippalī fresh vs dried properties, so `sushruta` was added. |
 | eval_004 | What are the therapeutic actions of Punarnava? | afi | api | API Rakta/Śveta-punarnavā monographs give properties and karma; others only mention it in groups or recipes. | `api_all_volume_pdf_724_P0`<br>`api_all_volume_pdf_1295_P1` | SS vol1 p604 gives potency/taste of Punarnavā *leaves* jointly with other pot-herbs (group-level). |
 | eval_005 | What is the classical action of Brahmi described as Medhya? | afi | api, sushruta | API Brāhmī karma lists Medhya; SS Cikitsā Brāhmī-ghṛta rasāyana describes the memory/intellect-promoting action. | `api_all_volume_pdf_278_P0`<br>`sushruta_samhita_vol_2_pdf_580_P0` |  |
 | eval_006 | What are the properties of Gokshura and its action on the urinary system? | sushruta, api | api | API Gokṣura (root, fruit) monographs give properties and urinary karma (mūtrakṛcchra, aśmarīhara, vastiśodhana). | `api_all_volume_pdf_78_P0`<br>`api_all_volume_pdf_80_P0` | AH p166/p488 give properties of laghu-pañcamūla as a group, Gokṣura included. |
 | eval_007 | What are the properties and actions of Guduchi? | sushruta | api | API Guḍūcī monograph gives properties and karma; SS/AH only name it in groups and recipes. | `api_all_volume_pdf_84_P0` | SS vol1 p607: bitter taste/doṣa action of a group of herbs incl. Guḍūcī. |
-| eval_008 | What are the properties and actions of Shatavari? | sushruta, api | api, sushruta | API Śatāvarī monograph; SS Sūtrasthāna 46 gives Śatāvarī-specific taste and action. | `api_all_volume_pdf_984_P0`<br>`sushruta_samhita_vol_1_pdf_614_P0` | AH p149 describes Śatāvarī *sprouts* (tikta rasa, aphrodisiac). |
+| eval_008 | What are the properties and actions of Shatavari? | sushruta, api | api, sushruta **(re-checked)** | API Śatāvarī monograph; SS Sūtrasthāna 46 gives Śatāvarī-specific taste and action. | `api_all_volume_pdf_984_P0`<br>`sushruta_samhita_vol_1_pdf_614_P0` | Reviewer re-check, option (a): SS p614 describes the root (Bulb group), so it stays in; AH p149 describes only the sprouts, so it stays out. |
 | eval_009 | What are the Rasa and Vipaka of Haritaki? | afi, sushruta | api, ashtanga_hridaya | API Harītakī monograph + AH dravya list gives Harītakī rasa and madhura vipāka explicitly. | `api_all_volume_pdf_93_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_487_P0` | SS vol1 p503 gives the collective taste of Triphalā, not Harītakī alone. |
 | eval_010 | What are the ingredients and indications of Yogaraja Guggulu? | afi | afi | AFI monograph gives ingredients, dose and therapeutic uses; API only lists it as an "important formulation". | `afi_part1_pdf_121_P0` |  |
 | eval_011 | What are the ingredients and dose of Amavatari Rasa? | afi | afi | AFI monograph (Bhaiṣajya Ratnāvalī, Āmavātādhikāra) gives ingredients and dose; no other work has it. | `afi_part2_pdf_234_P0` |  |
@@ -53,7 +52,7 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
 | eval_029 | What is Nasya Karma and for which disorders is it used? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 20 gives the nasya types and indications; SS Cikitsā 40 gives the kinds of nasya and doses. | `ashtanga_hridaya_vidyanath_illustrated_pdf_345_P0`<br>`sushruta_samhita_vol_2_pdf_714_P0` |  |
 | eval_030 | What does Dinacharya (daily regimen) include in Ayurveda? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 2 (Dinacaryā) and SS Cikitsā 24 (hygiene: tooth-brushing, collyrium, etc.) both cover the daily regimen. | `ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0`<br>`sushruta_samhita_vol_2_pdf_535_P0`<br>`sushruta_samhita_vol_2_pdf_536_P0` | SS never uses the word "dinacharya" but covers the topic in full. |
 
-## Re-check requested by the reviewer: eval_003, eval_008 (awaiting decision; labels unchanged, provenance pending)
+## Re-check requested by the reviewer: eval_003, eval_008 (decided 2026-10-29)
 
 Both re-checks are in Sushruta Sūtrasthāna ch. 46 (vol 1, pp. 558–660), found by plain text search.
 
@@ -115,3 +114,13 @@ was wrong. In that chunk the "amavata; vataroga" uses list comes *before* the 4:
 (MAHA) title, so it belongs to 4:27 Rasnadi Kvatha Curna, whose title is in the previous chunk. It
 falls outside the same-chunk rule and out of the set, and the gold answer now names Rasnadi Kvatha
 Curna instead.
+
+### Decisions (reviewer, 2026-10-29)
+
+- **eval_003:** add `sushruta`, supported by `sushruta_samhita_vol_1_pdf_599_P0` (the fresh vs dried
+  Pippalī entry). Gold is now api, ashtanga_hridaya, sushruta.
+- **eval_008:** option (a). Sushruta stays in: its Sūtrasthāna 46 passage describes Śatāvarī's root
+  (the tuber in the Bulb group: taste, potency, rasāyana, medhya, grahaṇī/arśas), the same part the
+  Pharmacopoeia monograph covers. AH p149 stays out: it describes only the sprouts eaten as a
+  vegetable, not the drug. Gold stays api, sushruta.
+- Both rows are now `human-reviewed`, `reviewed_by: logn1602`.

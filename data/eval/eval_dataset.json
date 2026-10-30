@@ -47,21 +47,23 @@
     "gold_answer": "Pippali (Piper longum): Rasa - Katu; Guna - Laghu, Snigdha, Tikshna; Virya - Ushna (Anushna per some); Vipaka - Madhura; Karma - Deepana, Vata-Kapha hara, Rasayana.",
     "gold_sources": [
       "api",
-      "ashtanga_hridaya"
+      "ashtanga_hridaya",
+      "sushruta"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed: pending",
+      "method": "agent-proposed from corpus text, human-reviewed",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "api_all_volume_pdf_959_P0",
         "ashtanga_hridaya_vidyanath_illustrated_pdf_164_P0",
-        "ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0"
+        "ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0",
+        "sushruta_samhita_vol_1_pdf_599_P0"
       ],
-      "reviewed_by": null
+      "reviewed_by": "logn1602"
     }
   },
   {
@@ -159,7 +161,7 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed: pending",
+      "method": "agent-proposed from corpus text, human-reviewed",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -167,7 +169,7 @@
         "api_all_volume_pdf_984_P0",
         "sushruta_samhita_vol_1_pdf_614_P0"
       ],
-      "reviewed_by": null
+      "reviewed_by": "logn1602"
     }
   },
   {

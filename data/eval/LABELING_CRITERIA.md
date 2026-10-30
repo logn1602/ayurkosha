@@ -82,6 +82,6 @@ Every item carries a `provenance` object (see `eval_dataset.schema.json`):
 | `reviewed_by` | who confirmed the labels; `null` while review is pending |
 
 Proposals are written to `relabel_review.md` first. The reviewer (logn1602)
-confirmed 28 rows on 2026-10-29. eval_003 and eval_008 stay `…: pending` with
-`reviewed_by: null` until the re-check decision (enforced by
-`tests/test_eval_dataset.py`).
+confirmed all 30 rows on 2026-10-29, eval_003 and eval_008 after a re-check.
+Until confirmed, a row's provenance reads `…: pending` with `reviewed_by: null`
+(enforced by `tests/test_eval_dataset.py`).
