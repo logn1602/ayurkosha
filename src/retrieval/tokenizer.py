@@ -32,7 +32,7 @@ import logging
 import re
 
 from config.settings import settings
-from src.ingestion.synonym_loader import get_synonyms
+from src.ingestion.synonym_loader import get_synonyms, wants_romanization_key
 from src.ingestion.text_cleanup import fold_diacritics
 from src.utils.transliterate import romanization_key
 
@@ -87,11 +87,27 @@ def _is_devanagari(token: str) -> bool:
     return bool(_DEVANAGARI_RE.search(token))
 
 
-def _with_keys(tokens: list[str]) -> list[str]:
-    """Add each Latin token's romanization key right after it, when it differs.
+# Latin letters with diacritics (Latin-1 Supplement, Extended-A/B, and Latin
+# Extended Additional, where ṛ ṣ ṇ ṭ ḍ ḥ ṃ live): marks an IAST-written word.
+_IAST_CHAR_RE = re.compile("[\u00c0-\u024f\u1e00-\u1eff]")
+_WORD_RE = re.compile(r"\S+")
+
+
+def _diacritic_tokens(text: str) -> frozenset[str]:
+    """Folded tokens of the words in ``text`` that were written with diacritics."""
+    out: set[str] = set()
+    for word in _WORD_RE.findall(text.lower()):
+        if _IAST_CHAR_RE.search(word):
+            out.update(_TOKEN_RE.findall(fold_diacritics(word)))
+    return frozenset(out)
+
+
+def _with_keys(tokens: list[str], diacritic_tokens: frozenset[str] = frozenset()) -> list[str]:
+    """Add each Sanskrit-like token's romanization key right after it, when it differs.
 
     "ashwagandha" -> ["ashwagandha", "asvagandha"], so a document spelling the
-    word in IAST ("Aśvagandhā" -> "asvagandha") matches. See
+    word in IAST ("Aśvagandhā" -> "asvagandha") matches. English words get no
+    key (synonym_loader.wants_romanization_key), so "ship" stays "ship". See
     src/utils/transliterate.py.
     """
     out: list[str] = []
@@ -100,7 +116,7 @@ def _with_keys(tokens: list[str]) -> list[str]:
         if _is_devanagari(token) or token in DOMAIN_ACRONYMS:
             continue
         key = romanization_key(token)
-        if key != token:
+        if key != token and wants_romanization_key(token, diacritic_tokens):
             out.append(key)
     return out
 
@@ -141,7 +157,9 @@ def tokenize_ayurvedic(
     if not text:
         return []
 
+    diacritic: frozenset[str] = frozenset()
     if settings.bm25_fold_diacritics:
+        diacritic = _diacritic_tokens(text)
         text = fold_diacritics(text)
     text = text.lower()
     raw_tokens = _TOKEN_RE.findall(text)
@@ -150,7 +168,7 @@ def tokenize_ayurvedic(
     # followed by its romanization key, so popular and IAST spellings meet.
     surface: list[str] = [t for t in raw_tokens if t not in STOPWORDS]
     if settings.bm25_fold_diacritics:
-        surface = _with_keys(surface)
+        surface = _with_keys(surface, diacritic)
 
     # Stage 2: synonym expansion (Latin tokens only; Devanagari and protected
     # acronyms pass through unchanged).

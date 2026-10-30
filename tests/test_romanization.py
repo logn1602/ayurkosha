@@ -78,3 +78,27 @@ def test_document_and_query_tokens_share_the_key(folding):
     doc = set(tokenize_ayurvedic("Aśvagandhā", stem=False))
     query = set(tokenize_ayurvedic("Ashwagandha", stem=False))
     assert "asvagandha" in doc & query
+
+
+# ── keys are for Sanskrit-like tokens only ────────────────────────────
+
+@pytest.mark.parametrize("word, collision", [
+    ("ship", "sip"), ("wine", "vine"), ("shore", "sore"), ("food", "fud"), ("teeth", "tith"),
+])
+def test_english_words_get_no_romanization_key(folding, word, collision):
+    assert collision not in tokenize_ayurvedic(word, stem=False)
+
+
+def test_ship_does_not_match_sip_but_ashwagandha_matches_asvagandha(folding):
+    chunks = CHUNKS + [{"chunk_id": "sip", "text": "Take a small sip of warm water.", "metadata": {}}]
+    index = build_bm25_index(chunks)
+    assert all(h["chunk_id"] != "sip" for h in index.search("ship", top_n=5))
+    assert index.search("Ashwagandha", top_n=1)[0]["chunk_id"] == "api_asvagandha"
+
+
+def test_which_tokens_get_keys(folding):
+    from src.ingestion.synonym_loader import wants_romanization_key
+    assert not wants_romanization_key("ship")                     # common English word
+    assert wants_romanization_key("krishna")                      # dictionary Sanskrit term (also common in English)
+    assert wants_romanization_key("satavari")                     # not an English word
+    assert wants_romanization_key("ship", frozenset({"ship"}))    # written with diacritics in the source

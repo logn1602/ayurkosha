@@ -131,9 +131,22 @@ With `bm25_fold_diacritics` on:
 - `get_synonyms` also looks terms up by key, so "asvagandha" finds the
   "Ashwagandha" entry.
 
-`tests/test_romanization.py` pins this down, including the case where an
-"Ashwagandha" query retrieves a chunk that only says "Aśvagandhā", and the same
-case failing with folding off.
+**Keys are for Sanskrit-like tokens only.** Applied to plain English, the same
+rules merge unrelated words (ship/sip, wine/vine, shore/sore, food/fud). So a
+token gets a key only if it was written with IAST diacritics, is a
+Sanskrit/Hindi/Ayurvedic term from the synonym dictionaries, or isn't among
+the 50,000 most frequent English words (wordninja's list:
+`transliterate.english_words`). That list holds 32 of 34 common collision
+words but only 6 of 54 Sanskrit terms checked. Of those six, pandu, rasa and pitta
+key to themselves; krishna is a dictionary term, so it's keyed anyway; and
+shiva/chakra aren't medical terms. The rule is
+`synonym_loader.wants_romanization_key`, used for documents, queries and
+dictionary lookups alike. The simpler of the two options was chosen: restricting
+keys rather than indexing romanized forms as a separate BM25 field.
+
+`tests/test_romanization.py` pins this down: an "Ashwagandha" query retrieves a
+chunk that only says "Aśvagandhā" (and doesn't with folding off), while "ship"
+does not match "sip", and wine, shore, food and teeth get no key.
 
 **Approved 2026-10-29** with no exceptions; both settings now default to `True`.
 

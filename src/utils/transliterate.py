@@ -23,6 +23,11 @@ The key is a matching form, not a spelling to display. The BM25 tokenizer
 adds it alongside the surface token, and the synonym index is also keyed by
 it (see src/retrieval/tokenizer.py, src/ingestion/synonym_loader.py).
 
+Keys are only given to Sanskrit-like tokens (synonym_loader.wants_romanization_key):
+applied to plain English, the same rules merge unrelated words (ship/sip,
+wine/vine, shore/sore, food/fud). ``english_words`` is the English side of
+that test.
+
 TODO (unchanged): Devanagari <-> IAST conversion (e.g. via
 indic-transliteration) for Devanagari queries.
 
@@ -44,6 +49,28 @@ _RULES: tuple[tuple[str, str], ...] = (
     ("ri", "r"),    # popular ri  = IAST ṛ   (Ghrita / Ghṛta, Krishna / Kṛṣṇa)
 )
 _MIN_LEN = 3
+# Tokens among the most frequent English words never get a key. At 50k the
+# list covers the common words the rules would merge (ship 1071, wine 2314,
+# shore 3242) while holding almost no Sanskrit: only pandu/rasa/pitta, whose
+# keys are themselves, and names like krishna, which the synonym dictionary
+# flags as Sanskrit anyway.
+ENGLISH_TOP_N = 50_000
+_english_words: frozenset[str] | None = None
+
+
+def english_words() -> frozenset[str]:
+    """The ENGLISH_TOP_N most frequent English words (wordninja's frequency list)."""
+    global _english_words
+    if _english_words is None:
+        import gzip
+        import os
+
+        import wordninja
+
+        path = os.path.join(os.path.dirname(wordninja.__file__), "wordninja", "wordninja_words.txt.gz")
+        with gzip.open(path) as f:
+            _english_words = frozenset(f.read().decode().split()[:ENGLISH_TOP_N])
+    return _english_words
 
 
 def romanization_key(token: str) -> str:
