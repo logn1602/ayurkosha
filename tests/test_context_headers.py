@@ -72,6 +72,50 @@ def test_ss_new_sthana_restarts_chapters_even_with_chapter_first_running_head():
     assert _header_end(recs[1]) == f"{SS} > Nidanasthana, Chapter 1"
 
 
+def _after(rec, phrase):
+    return header_at(rec["context"], rec["text"].index(phrase) + len(phrase))
+
+
+def test_ss_garbled_openings_nidana_6_to_7_to_8():
+    """Volume 2 glues and garbles its openings (pp. 98, 105, 110): each must still move
+    the chapter on, even though the running heads in between are unreadable."""
+    recs = annotate_context(_pages(SS, [
+        "Chap.V.]NIDANASTHANAM.41 CHAPTER V. Now we shall discourse on the Nidanam of Kushtha",
+        "CHAPTER-VI.Now^weshalldiscourseontheNiddnamofPrameha. Prameha is of twenty kinds",
+        "cup.VL]SiDANASTHANAM.4}^non-relishforfood",                          # unreadable running head
+        "CHAPTERVn.No\\yweshalldiscourseontheNidstnamofUdara. Udara is of eight kinds",
+        "CHAPTERym.*Now*weshalldiscourseontheNiddnamofMudhagarbha. A dead foetus",
+    ]))
+    assert _after(recs[1], "Prameha") == f"{SS} > Nidanasthana, Chapter 6"
+    assert _header_end(recs[2]) == f"{SS} > Nidanasthana, Chapter 6"
+    assert _after(recs[3], "Udara") == f"{SS} > Nidanasthana, Chapter 7"
+    assert _after(recs[4], "Mudhagarbha") == f"{SS} > Nidanasthana, Chapter 8"
+
+
+def test_ss_garbled_opening_cikitsa_6_to_7():
+    recs = annotate_context(_pages(SS, [
+        "Chap.V.]CHIKITSASTHANAM.315 CHAPTERVI.NowweshalldiscourseonthemedicaltreatmentofHaemorrhoids",
+        "Chap.VI.]CHIKITSASTHANAM.323 AmedicatedTakra",
+        "CHAPTERVILNowwe»shalldiscourseonthemedicaltreatmentofAsmari(Urinarycalculus)",
+    ]))
+    assert _after(recs[0], "Haemorrhoids") == f"{SS} > Chikitsasthana, Chapter 6"
+    assert _header_end(recs[1]) == f"{SS} > Chikitsasthana, Chapter 6"
+    assert _after(recs[2], "Asmari") == f"{SS} > Chikitsasthana, Chapter 7"
+
+
+@pytest.mark.parametrize("opening, chapter", [
+    ("H A P T E R I v i I I . Now we shall discourse", 18),     # numeral unreadable: the next chapter
+    ("CHAPTERXXXIIT.I^ow^weshalldiscourse", 18),                 # 33, far ahead: a misreading, the next chapter
+    ("1 1 1 § L C H A P T E R X V I I I . Now shall discourse", 18),
+])
+def test_ss_an_opening_always_moves_the_chapter_on(opening, chapter):
+    recs = annotate_context(_pages(SS, [
+        "Chap. XVII.] UTTARA-TANTRA. 101 CHAPTER XVII. Now we shall discourse on the eye",
+        opening + " on the treatment of the eye",
+    ]))
+    assert _after(recs[1], "the eye") == f"{SS} > Uttaratantra, Chapter {chapter}"
+
+
 def test_chunk_headers_track_position_within_page():
     filler_a = " ".join(f"part{i} (Rt.) {i} g;" for i in range(60))
     filler_b = " ".join(f"item{i} (Fr.) {i} g;" for i in range(60))

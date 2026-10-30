@@ -285,14 +285,37 @@ are re-joined with single spaces and so aren't verbatim substrings of the page.
 
 The Sushruta OCR needed most of the work:
 - Chapters may only move **forward** within a sthāna. Running heads may step 0–3.
-  A chapter opening may jump any distance (OCR lost some headings), but never back.
-- OCR numeral slips (`XVIIl`, `XXXILI`, `XLY`, `XHI`, `XL1I`, letter-spaced
-  `C H A P T E R X L .`) are normalized. Only canonical numerals are accepted, and
-  when two readings are valid (`XL` = 40 vs XI), the one nearest the next expected
-  chapter wins.
+- A chapter opening **always** moves the chapter on. Its numeral may jump up to 3
+  ahead (an opening lost to OCR leaves a gap). An unreadable numeral, or one that
+  is behind or further ahead, is a misreading, so the opening counts as the next
+  chapter.
+- Openings are matched glitch-tolerantly. The heading may be letter-spaced, glued,
+  or damaged (`H A P T E R`, `CHAPTEK`, `CH.\PTER`, `chapterIX`). The numeral may
+  be misread (`Vn` VII, `ym` VIII, `in` III, `11` II, `XXXIIT` XXXIII, `I v i I I`),
+  and so may the sentence (`Xow we`, `I^ow^we`, `No\yweshall`, `Now shall`). The
+  pattern needs only the heading and a numeral with "shall" close behind.
+- OCR numeral slips (`XVIIl`, `XXXILI`, `XLY`, `XHI`, `XL1I`) are normalized. Only
+  canonical numerals are accepted, and when two readings are valid (`XL` = 40 vs
+  XI), the one nearest the next expected chapter wins.
 - Cross-references ("see Chap. X", "as in the Sutrasthana") are ignored: only
   capitalized running heads and chapter openings count.
 - Table-of-contents pages are ignored. A sthāna change clears the chapter count.
+
+**Chapter-boundary audit (2026-10-30), all three volumes.** All 186 chapters
+(Sutra 46, Nidana 16, Sharira 10, Chikitsa 40, Kalpa 8, Uttara 66) were located
+independently of the header code. 184 were found by their opening. The openings of
+Sutra II and Uttara VI are lost in the OCR, so those two are located by the
+previous chapter's closing colophon. Every opening numeral agrees with the
+chapter's place in its sthāna.
+
+The header state just after each boundary was then checked: **165/186** right
+before this fix, **184/186** after. The pattern matches all 184 openings the OCR
+has, with no false matches (contents pages, sub-section openers such as "Now we
+shall discourse on the Bulb group"). The two misses are those lost openings: their
+pages keep the previous chapter's number, Sutra II on p106–109 of vol 1 and
+Uttara VI on p40–45 of vol 3. 312 of ~9,000 Sushruta chunks changed header, each
+to its true chapter. The largest groups: 114 chunks of Uttara 18 had read 17, 43
+of Uttara 1 had no chapter, and 28 of Nidana 7–8 had read 6.
 
 ### Results
 

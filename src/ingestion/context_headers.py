@@ -117,14 +117,22 @@ _SS_CHAPTER_RE = re.compile(r"\bCHAP(?:TER|[.,])?\s*([IVXLC]{1,8})\b\.?", re.I) 
 # counts; "see Chap. X" or "described in the Sutrasthana" in the body is a
 # cross-reference.
 _SS_RUNNING_HEAD_CHARS = 80
-# Every Sushruta chapter opens "CHAPTER <n>. Now we shall discourse on…". The
-# OCR letter-spaces the heading ("C H A P T E R X L .", "CH APTER", "CHAPER")
-# and substitutes numeral glyphs (Y=V, H=II, 1/l=I), so the opening sentence is
-# the reliable anchor.
+# Every Sushruta chapter opens "CHAPTER <n>. Now we shall discourse on…" (the
+# first: "Well, we shall now describe…"). The OCR letter-spaces or glues the
+# heading ("C H A P T E R X L .", "CHAPTERXII.") and garbles it ("H A P T E R",
+# "CHAPTEK", "CH.\PTER", "chapterIX"). It misreads the numeral (Y=V, H/n=II,
+# m=III, 1/l/i/T=I: "Vn" is VII, "ym" VIII, "XXXIIT" XXXIII) and the sentence
+# ("Xow we", "I^ow^we", "No\yweshall", "Now shall"). So an opening is the
+# heading and a numeral with "shall" close behind; it always moves the chapter
+# on (see _resolve_chapters).
+_SS_NUMERAL = "IVXLYHnmlvyi1T"
 _SS_OPENING_RE = re.compile(
-    r"C\s?H\s?A\s?P\s?T?\s?E\s?R\s*,?\s*([IVXLYH1l](?:\s?[IVXLYH1l]){0,9})\s*\.*\s*N\s*o\s*w\s*w\s*e\s*s\s*h\s*a\s*l\s*l")
+    r"(?:(?:C\W{0,2})?H\W{0,2}A?\W{0,2}P\W{0,2}T?\W{0,2}E\W{0,2}[RK]|chapter(?=[IVXL]))\W{0,3}"
+    rf"([{_SS_NUMERAL}](?:\s?[{_SS_NUMERAL}]){{0,9}})"
+    r"[\s\S]{0,30}?s\W?h\W?[aei]\W?[il1!]\W?[l1!]")
 _CONTENTS_MIN_HEADINGS = 2    # uppercase CHAPTER mentions on a page with no chapter opening
-_OCR_NUMERAL = str.maketrans({"Y": "V", "1": "I", "l": "I", " ": None})
+_OCR_NUMERAL = str.maketrans({"Y": "V", "y": "V", "v": "V", "i": "I", "1": "I", "l": "I", "T": "I", " ": None})
+_OCR_NUMERAL_RUNS = (("H", "II"), ("n", "II"), ("m", "III"))
 _SS_STHANA_RE = re.compile(
     r"(SUTRA|NIDANA|SHARIRA|SARIRA|CHIKITSA|CHIKITSITA|KALPA)\s*-?\s*STHANA|U\s*T\s*T\s*A\s*R\s*A\s*-?\s*T\s*A\s*N\s*T\s*R\s*A",
     re.I)
@@ -146,6 +154,14 @@ _MINOR_WORDS = {"and", "of", "the", "in", "for", "with"}
 def _title(s: str) -> str:
     words = [(w[0] + w[1:].capitalize() if w[0] == "(" else w.capitalize()) if w.isupper() else w for w in s.split()]
     return " ".join(w.lower() if i and w.lower() in _MINOR_WORDS else w for i, w in enumerate(words))
+
+
+def _ocr_numeral(raw: str) -> str:
+    """A chapter numeral as OCR printed it, mapped back to roman letters ("Vn" -> "VII")."""
+    out = raw.translate(_OCR_NUMERAL)
+    for glyph, letters in _OCR_NUMERAL_RUNS:
+        out = out.replace(glyph, letters)
+    return out
 
 
 def _sthana(match_text: str) -> str:
@@ -304,8 +320,7 @@ def _marks(text: str, text_name: str | None) -> tuple[list[tuple[int, str]], lis
         sthanas = [(m.start(), _sthana(m.group(0))) for m in _SS_STHANA_RE.finditer(text) if m.group(0).isupper()]
         # Chapter openings ("CHAPTER XLIV. Now we shall discourse…") are the
         # strong signal; otherwise only the running head at the top of a page.
-        openings = [(m.start(), (m.group(1).translate(_OCR_NUMERAL).replace("H", "II"), True))
-                    for m in _SS_OPENING_RE.finditer(text)]
+        openings = [(m.start(), (_ocr_numeral(m.group(1)), True)) for m in _SS_OPENING_RE.finditer(text)]
         mentions = list(_SS_CHAPTER_RE.finditer(text))
         if not openings and sum(m.group(0).isupper() for m in mentions) >= _CONTENTS_MIN_HEADINGS:
             return [], []          # a table-of-contents page: its headings aren't the text's structure
@@ -439,12 +454,15 @@ def _resolve_chapters(sections: list, parts: dict[str, Any]) -> list:
     """Turn raw OCR'd chapter numerals into accepted ("chapter", n) marks.
 
     Chapters only move forward within a sthana. A running-head numeral is
-    accepted when it lies 0..3 chapters ahead of the current one; a chapter
-    opening ("CHAPTER n. Now we shall discourse…") may jump any distance
-    forward (headings lost to OCR leave gaps) but never back. Both readings
+    accepted when it lies 0..3 chapters ahead of the current one. Both readings
     of an OCR slip are tried (as read, and L->I: "XXXILI" -> XXXIII, "XL" ->
-    XI) and the valid one nearest the next expected chapter wins. Truncated
+    XI), and the valid one nearest the next expected chapter wins. Truncated
     running heads ("Chap. X" for XXXIX) and cross-references are dropped.
+
+    A chapter opening ("CHAPTER n. Now we shall discourse…") always moves the
+    chapter on. Its numeral may jump up to 3 ahead (an opening lost to OCR
+    leaves a gap). A numeral that is unreadable, behind, or further ahead is
+    a misreading, so the opening counts as the next chapter.
 
     A sthana change on the page clears the chapter (numbering restarts), and
     is moved to the top of the page so it applies before that page's chapter
@@ -461,14 +479,19 @@ def _resolve_chapters(sections: list, parts: dict[str, Any]) -> list:
             resolved.append((off, label))
             continue
         raw, is_opening = label[1]
-        max_step = None if is_opening else _CHAPTER_MAX_STEP
-        valid = [n for n in {_canonical_roman(raw), _canonical_roman(raw.replace("L", "I"))} if n
-                 and (current is None or (current <= n and (max_step is None or n <= current + max_step)))]
+        readings = {_canonical_roman(raw), _canonical_roman(raw.replace("L", "I"))}
+        valid = [n for n in readings if n and (current is None or current <= n <= current + _CHAPTER_MAX_STEP)]
+        target = (current or 0) + 1
+        if is_opening and current is None:          # a sthana's first opening: any readable numeral
+            valid = [n for n in readings if n]
         if valid:
-            target = (current or 0) + 1
             n = min(valid, key=lambda v: (abs(v - target), v))
-            resolved.append((off, ("chapter", n)))
-            current = n
+        elif is_opening:
+            n = target
+        else:
+            continue
+        resolved.append((off, ("chapter", n)))
+        current = n
     return sorted(resolved, key=lambda x: x[0])
 
 
