@@ -45,6 +45,16 @@ def test_provenance_records():
             assert prov["criteria_version"] and prov["supporting_chunk_ids"], item["id"]
 
 
+def test_reviewer_recorded_only_after_confirmation():
+    """Pending labels name no reviewer; confirmed ones must name who confirmed them."""
+    for item in DATASET:
+        prov = item["provenance"]
+        if prov["method"].endswith(": pending"):
+            assert prov["reviewed_by"] is None, item["id"]
+        elif prov["method"] == "agent-proposed from corpus text, human-reviewed":
+            assert prov["reviewed_by"], item["id"]
+
+
 def test_gold_labels_resolve_to_canonical_works():
     canonical = set(_CANONICAL_BY_LOWER.values())
     for item in DATASET:

@@ -1,13 +1,16 @@
 # Eval Relabel Review
 
-**Status: approved by the reviewer (logn1602) on 2026-10-29 and applied to `eval_dataset.json`**
-under [`LABELING_CRITERIA.md`](LABELING_CRITERIA.md) **v2**.
+**Status: applied to `eval_dataset.json` on 2026-10-29, PENDING row-by-row human review.**
+Every item's provenance reads `agent-proposed from corpus text, human-reviewed: pending` with `reviewed_by: null` until the reviewer
+confirms. Labels follow [`LABELING_CRITERIA.md`](LABELING_CRITERIA.md) **v2**.
 
-- The v1 proposals were approved as written. The reviewer then added the **v2 Formulary rule**
+Reviewer decisions so far (these are the reviewer's, not row approvals):
+- The **v2 Formulary rule**
   (for treatment/management questions, the Formulary is gold when it has formulation monographs
   indicated for the disease). 7 rows were re-checked and gained `afi` under it; `eval_024`
   stays Sushruta-only because the question names Sushruta.
 - `eval_017` was reworded by the reviewer to "Which classical formulations are indicated for Āmavāta?" (gold: Formulary).
+- **All other label choices are the agent's v1 proposals and have not been reviewed yet.**
 - Evidence came from plain text search of the corpus (parent chunks), never from retrieval or eval
   output. Formulary evidence is a monograph whose title and "Important therapeutic uses" list sit in
   the same chunk.

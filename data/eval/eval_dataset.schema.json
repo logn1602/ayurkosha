@@ -69,8 +69,10 @@
             "enum": [
               "bm25-keyword-evidence",
               "corpus-evidence-v1",
+              "agent-proposed from corpus text, human-reviewed: pending",
               "agent-proposed from corpus text, human-reviewed"
-            ]
+            ],
+            "description": "PENDING until the reviewer confirms the rows; only then CONFIRMED with reviewed_by set"
           },
           "criteria_version": {
             "type": [

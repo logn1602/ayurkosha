@@ -1,7 +1,7 @@
 # Eval Gold-Labeling Criteria (v2)
 
-v2 (2026-10-29, reviewer decision): adds the Formulary rule for treatment/management
-questions (§2) and the human-review provenance method (§5).
+v2 (2026-10-29): adds the reviewer's Formulary rule for treatment/management
+questions (§2) and the review-status provenance methods (§5).
 
 How `gold_sources` in `eval_dataset.json` are assigned. Retrieval metrics are
 scored at the **work level** (`src/evaluation/retrieval_metrics.py`): a retrieved
@@ -71,12 +71,14 @@ Every item carries a `provenance` object (see `eval_dataset.schema.json`):
 
 | Field | Meaning |
 |---|---|
-| `method` | how the gold sources were assigned: `agent-proposed from corpus text, human-reviewed` (current: proposed under these criteria, then approved by a reviewer), or `bm25-keyword-evidence` (legacy, unreviewed) |
+| `method` | how the gold sources were assigned: `agent-proposed from corpus text, human-reviewed: pending` (current: proposed under these criteria and applied, awaiting row-by-row review); `agent-proposed from corpus text, human-reviewed` (only once the reviewer confirms); or `bm25-keyword-evidence` (legacy) |
 | `criteria_version` | version of this document applied, or `null` for legacy labels |
 | `labeled_on` | ISO date the labels were assigned |
 | `source_commit` | commit holding the proposal the labels come from |
 | `supporting_chunk_ids` | parent chunk ids that substantively answer the question (empty for legacy labels) |
-| `reviewed_by` | who approved the labels, or `null` if unreviewed |
+| `reviewed_by` | who confirmed the labels; `null` while review is pending |
 
-Proposals are written to `relabel_review.md` first. Labels are changed in the
-dataset only after human approval.
+Proposals are written to `relabel_review.md` first. The current labels were
+applied at the reviewer's request before row-by-row review, so their provenance
+stays `…: pending` with `reviewed_by: null` until the reviewer confirms them
+(enforced by `tests/test_eval_dataset.py`).

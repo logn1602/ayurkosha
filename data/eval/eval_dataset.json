@@ -9,14 +9,14 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "api_all_volume_pdf_40_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -30,7 +30,7 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -38,7 +38,7 @@
         "api_all_volume_pdf_57_P0",
         "ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -52,7 +52,7 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -61,7 +61,7 @@
         "ashtanga_hridaya_vidyanath_illustrated_pdf_164_P0",
         "ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -74,7 +74,7 @@
     "category": "pharmacopoeia",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -82,7 +82,7 @@
         "api_all_volume_pdf_724_P0",
         "api_all_volume_pdf_1295_P1"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -96,7 +96,7 @@
     "category": "pharmacopoeia",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -104,7 +104,7 @@
         "api_all_volume_pdf_278_P0",
         "sushruta_samhita_vol_2_pdf_580_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -117,7 +117,7 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -125,7 +125,7 @@
         "api_all_volume_pdf_78_P0",
         "api_all_volume_pdf_80_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -138,14 +138,14 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "api_all_volume_pdf_84_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -159,7 +159,7 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -167,7 +167,7 @@
         "api_all_volume_pdf_984_P0",
         "sushruta_samhita_vol_1_pdf_614_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -181,7 +181,7 @@
     "category": "pharmacopoeia",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -189,7 +189,7 @@
         "api_all_volume_pdf_93_P0",
         "ashtanga_hridaya_vidyanath_illustrated_pdf_487_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -202,14 +202,14 @@
     "category": "formulation",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "afi_part1_pdf_121_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -222,14 +222,14 @@
     "category": "formulation",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "afi_part2_pdf_234_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -242,14 +242,14 @@
     "category": "formulation",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "afi_part1_pdf_168_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -262,14 +262,14 @@
     "category": "formulation",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "afi_part1_pdf_119_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -282,14 +282,14 @@
     "category": "formulation",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "afi_part1_pdf_112_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -302,14 +302,14 @@
     "category": "formulation",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "afi_part1_pdf_122_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -323,7 +323,7 @@
     "category": "formulation",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -332,7 +332,7 @@
         "sushruta_samhita_vol_1_pdf_442_P0",
         "sushruta_samhita_vol_1_pdf_503_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -345,7 +345,7 @@
     "category": "clinical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -358,7 +358,7 @@
         "afi_part1_pdf_310_P0",
         "afi_part1_pdf_164_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -372,7 +372,7 @@
     "category": "clinical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -382,7 +382,7 @@
         "afi_part1_pdf_58_P0",
         "afi_part1_pdf_97_P1"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -396,7 +396,7 @@
     "category": "clinical",
     "difficulty": "hard",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -407,7 +407,7 @@
         "afi_part1_pdf_162_P0",
         "afi_part1_pdf_264_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -421,7 +421,7 @@
     "category": "clinical",
     "difficulty": "hard",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -431,7 +431,7 @@
         "afi_part1_pdf_109_P0",
         "afi_part1_pdf_109_P1"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -445,7 +445,7 @@
     "category": "clinical",
     "difficulty": "hard",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -454,7 +454,7 @@
         "afi_part1_pdf_112_P0",
         "afi_part1_pdf_165_P1"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -468,7 +468,7 @@
     "category": "clinical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -478,7 +478,7 @@
         "afi_part1_pdf_92_P1",
         "afi_part1_pdf_110_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -492,7 +492,7 @@
     "category": "clinical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -501,7 +501,7 @@
         "afi_part1_pdf_97_P1",
         "afi_part1_pdf_110_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -514,14 +514,14 @@
     "category": "classical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
       "supporting_chunk_ids": [
         "sushruta_samhita_vol_2_pdf_371_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -535,7 +535,7 @@
     "category": "classical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -545,7 +545,7 @@
         "afi_part1_pdf_109_P1",
         "afi_part1_pdf_119_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -559,7 +559,7 @@
     "category": "classical",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -567,7 +567,7 @@
         "ashtanga_hridaya_vidyanath_illustrated_pdf_311_P0",
         "sushruta_samhita_vol_2_pdf_621_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -581,7 +581,7 @@
     "category": "classical",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -589,7 +589,7 @@
         "ashtanga_hridaya_vidyanath_illustrated_pdf_310_P0",
         "sushruta_samhita_vol_2_pdf_625_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -603,7 +603,7 @@
     "category": "classical",
     "difficulty": "medium",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -611,7 +611,7 @@
         "sushruta_samhita_vol_2_pdf_645_P0",
         "ashtanga_hridaya_vidyanath_illustrated_pdf_53_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -625,7 +625,7 @@
     "category": "classical",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -633,7 +633,7 @@
         "ashtanga_hridaya_vidyanath_illustrated_pdf_345_P0",
         "sushruta_samhita_vol_2_pdf_714_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   },
   {
@@ -647,7 +647,7 @@
     "category": "classical",
     "difficulty": "easy",
     "provenance": {
-      "method": "agent-proposed from corpus text, human-reviewed",
+      "method": "agent-proposed from corpus text, human-reviewed: pending",
       "criteria_version": "v2",
       "labeled_on": "2026-10-29",
       "source_commit": "f082675",
@@ -656,7 +656,7 @@
         "sushruta_samhita_vol_2_pdf_535_P0",
         "sushruta_samhita_vol_2_pdf_536_P0"
       ],
-      "reviewed_by": "logn1602"
+      "reviewed_by": null
     }
   }
 ]
