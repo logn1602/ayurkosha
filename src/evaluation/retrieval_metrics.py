@@ -135,6 +135,11 @@ def score_retrieval(
 # work" means same file.
 
 PASSAGE_PAGE_WINDOW = 1
+# The Formulary prints two columns with different formulations side by side, so
+# an adjacent page is another formulation: its passages get no page allowance
+# (the passage's own page still counts, since parent ids shift when pages are
+# re-chunked).
+PASSAGE_PAGE_WINDOW_BY_WORK = {"Ayurvedic Formulary of India": 0}
 _SUPPORT_ID_RE = re.compile(r"^(?P<stem>.+)_(?P<page>\d+)_P\d+$")
 _CHILD_SUFFIX_RE = re.compile(r"_C\d+$")
 _ID_UNSAFE_RE = re.compile(r"[^A-Za-z0-9]+")      # as chunkers._sanitize_id
@@ -167,8 +172,12 @@ def covered_passages(chunk: dict[str, Any], supporting_ids: list[str],
     covered = set()
     for pid in supporting_ids:
         parsed = parse_support_id(pid)
-        if parent == pid or (parsed and page is not None and stem == parsed[0] and abs(page - parsed[1]) <= window):
+        if parent == pid:
             covered.add(pid)
+        elif parsed and page is not None and stem == parsed[0]:
+            allowed = min(window, PASSAGE_PAGE_WINDOW_BY_WORK.get(work_key(parsed[0]), window))
+            if abs(page - parsed[1]) <= allowed:
+                covered.add(pid)
     return covered
 
 

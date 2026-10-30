@@ -75,6 +75,13 @@ The exception, decided by the reviewer on 2026-10-30:
 - **eval_017 keeps its Formulary set as passage gold:** it asks for formulations.
   The set is 51 parents: 4.2% of Formulary pages, 5.9% of its chunks.
 
+**Page allowance.** A retrieved chunk hits a gold passage if it comes from that
+passage's parent or page. For Sushruta, the Pharmacopoeia and Ashtanga Hridaya,
+a page ±1 in the same file also counts. Formulary passages get no ±1: its
+two-column pages put different formulations side by side, so an adjacent page
+is another formulation. The passage's own page still counts, because parent ids
+shift when a page is re-chunked.
+
 ## 3. Scope
 
 - A question that names a work ("…in Sushruta") is gold only for that work, if it

@@ -239,6 +239,18 @@ def test_passage_hit_rules():
     assert rm.covered_passages({"chunk_id": "api_all_volume_pdf_40_P0_C3", "metadata": {}}, support)
 
 
+@pytest.mark.parametrize("source, stem, page, hit", [
+    ("afi_part1.pdf", "afi_part1_pdf", 112, True),                               # same page
+    ("afi_part1.pdf", "afi_part1_pdf", 113, False),                              # +1 page: another formulation
+    ("afi_part1.pdf", "afi_part1_pdf", 111, False),
+    ("sushruta_samhita_vol_3.pdf", "sushruta_samhita_vol_3_pdf", 113, True),     # others keep +-1
+    ("api_all_volume.pdf", "api_all_volume_pdf", 111, True),
+    ("ashtanga_hridaya_vidyanath_illustrated.pdf", "ashtanga_hridaya_vidyanath_illustrated_pdf", 113, True),
+])
+def test_formulary_passages_get_no_page_allowance(source, stem, page, hit):
+    assert bool(rm.covered_passages(_pchunk("x", source, page), [f"{stem}_112_P1"])) is hit
+
+
 def test_passage_scores_recall_share_and_mrr_cutoff():
     support = ["sushruta_samhita_vol_2_pdf_371_P0", "sushruta_samhita_vol_2_pdf_416_P0"]
     ranked = [_pchunk(f"c{i}", "afi_part1.pdf", i) for i in range(7)] + [_pchunk("ss", "sushruta_samhita_vol_2.pdf", 372)]
