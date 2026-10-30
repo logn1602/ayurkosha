@@ -48,6 +48,34 @@
         "uniqueItems": true,
         "description": "parent chunk ids the passage-level metric scores against"
       },
+      "gold_chapters": {
+        "type": "array",
+        "description": "chapters gold_passages covers when a cited page stands for its whole chapter (LABELING_CRITERIA.md 2a)",
+        "items": {
+          "type": "object",
+          "required": [
+            "source",
+            "chapter",
+            "first_page",
+            "last_page"
+          ],
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "chapter": {
+              "type": "string"
+            },
+            "first_page": {
+              "type": "integer"
+            },
+            "last_page": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
       "category": {
         "enum": [
           "pharmacopoeia",

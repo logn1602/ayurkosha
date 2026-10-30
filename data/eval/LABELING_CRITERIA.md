@@ -60,7 +60,7 @@ topic:
 ## 2a. Passage-level gold (`gold_passages`)
 
 By default a row's passage gold is its evidence, `provenance.supporting_chunk_ids`.
-The exception, decided by the reviewer on 2026-10-30:
+The exceptions, decided by the reviewer on 2026-10-30:
 
 - **eval_018–023 and eval_025: Sushruta chapter passages only.** The Formulary
   stays in their `gold_works`, so any Formulary chunk still counts at the work
@@ -74,6 +74,38 @@ The exception, decided by the reviewer on 2026-10-30:
     Formulary chunk would count as a passage hit 41% of the time.
 - **eval_017 keeps its Formulary set as passage gold:** it asks for formulations.
   The set is 51 parents: 4.2% of Formulary pages, 5.9% of its chunks.
+
+**Chapter-level gold (eval_018–025, the Sushruta disease rows, including eval_024
+Arsha).** Each cited Sushruta page stands for its whole chapter. `gold_passages`
+holds every parent chunk of that chapter, and `gold_chapters` records the span.
+- Chapters come from the context headers. A parent belongs to a chapter when one
+  of its chunks is headed with it, so the gold and the embedded headers agree.
+  The chapter openings behind them were audited for all 186 chapters (see
+  `docs/corpus_text_fixes.md`).
+- Every cited page lies inside its span. eval_019 cites three chapters (the
+  pathology in Nidana 6, the treatment in Cikitsa 11 and 12) and gets all three.
+
+| Row | Chapter | Pages | Parents |
+|---|---|---|---|
+| eval_018 Jvara | Uttaratantra 39 | vol 3 p190–232 (43) | 84 |
+| eval_019 Prameha | Nidana 6 + Cikitsa 11 + 12 | vol 2 p98–104, 427–433, 434–440 (7+7+7) | 9+7+10 |
+| eval_020 Grahani | Uttaratantra 40 | vol 3 p233–257 (25) | 49 |
+| eval_021 Atisara | Uttaratantra 40 | vol 3 p233–257 (25) | 49 |
+| eval_022 Pandu | Uttaratantra 44 | vol 3 p290–297 (8) | 15 |
+| eval_023 Kasa | Uttaratantra 52 | vol 3 p347–355 (9) | 16 |
+| eval_024 Arsha | Cikitsa 6 | vol 2 p371–383 (13) | 14 |
+| eval_025 Kustha | Cikitsa 9 | vol 2 p401–416 (16) | 18 |
+
+A chapter over 25 pages keeps page-level gold. The cap guards against
+mixed-topic chapters: Sutrasthana 46 runs ~100 pages through every food group.
+The exception is a single-topic chapter, and so far that is only Uttaratantra 39
+(Jvara, 43 pages), decided by the reviewer on 2026-10-30. Chapter-level gold
+isn't used for the herb/property rows or for Ashtanga Hridaya and Pharmacopoeia
+passages. Those stay page-level. Rebuild with
+`python scripts/build_chapter_passages.py` (offline; `--write` applies). The ±1
+page allowance below still applies to chapter gold, so the page on either side
+of a chapter also counts. That page is usually the shared edge of the
+neighbouring chapter.
 
 **Page allowance.** A retrieved chunk hits a gold passage if it comes from that
 passage's parent or page. For Sushruta, the Pharmacopoeia and Ashtanga Hridaya,

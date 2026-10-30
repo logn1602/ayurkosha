@@ -528,8 +528,90 @@
       "afi"
     ],
     "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_190_P0",
+      "sushruta_samhita_vol_3_pdf_191_P0",
+      "sushruta_samhita_vol_3_pdf_191_P1",
+      "sushruta_samhita_vol_3_pdf_192_P1",
+      "sushruta_samhita_vol_3_pdf_192_P0",
+      "sushruta_samhita_vol_3_pdf_193_P0",
+      "sushruta_samhita_vol_3_pdf_193_P1",
+      "sushruta_samhita_vol_3_pdf_194_P1",
+      "sushruta_samhita_vol_3_pdf_194_P0",
+      "sushruta_samhita_vol_3_pdf_195_P0",
+      "sushruta_samhita_vol_3_pdf_195_P1",
+      "sushruta_samhita_vol_3_pdf_196_P1",
+      "sushruta_samhita_vol_3_pdf_196_P0",
+      "sushruta_samhita_vol_3_pdf_197_P0",
+      "sushruta_samhita_vol_3_pdf_197_P1",
+      "sushruta_samhita_vol_3_pdf_198_P1",
+      "sushruta_samhita_vol_3_pdf_198_P0",
+      "sushruta_samhita_vol_3_pdf_199_P1",
+      "sushruta_samhita_vol_3_pdf_199_P0",
+      "sushruta_samhita_vol_3_pdf_200_P0",
+      "sushruta_samhita_vol_3_pdf_200_P1",
+      "sushruta_samhita_vol_3_pdf_201_P0",
+      "sushruta_samhita_vol_3_pdf_201_P1",
+      "sushruta_samhita_vol_3_pdf_202_P0",
+      "sushruta_samhita_vol_3_pdf_202_P1",
+      "sushruta_samhita_vol_3_pdf_203_P1",
       "sushruta_samhita_vol_3_pdf_203_P0",
-      "sushruta_samhita_vol_3_pdf_204_P0"
+      "sushruta_samhita_vol_3_pdf_204_P1",
+      "sushruta_samhita_vol_3_pdf_204_P0",
+      "sushruta_samhita_vol_3_pdf_205_P0",
+      "sushruta_samhita_vol_3_pdf_205_P1",
+      "sushruta_samhita_vol_3_pdf_206_P0",
+      "sushruta_samhita_vol_3_pdf_206_P1",
+      "sushruta_samhita_vol_3_pdf_207_P0",
+      "sushruta_samhita_vol_3_pdf_207_P1",
+      "sushruta_samhita_vol_3_pdf_208_P0",
+      "sushruta_samhita_vol_3_pdf_208_P1",
+      "sushruta_samhita_vol_3_pdf_209_P0",
+      "sushruta_samhita_vol_3_pdf_209_P1",
+      "sushruta_samhita_vol_3_pdf_210_P0",
+      "sushruta_samhita_vol_3_pdf_210_P1",
+      "sushruta_samhita_vol_3_pdf_211_P1",
+      "sushruta_samhita_vol_3_pdf_211_P0",
+      "sushruta_samhita_vol_3_pdf_212_P0",
+      "sushruta_samhita_vol_3_pdf_212_P1",
+      "sushruta_samhita_vol_3_pdf_213_P0",
+      "sushruta_samhita_vol_3_pdf_213_P1",
+      "sushruta_samhita_vol_3_pdf_214_P0",
+      "sushruta_samhita_vol_3_pdf_214_P1",
+      "sushruta_samhita_vol_3_pdf_215_P0",
+      "sushruta_samhita_vol_3_pdf_215_P1",
+      "sushruta_samhita_vol_3_pdf_216_P0",
+      "sushruta_samhita_vol_3_pdf_216_P1",
+      "sushruta_samhita_vol_3_pdf_217_P0",
+      "sushruta_samhita_vol_3_pdf_217_P1",
+      "sushruta_samhita_vol_3_pdf_218_P1",
+      "sushruta_samhita_vol_3_pdf_218_P0",
+      "sushruta_samhita_vol_3_pdf_219_P1",
+      "sushruta_samhita_vol_3_pdf_219_P0",
+      "sushruta_samhita_vol_3_pdf_220_P1",
+      "sushruta_samhita_vol_3_pdf_220_P0",
+      "sushruta_samhita_vol_3_pdf_221_P1",
+      "sushruta_samhita_vol_3_pdf_221_P0",
+      "sushruta_samhita_vol_3_pdf_222_P0",
+      "sushruta_samhita_vol_3_pdf_222_P1",
+      "sushruta_samhita_vol_3_pdf_223_P0",
+      "sushruta_samhita_vol_3_pdf_223_P1",
+      "sushruta_samhita_vol_3_pdf_224_P0",
+      "sushruta_samhita_vol_3_pdf_224_P1",
+      "sushruta_samhita_vol_3_pdf_225_P1",
+      "sushruta_samhita_vol_3_pdf_225_P0",
+      "sushruta_samhita_vol_3_pdf_226_P1",
+      "sushruta_samhita_vol_3_pdf_226_P0",
+      "sushruta_samhita_vol_3_pdf_227_P0",
+      "sushruta_samhita_vol_3_pdf_227_P1",
+      "sushruta_samhita_vol_3_pdf_228_P0",
+      "sushruta_samhita_vol_3_pdf_228_P1",
+      "sushruta_samhita_vol_3_pdf_229_P0",
+      "sushruta_samhita_vol_3_pdf_229_P1",
+      "sushruta_samhita_vol_3_pdf_230_P1",
+      "sushruta_samhita_vol_3_pdf_230_P0",
+      "sushruta_samhita_vol_3_pdf_231_P1",
+      "sushruta_samhita_vol_3_pdf_231_P0",
+      "sushruta_samhita_vol_3_pdf_232_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -801,7 +883,15 @@
         "afi_part2_pdf_317_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_3.pdf",
+        "chapter": "Uttaratantra, Chapter 39",
+        "first_page": 190,
+        "last_page": 232
+      }
+    ]
   },
   {
     "id": "eval_019",
@@ -812,9 +902,32 @@
       "afi"
     ],
     "gold_passages": [
+      "sushruta_samhita_vol_2_pdf_98_P0",
+      "sushruta_samhita_vol_2_pdf_99_P0",
       "sushruta_samhita_vol_2_pdf_100_P0",
+      "sushruta_samhita_vol_2_pdf_101_P0",
+      "sushruta_samhita_vol_2_pdf_102_P0",
+      "sushruta_samhita_vol_2_pdf_103_P0",
+      "sushruta_samhita_vol_2_pdf_104_P0",
+      "sushruta_samhita_vol_2_pdf_104_P1",
+      "sushruta_samhita_vol_2_pdf_104_P2",
       "sushruta_samhita_vol_2_pdf_427_P0",
-      "sushruta_samhita_vol_2_pdf_434_P0"
+      "sushruta_samhita_vol_2_pdf_428_P0",
+      "sushruta_samhita_vol_2_pdf_429_P0",
+      "sushruta_samhita_vol_2_pdf_430_P0",
+      "sushruta_samhita_vol_2_pdf_431_P0",
+      "sushruta_samhita_vol_2_pdf_432_P0",
+      "sushruta_samhita_vol_2_pdf_433_P0",
+      "sushruta_samhita_vol_2_pdf_434_P0",
+      "sushruta_samhita_vol_2_pdf_435_P0",
+      "sushruta_samhita_vol_2_pdf_436_P1",
+      "sushruta_samhita_vol_2_pdf_436_P0",
+      "sushruta_samhita_vol_2_pdf_437_P0",
+      "sushruta_samhita_vol_2_pdf_438_P0",
+      "sushruta_samhita_vol_2_pdf_438_P1",
+      "sushruta_samhita_vol_2_pdf_439_P1",
+      "sushruta_samhita_vol_2_pdf_439_P0",
+      "sushruta_samhita_vol_2_pdf_440_P0"
     ],
     "category": "clinical",
     "difficulty": "hard",
@@ -1003,7 +1116,27 @@
         "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_2.pdf",
+        "chapter": "Nidanasthana, Chapter 6",
+        "first_page": 98,
+        "last_page": 104
+      },
+      {
+        "source": "sushruta_samhita_vol_2.pdf",
+        "chapter": "Chikitsasthana, Chapter 11",
+        "first_page": 427,
+        "last_page": 433
+      },
+      {
+        "source": "sushruta_samhita_vol_2.pdf",
+        "chapter": "Chikitsasthana, Chapter 12",
+        "first_page": 434,
+        "last_page": 440
+      }
+    ]
   },
   {
     "id": "eval_020",
@@ -1014,7 +1147,54 @@
       "afi"
     ],
     "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_233_P1",
+      "sushruta_samhita_vol_3_pdf_233_P0",
+      "sushruta_samhita_vol_3_pdf_234_P1",
+      "sushruta_samhita_vol_3_pdf_234_P0",
+      "sushruta_samhita_vol_3_pdf_235_P0",
+      "sushruta_samhita_vol_3_pdf_235_P1",
+      "sushruta_samhita_vol_3_pdf_236_P0",
+      "sushruta_samhita_vol_3_pdf_236_P1",
+      "sushruta_samhita_vol_3_pdf_237_P0",
+      "sushruta_samhita_vol_3_pdf_237_P1",
+      "sushruta_samhita_vol_3_pdf_238_P1",
+      "sushruta_samhita_vol_3_pdf_238_P0",
+      "sushruta_samhita_vol_3_pdf_239_P1",
+      "sushruta_samhita_vol_3_pdf_239_P0",
+      "sushruta_samhita_vol_3_pdf_240_P0",
+      "sushruta_samhita_vol_3_pdf_240_P1",
+      "sushruta_samhita_vol_3_pdf_241_P0",
+      "sushruta_samhita_vol_3_pdf_241_P1",
+      "sushruta_samhita_vol_3_pdf_242_P1",
+      "sushruta_samhita_vol_3_pdf_242_P0",
+      "sushruta_samhita_vol_3_pdf_243_P0",
+      "sushruta_samhita_vol_3_pdf_243_P1",
+      "sushruta_samhita_vol_3_pdf_244_P1",
+      "sushruta_samhita_vol_3_pdf_244_P0",
+      "sushruta_samhita_vol_3_pdf_245_P1",
+      "sushruta_samhita_vol_3_pdf_245_P0",
+      "sushruta_samhita_vol_3_pdf_246_P0",
+      "sushruta_samhita_vol_3_pdf_246_P1",
+      "sushruta_samhita_vol_3_pdf_247_P0",
+      "sushruta_samhita_vol_3_pdf_247_P1",
+      "sushruta_samhita_vol_3_pdf_248_P1",
+      "sushruta_samhita_vol_3_pdf_248_P0",
+      "sushruta_samhita_vol_3_pdf_249_P0",
+      "sushruta_samhita_vol_3_pdf_249_P1",
+      "sushruta_samhita_vol_3_pdf_250_P1",
+      "sushruta_samhita_vol_3_pdf_250_P0",
+      "sushruta_samhita_vol_3_pdf_251_P0",
+      "sushruta_samhita_vol_3_pdf_251_P1",
+      "sushruta_samhita_vol_3_pdf_252_P0",
+      "sushruta_samhita_vol_3_pdf_252_P1",
+      "sushruta_samhita_vol_3_pdf_253_P1",
+      "sushruta_samhita_vol_3_pdf_253_P0",
+      "sushruta_samhita_vol_3_pdf_254_P1",
+      "sushruta_samhita_vol_3_pdf_254_P0",
+      "sushruta_samhita_vol_3_pdf_255_P1",
+      "sushruta_samhita_vol_3_pdf_255_P0",
       "sushruta_samhita_vol_3_pdf_256_P0",
+      "sushruta_samhita_vol_3_pdf_256_P1",
       "sushruta_samhita_vol_3_pdf_257_P0"
     ],
     "category": "clinical",
@@ -1196,7 +1376,15 @@
         "afi_part2_pdf_304_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_3.pdf",
+        "chapter": "Uttaratantra, Chapter 40",
+        "first_page": 233,
+        "last_page": 257
+      }
+    ]
   },
   {
     "id": "eval_021",
@@ -1207,7 +1395,55 @@
       "afi"
     ],
     "gold_passages": [
-      "sushruta_samhita_vol_3_pdf_253_P0"
+      "sushruta_samhita_vol_3_pdf_233_P1",
+      "sushruta_samhita_vol_3_pdf_233_P0",
+      "sushruta_samhita_vol_3_pdf_234_P1",
+      "sushruta_samhita_vol_3_pdf_234_P0",
+      "sushruta_samhita_vol_3_pdf_235_P0",
+      "sushruta_samhita_vol_3_pdf_235_P1",
+      "sushruta_samhita_vol_3_pdf_236_P0",
+      "sushruta_samhita_vol_3_pdf_236_P1",
+      "sushruta_samhita_vol_3_pdf_237_P0",
+      "sushruta_samhita_vol_3_pdf_237_P1",
+      "sushruta_samhita_vol_3_pdf_238_P1",
+      "sushruta_samhita_vol_3_pdf_238_P0",
+      "sushruta_samhita_vol_3_pdf_239_P1",
+      "sushruta_samhita_vol_3_pdf_239_P0",
+      "sushruta_samhita_vol_3_pdf_240_P0",
+      "sushruta_samhita_vol_3_pdf_240_P1",
+      "sushruta_samhita_vol_3_pdf_241_P0",
+      "sushruta_samhita_vol_3_pdf_241_P1",
+      "sushruta_samhita_vol_3_pdf_242_P1",
+      "sushruta_samhita_vol_3_pdf_242_P0",
+      "sushruta_samhita_vol_3_pdf_243_P0",
+      "sushruta_samhita_vol_3_pdf_243_P1",
+      "sushruta_samhita_vol_3_pdf_244_P1",
+      "sushruta_samhita_vol_3_pdf_244_P0",
+      "sushruta_samhita_vol_3_pdf_245_P1",
+      "sushruta_samhita_vol_3_pdf_245_P0",
+      "sushruta_samhita_vol_3_pdf_246_P0",
+      "sushruta_samhita_vol_3_pdf_246_P1",
+      "sushruta_samhita_vol_3_pdf_247_P0",
+      "sushruta_samhita_vol_3_pdf_247_P1",
+      "sushruta_samhita_vol_3_pdf_248_P1",
+      "sushruta_samhita_vol_3_pdf_248_P0",
+      "sushruta_samhita_vol_3_pdf_249_P0",
+      "sushruta_samhita_vol_3_pdf_249_P1",
+      "sushruta_samhita_vol_3_pdf_250_P1",
+      "sushruta_samhita_vol_3_pdf_250_P0",
+      "sushruta_samhita_vol_3_pdf_251_P0",
+      "sushruta_samhita_vol_3_pdf_251_P1",
+      "sushruta_samhita_vol_3_pdf_252_P0",
+      "sushruta_samhita_vol_3_pdf_252_P1",
+      "sushruta_samhita_vol_3_pdf_253_P1",
+      "sushruta_samhita_vol_3_pdf_253_P0",
+      "sushruta_samhita_vol_3_pdf_254_P1",
+      "sushruta_samhita_vol_3_pdf_254_P0",
+      "sushruta_samhita_vol_3_pdf_255_P1",
+      "sushruta_samhita_vol_3_pdf_255_P0",
+      "sushruta_samhita_vol_3_pdf_256_P0",
+      "sushruta_samhita_vol_3_pdf_256_P1",
+      "sushruta_samhita_vol_3_pdf_257_P0"
     ],
     "category": "clinical",
     "difficulty": "hard",
@@ -1319,7 +1555,15 @@
         "afi_part2_pdf_304_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_3.pdf",
+        "chapter": "Uttaratantra, Chapter 40",
+        "first_page": 233,
+        "last_page": 257
+      }
+    ]
   },
   {
     "id": "eval_022",
@@ -1331,7 +1575,20 @@
     ],
     "gold_passages": [
       "sushruta_samhita_vol_3_pdf_290_P0",
-      "sushruta_samhita_vol_3_pdf_296_P0"
+      "sushruta_samhita_vol_3_pdf_290_P1",
+      "sushruta_samhita_vol_3_pdf_291_P0",
+      "sushruta_samhita_vol_3_pdf_291_P1",
+      "sushruta_samhita_vol_3_pdf_292_P0",
+      "sushruta_samhita_vol_3_pdf_292_P1",
+      "sushruta_samhita_vol_3_pdf_293_P0",
+      "sushruta_samhita_vol_3_pdf_293_P1",
+      "sushruta_samhita_vol_3_pdf_294_P0",
+      "sushruta_samhita_vol_3_pdf_294_P1",
+      "sushruta_samhita_vol_3_pdf_295_P0",
+      "sushruta_samhita_vol_3_pdf_295_P1",
+      "sushruta_samhita_vol_3_pdf_296_P1",
+      "sushruta_samhita_vol_3_pdf_296_P0",
+      "sushruta_samhita_vol_3_pdf_297_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -1532,7 +1789,15 @@
         "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_3.pdf",
+        "chapter": "Uttaratantra, Chapter 44",
+        "first_page": 290,
+        "last_page": 297
+      }
+    ]
   },
   {
     "id": "eval_023",
@@ -1543,7 +1808,22 @@
       "afi"
     ],
     "gold_passages": [
-      "sushruta_samhita_vol_3_pdf_347_P0"
+      "sushruta_samhita_vol_3_pdf_347_P0",
+      "sushruta_samhita_vol_3_pdf_348_P1",
+      "sushruta_samhita_vol_3_pdf_348_P0",
+      "sushruta_samhita_vol_3_pdf_349_P0",
+      "sushruta_samhita_vol_3_pdf_349_P1",
+      "sushruta_samhita_vol_3_pdf_350_P0",
+      "sushruta_samhita_vol_3_pdf_350_P1",
+      "sushruta_samhita_vol_3_pdf_351_P0",
+      "sushruta_samhita_vol_3_pdf_351_P1",
+      "sushruta_samhita_vol_3_pdf_352_P1",
+      "sushruta_samhita_vol_3_pdf_352_P0",
+      "sushruta_samhita_vol_3_pdf_353_P1",
+      "sushruta_samhita_vol_3_pdf_353_P0",
+      "sushruta_samhita_vol_3_pdf_354_P1",
+      "sushruta_samhita_vol_3_pdf_354_P0",
+      "sushruta_samhita_vol_3_pdf_355_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -1781,7 +2061,15 @@
         "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_3.pdf",
+        "chapter": "Uttaratantra, Chapter 52",
+        "first_page": 347,
+        "last_page": 355
+      }
+    ]
   },
   {
     "id": "eval_024",
@@ -1791,7 +2079,20 @@
       "sushruta"
     ],
     "gold_passages": [
-      "sushruta_samhita_vol_2_pdf_371_P0"
+      "sushruta_samhita_vol_2_pdf_371_P0",
+      "sushruta_samhita_vol_2_pdf_372_P0",
+      "sushruta_samhita_vol_2_pdf_373_P0",
+      "sushruta_samhita_vol_2_pdf_374_P0",
+      "sushruta_samhita_vol_2_pdf_375_P1",
+      "sushruta_samhita_vol_2_pdf_375_P0",
+      "sushruta_samhita_vol_2_pdf_376_P0",
+      "sushruta_samhita_vol_2_pdf_377_P0",
+      "sushruta_samhita_vol_2_pdf_378_P0",
+      "sushruta_samhita_vol_2_pdf_379_P0",
+      "sushruta_samhita_vol_2_pdf_380_P0",
+      "sushruta_samhita_vol_2_pdf_381_P0",
+      "sushruta_samhita_vol_2_pdf_382_P0",
+      "sushruta_samhita_vol_2_pdf_383_P0"
     ],
     "category": "classical",
     "difficulty": "medium",
@@ -1804,7 +2105,15 @@
         "sushruta_samhita_vol_2_pdf_371_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_2.pdf",
+        "chapter": "Chikitsasthana, Chapter 6",
+        "first_page": 371,
+        "last_page": 383
+      }
+    ]
   },
   {
     "id": "eval_025",
@@ -1815,6 +2124,22 @@
       "afi"
     ],
     "gold_passages": [
+      "sushruta_samhita_vol_2_pdf_401_P0",
+      "sushruta_samhita_vol_2_pdf_402_P0",
+      "sushruta_samhita_vol_2_pdf_403_P0",
+      "sushruta_samhita_vol_2_pdf_403_P1",
+      "sushruta_samhita_vol_2_pdf_404_P0",
+      "sushruta_samhita_vol_2_pdf_405_P0",
+      "sushruta_samhita_vol_2_pdf_406_P0",
+      "sushruta_samhita_vol_2_pdf_407_P0",
+      "sushruta_samhita_vol_2_pdf_408_P0",
+      "sushruta_samhita_vol_2_pdf_408_P1",
+      "sushruta_samhita_vol_2_pdf_409_P0",
+      "sushruta_samhita_vol_2_pdf_410_P0",
+      "sushruta_samhita_vol_2_pdf_411_P0",
+      "sushruta_samhita_vol_2_pdf_412_P0",
+      "sushruta_samhita_vol_2_pdf_413_P0",
+      "sushruta_samhita_vol_2_pdf_414_P0",
       "sushruta_samhita_vol_2_pdf_415_P0",
       "sushruta_samhita_vol_2_pdf_416_P0"
     ],
@@ -1985,7 +2310,15 @@
         "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
-    }
+    },
+    "gold_chapters": [
+      {
+        "source": "sushruta_samhita_vol_2.pdf",
+        "chapter": "Chikitsasthana, Chapter 9",
+        "first_page": 401,
+        "last_page": 416
+      }
+    ]
   },
   {
     "id": "eval_026",

@@ -55,14 +55,57 @@ def test_reviewer_recorded_only_after_confirmation():
             assert prov["reviewed_by"], item["id"]
 
 
+def _in_chapters(item, pid):
+    stem, page = parse_support_id(pid)
+    return any(stem == c["source"][: -len(".pdf")] + "_pdf" and c["first_page"] <= page <= c["last_page"]
+               for c in item.get("gold_chapters", []))
+
+
 def test_gold_passages_are_evidenced_parents_of_gold_works():
+    """Each gold passage is cited evidence, or lies in the chapter a cited page stands for."""
     for item in DATASET:
         assert item["gold_passages"], item["id"]
-        assert set(item["gold_passages"]) <= set(item["provenance"]["supporting_chunk_ids"]), item["id"]
+        evidence = set(item["provenance"]["supporting_chunk_ids"])
         works = {work_key(w) for w in item["gold_works"]}
         for pid in item["gold_passages"]:
             parsed = parse_support_id(pid)
             assert parsed and work_key(parsed[0]) in works, (item["id"], pid)
+            assert pid in evidence or _in_chapters(item, pid), (item["id"], pid)
+
+
+CHAPTER_ROWS = {"eval_018", "eval_019", "eval_020", "eval_021", "eval_022", "eval_023", "eval_024", "eval_025"}
+
+
+def test_chapter_gold_only_on_the_disease_rows_and_covers_their_cited_pages():
+    for item in DATASET:
+        chapters = item.get("gold_chapters", [])
+        assert bool(chapters) == (item["id"] in CHAPTER_ROWS), item["id"]
+        for c in chapters:
+            assert c["source"].startswith("sushruta"), item["id"]                       # never AH / API
+            pages = c["last_page"] - c["first_page"] + 1
+            assert pages <= 25 or c["chapter"] == "Uttaratantra, Chapter 39", (item["id"], c)   # single-topic
+        for pid in item["provenance"]["supporting_chunk_ids"]:
+            if chapters and pid.startswith("sushruta"):
+                assert _in_chapters(item, pid), (item["id"], pid)                   # cited page inside its span
+
+
+def test_eval_023_a_non_cited_page_of_the_kasa_chapter_is_a_passage_hit():
+    from src.evaluation import traces
+    from src.evaluation.retrieval_metrics import score_passages
+
+    item = next(i for i in DATASET if i["id"] == "eval_023")
+    [kasa] = item["gold_chapters"]
+    assert kasa["chapter"] == "Uttaratantra, Chapter 52"
+    cited = {parse_support_id(c)[1] for c in item["provenance"]["supporting_chunk_ids"] if c.startswith("sushruta")}
+    page = kasa["last_page"]                                                         # p355; cited is p347
+    assert all(abs(page - p) > 1 for p in cited)                                     # not a +-1 neighbour
+    passages = traces.load_gold_passages(EVAL_DIR / "eval_dataset.json")["eval_023"]
+
+    def chunk(p):
+        return {"chunk_id": f"x_{p}", "metadata": {"source": kasa["source"], "page": p, "text_name": "Sushruta Samhita"}}
+
+    assert score_passages([chunk(page)], passages, k=6)["hit"] == 1.0
+    assert score_passages([chunk(kasa["last_page"] + 2)], passages, k=6)["hit"] == 0.0   # Uttara 53, past +-1
 
 
 def test_formulary_sets_are_passage_gold_only_where_formulations_are_asked_for():
