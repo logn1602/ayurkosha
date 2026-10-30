@@ -155,3 +155,40 @@ def test_afi_unparseable_monograph_start_blanks_the_item():
     assert _header_end(recs[0]) == f"{AFI} > Simhanada Guggulu"
     assert _header_end(recs[1]) == AFI          # blank from the stranded reference on
     assert _header_end(recs[2]) == AFI          # ... and not revived on later pages
+
+
+# ── Pharmacopoeia: no carry-forward past a monograph start ────────────
+
+def test_api_garbled_running_header_falls_back_to_the_iast_title_line():
+    recs = annotate_context(_pages(API, [
+        "9. Yavani (Frt.)\nYAVĀNĪ (Fruit)\nYavānī consists of dried fruits of Trachyspermum ammi (Fam. Apiaceae)\n"
+        "PROPERTIES AND ACTION",
+        "1. Akarakarabha (R)t.)\nĀKĀRAKARABHA (Root)\nĀkārakarabha consists of dried roots of Anacyclus pyrethrum DC. "
+        "(Fam.\nAsteraceae)",
+    ]))
+    assert _header_end(recs[0]).endswith("Yavani (Frt.)")
+    assert _header_end(recs[1]) == f"{API} > Ākārakarabha (Root)"      # not "Yavani (Frt.)"
+
+
+def test_api_opening_without_any_parsable_title_blanks_the_item():
+    recs = annotate_context(_pages(API, [
+        "9. Yavani (Frt.)\nYAVĀNĪ (Fruit)\nYavānī consists of dried fruits (Fam. Apiaceae)\nPROPERTIES AND ACTION",
+        "#@ garbled heading line\nDroṇapuṣpī consists of dried whole plant of Leucas cephalotes Spreng. "
+        "(Fam. Lamiaceae)",
+    ]))
+    assert _header_end(recs[1]) == API
+
+
+def test_api_description_sentences_are_not_monograph_starts():
+    recs = annotate_context(_pages(API, [
+        "9. Yavani (Frt.)\nYAVĀNĪ (Fruit)\nYavānī consists of dried fruits (Fam. Apiaceae)\nDESCRIPTION",
+        "Drug consists of small, ovoid fruit; mesocarp consists of polygonal parenchyma",
+    ]))
+    assert _header_end(recs[1]).endswith("Yavani (Frt.)")                # no false boundary
+
+
+def test_api_plant_part_with_ampersand():
+    recs = annotate_context(_pages(API, [
+        "70. Tamalaki (Rt. St.& Lf.)\nTĀMALAKĪ (Root, Stem & Leaf)\nTāmalakī consists of root, stem and leaf "
+        "of Phyllanthus urinaria (Fam. Euphorbiaceae)"]))
+    assert _header_end(recs[0]) == f"{API} > Tamalaki (Rt. St.& Lf.)"

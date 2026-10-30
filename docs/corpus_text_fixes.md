@@ -345,6 +345,34 @@ monograph at the chunk's midpoint), and 1 was wrong (a summary-table page), whic
 the table-page rule now blanks. The remaining misses (10.6%) are formulation
 content whose title OCR made unreadable.
 
+### Pharmacopoeia item headers: carry-forward audit 2026-10-29
+
+Same check on the Pharmacopoeia. Boundaries were found independently of the header
+code, from the upper-case IAST title line every monograph opens with
+(`AŚVAGANDHĀ (Root)`). Result: 20 random boundaries, **19/20** headed with their own
+drug; all 513, **501**. Eleven of the 12 misses were carry-forward errors, where the
+previous drug's name ran on for a whole monograph:
+- Seven running headers didn't parse because the plant part contains "&"
+  (`Yashti (Stm& RT.)`, `Kumkuma (Sty & Stg.)`, …).
+- Four had garbled punctuation: `1. Akarakarabha (R)t.)` (headed "Yavani (Frt.)"),
+  `16. Dronapushpi (W.P.).)`, `11. Dhanvayasa (Wh/Pl)` and
+  `24. Jivaka (Pseudo –bulb)`.
+
+The twelfth, CIÑCĀ headed "Chicha (Ft. Pl.)", is the same drug spelled differently.
+
+The fix:
+- The running-header pattern accepts "&" and commas in the plant part.
+- When the running header doesn't parse, the IAST title line names the monograph,
+  if a "<Drug> consists of … (Fam. …)" opening sentence follows.
+- An opening sentence with no title before it still blanks the item.
+- Description sentences ("mesocarp consists of …") never cite a family, so they
+  don't count as openings.
+
+After: **512/513** (only the CIÑCĀ spelling variant). Item coverage is unchanged at
+99.2%. 162 of 6,557 chunks (2.5%) were renamed across 11 monographs, from the
+previous drug to the right one, e.g. Tagara (Rz.) → Tamalaki (Rt. St.& Lf.) (16
+chunks).
+
 Examples:
 ```
 api_all_volume_pdf_40_P0_C0   Ayurvedic Pharmacopoeia of India > Properties and Action > Asvagandha (Rt.)

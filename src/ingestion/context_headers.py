@@ -38,7 +38,21 @@ from config.settings import settings
 from src.ingestion.metadata import MONOGRAPH_SECTION_HEADERS, _roman_to_int
 
 # ── Markers per work ──────────────────────────────────────────────────
-_API_MONOGRAPH_RE = re.compile(r"^\s*\d{1,3}\.\s+([A-Z][A-Za-z\- ]{2,40}?)\s*\(([A-Za-z. \-]{2,25})\)\s*$", re.M)
+_API_MONOGRAPH_RE = re.compile(r"^\s*\d{1,3}\.\s+([A-Z][A-Za-z\- ]{2,40}?)\s*\(([A-Za-z.&, \-]{2,30})\)\s*$", re.M)
+# Every monograph also opens with an upper-case IAST title line and a
+# "<Drug> consists of …" sentence. When OCR breaks the running header
+# ("1. Akarakarabha (R)t.)"), the title line names the monograph; when neither
+# parses, the opening sentence still marks a boundary and the item goes blank.
+_API_UPPER = "A-ZĀĪŪṚṜḶṄÑṬḌṆŚṢṂḤ"
+_API_TITLE_LINE_RE = re.compile(rf"^\s*([{_API_UPPER}][{_API_UPPER}\- ]{{2,40}}?)\s*\(([A-Za-z .,&\-]{{3,40}})\)\s*$", re.M)
+# The opening sentence names the drug, then its botanical source *with family*:
+# "Aśvagandhā consists of dried mature roots of Withania somnifera Dunal. (Fam.
+# Solanaceae)". Description sentences ("Drug consists of small, ovoid fruit",
+# "mesocarp consists of …") never cite a family.
+_API_OPENING_RE = re.compile(r"^\s*[A-Z" + "ĀĪŪṚṜḶṄÑṬḌṆŚṢṂḤ" + r"]\S*(?:[ \t]+\S+){0,3}[ \t]+consists\s+of\b"
+                             r"[\s\S]{0,250}?\(\s*Fam\.", re.M)
+_API_HEAD_WINDOW = 300        # a title line this close after a running header is the same monograph
+_API_OPENING_WINDOW = 400     # an opening sentence this close after a title belongs to it
 # Formulary monograph openers. A title is a run of upper-case words, found either
 # after its number "G:I" (OCR writes "16:3", "1 : 9", "1 ; 14", "3:17PUGA" and
 # often drops the "(" that follows) or, when OCR garbled the number ("fe LASUNADI
@@ -114,6 +128,19 @@ def _sthana(match_text: str) -> str:
     return _title(match_text)
 
 
+def _api_items(text: str) -> list[tuple[int, str]]:
+    """Pharmacopoeia item marks: running headers, else IAST title lines, else blank at an opening."""
+    heads = [(m.start(), f"{m.group(1).strip()} ({m.group(2).strip()})") for m in _API_MONOGRAPH_RE.finditer(text)]
+    titled = list(heads)
+    for m in _API_TITLE_LINE_RE.finditer(text):
+        if (_API_OPENING_RE.search(text, m.end(), m.end() + 250)
+                and not any(0 <= m.start() - off <= _API_HEAD_WINDOW for off, _ in heads)):
+            titled.append((m.start(), f"{' '.join(m.group(1).split()).title()} ({m.group(2).strip()})"))
+    blanks = [(m.start(), "") for m in _API_OPENING_RE.finditer(text)
+              if not any(0 <= m.start() - off <= _API_OPENING_WINDOW for off, _ in titled)]
+    return sorted(titled + blanks)
+
+
 def _afi_titles(text: str) -> list[tuple[int, str]]:
     """(offset, title) of every parsable Formulary monograph title on a page."""
     def ok(run: str) -> bool:
@@ -148,7 +175,7 @@ def _marks(text: str, text_name: str | None) -> tuple[list[tuple[int, str]], lis
     sections: list[tuple[int, str]] = []
     items: list[tuple[int, str]] = []
     if text_name == "Ayurvedic Pharmacopoeia of India":
-        items = [(m.start(), f"{m.group(1).strip()} ({m.group(2).strip()})") for m in _API_MONOGRAPH_RE.finditer(text)]
+        items = _api_items(text)
         sections = [(m.start(), _title(m.group(1))) for m in _SECTION_HEADER_RE.finditer(text)]
         # A new monograph resets the section until its first heading.
         sections += [(off, "") for off, _ in items]
