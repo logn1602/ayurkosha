@@ -299,7 +299,7 @@ The Sushruta OCR needed most of the work:
 | Work | Chunks with section or item | All three levels |
 |---|---|---|
 | Pharmacopoeia | 99% | 92% |
-| Formulary | 44% item level (was 91%, mostly wrong; see below) | — |
+| Formulary | 51% item level (was 91%, mostly wrong; see below) | — |
 | Sushruta | 95% | n/a (no item level) |
 | Ashtanga Hridaya | 15% | 14% (only the English Vidyanath volume has markers) |
 
@@ -339,27 +339,71 @@ formulation's name. The fix:
     starts the next word ("BHASMA A|cceptable", "RASA B|haisajyaratnavali").
   - A heading split by OCR is joined ("12:4 KASTURYADI (VAYU) GUTIKA",
     "18:6 TRIVANGA! BHASMA").
+  - A section number may end in a period ("4:2. ARKADI KVATHA CURNA"): 16 more
+    titles in the second volume.
 
-  These changed 36 chunk headers: 31 truncated or split names completed, 4
-  garbage names blanked, 1 new title (Boladi Vati).
+  The first three changed 36 chunk headers: 31 truncated or split names
+  completed, 4 garbage names blanked, 1 new title (Boladi Vati).
+- **Recovery from section numbers.** Most chunks blanked as "title unreadable"
+  sit inside a monograph whose title did parse. A doubtful boundary had blanked
+  them: a citation the two-column layout misplaced, or, in the second volume,
+  the citation that closes the verse block, well over 160 chars after the title.
+  A blank inside a monograph span is given the monograph's name only when nothing
+  else can start there:
+  - the next parsed title carries the next section number (G:I, then G:I+1; or
+    G+1:1 after a group end trimmed before the introduction), and
+  - the span holds at most one therapeutic-uses list. A misread number or an
+    untitled formulation in between would bring a second one.
 
-Item-level coverage over 4,090 chunks went from 91.1% to **43.7%**:
+  A title found without its number takes it from its neighbours (between G:I-1
+  and G:I+1, or G:last and G+1:2). Table pages stay blank, and no named chunk
+  is renamed. This filled 297 blanks: 251 of the 425 "title unreadable" chunks
+  and 46 verse chunks. A spot check of 10 against the page text found all 10
+  right (Sri Ramabana Rasa's chunk reads "Grahani, Amavata"; Punarnavadyarista's
+  chunk carries its own Sotharogadhikara citation).
 
-| Chunks now | Count | Share | Named before |
-|---|---|---|---|
-| named | 1,786 | 43.7% | 1,782 (925 unchanged, 857 renamed) |
-| blank: non-monograph page (front matter, glossary, appendix, garbage OCR) | 1,206 | 29.5% | 897 (wrong before) |
-| blank: index / summary-table page | 467 | 11.4% | 467 (wrong before) |
-| blank: formulation content, title unreadable (**miss**) | 438 | 10.7% | 419 |
-| blank: verse / OCR-noise chunk on a monograph page | 193 | 4.7% | 162 |
+Item-level coverage over 4,090 chunks went from 91.1% to **51.4%**:
+
+| Chunks now | Count | Share |
+|---|---|---|
+| named | 2,101 | 51.4% |
+| blank: non-monograph page (front matter, glossary, appendix, garbage OCR) | 1,206 | 29.5% |
+| blank: index / summary-table page | 467 | 11.4% |
+| blank: formulation content, still unresolved (**miss**) | 174 | 4.3% |
+| blank: verse / OCR-noise chunk on a monograph page | 142 | 3.5% |
 
 The old 91% was mostly carry-forward error. 1,364 of its 3,726 named chunks sat on
-non-monograph or index pages, so those blanks are correct. Of the chunks named
-now, 857 had a different name before. Spot check of 10 changed headers: 7
-correct, 2 straddle a monograph boundary (the header names the monograph at the
-chunk's midpoint), and 1 was wrong (a summary-table page), which the table-page
-rule now blanks. The real loss is the misses (10.7%): formulation content whose
-title OCR made unreadable.
+non-monograph or index pages, so those blanks are correct, and 857 of the chunks
+named after the title fix had a different name before. Spot check of 10 changed
+headers (title fix): 7 correct, 2 straddle a monograph boundary (the header names
+the monograph at the chunk's midpoint), and 1 was wrong (a summary-table page),
+which the table-page rule now blanks.
+
+The 174 remaining misses break down as:
+- 63 back-matter entries (purification procedures, appendices) or titles without
+  a section number;
+- 56 outside every monograph span: group introductions and front or back matter;
+- 28 in spans holding two or more uses lists (an untitled formulation inside);
+- 27 before a next title that skips the new group's first formulations.
+
+About 119 of these are right to stay blank. The ~55 that are real formulation
+content can't be told apart without the untitled formulation's own title.
+
+**The Formulary's own index and contents pages** were tried for that last step.
+They are:
+- the formula-wise therapeutic index (back matter: serial, name and G:I for every
+  formulation, by group);
+- the table at the start of each group (formulation, source, verses and printed
+  page).
+
+In the parent store their line breaks are gone, so names run together in the
+column-wise blocks ("…KUMARYASAVA (A) KUMARYASAVA (B) KHADIRARISTA…"). Scored
+against the titles that do parse, the index-derived section map agreed on 137 of
+194 numbers. The group-table rows agreed on 165 of 225, and their page column
+gave no stable printed-to-PDF offset in the second volume. Assigning titles from
+either map would add wrong headers, so neither is used. A layout-aware re-read of
+those pages from the PDFs (word positions, not the joined text) would be needed
+first.
 
 **Evidence sets use different boundaries.** A blank header is safe, but a
 supporting set that stops at a doubtful boundary drops real evidence. So

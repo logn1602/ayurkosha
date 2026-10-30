@@ -221,25 +221,46 @@ def _span_at(spans, page, offset):
                 None)
 
 
-def test_afi_misplaced_citation_does_not_split_a_formulation_from_its_uses_list():
-    """The two-column layout moved a citation into the ingredient list. The header goes
-    blank there (conservative), but the formulation's span runs on to the next title,
-    so its therapeutic-uses list on the next page stays with it."""
-    pages = [
+def _rasnadi_pages(next_number="4:29", second_uses=""):
+    return [
         "4:27 RASNADI KVATHA CURNA (Bhaisajyaratnavali, Amavatadhikara; 98-100.) 1. Rasna (Rt.) 1 part "
         "2. Eranda (Rt.) 1 part 3. Sunthi (Rz.) 1 part 4. Devadaru (Ht. Wd.) 1 part 5. Guduci (St.) 1 part "
         "6. Punarnava (Rt.) 1 part (Cakradatta, Amavatacikitsa; 58.) 7. Sati (Rz.) 1 part",
-        "8. Vaca (Rz.) 1 part Dosage : 12 g. Important therapeutic uses : amavata; vataroga. "
-        "4:28 RASNADI KVATHA CURNA (MAHA) (Sarngadharasamhita, Madhyamakhanda, Adhyaya 2; 90.) 1. Rasna",
+        "8. Vaca (Rz.) 1 part Dosage : 12 g. Important therapeutic uses : amavata; vataroga. " + second_uses +
+        f"{next_number} RASNADI KVATHA CURNA (MAHA) (Sarngadharasamhita, Madhyamakhanda, Adhyaya 2; 90.) 1. Rasna",
     ]
+
+
+def test_afi_misplaced_citation_does_not_split_a_formulation_from_its_uses_list():
+    """The two-column layout moved a citation into the ingredient list. The header goes
+    blank there (conservative: 4:28 may hide in between), but the formulation's span runs
+    on to the next title, so its therapeutic-uses list on the next page stays with it."""
+    pages = _rasnadi_pages()
     recs = annotate_context(_pages(AFI, pages))
     uses_at = pages[1].index("Important therapeutic uses")
     assert header_at(recs[1]["context"], uses_at) == AFI                 # header: blank after the citation
     spans = afi_monograph_spans(recs)
     assert [(s["number"], s["title"]) for s in spans] == [("4:27", "Rasnadi Kvatha Curna"),
-                                                           ("4:28", "Rasnadi Kvatha Curna")]
+                                                           ("4:29", "Rasnadi Kvatha Curna")]
     assert _span_at(spans, 2, uses_at) is spans[0]                        # span: the uses list is 4:27's
-    assert spans[0]["end"] == (2, pages[1].index("4:28"))
+    assert spans[0]["end"] == (2, pages[1].index("4:29"))
+
+
+def test_afi_blank_is_recovered_when_the_next_title_is_the_next_section_number():
+    """4:27 then 4:28: nothing else can start in between, so the blank after the misplaced
+    citation gets 4:27's name back."""
+    pages = _rasnadi_pages("4:28")
+    recs = annotate_context(_pages(AFI, pages))
+    assert header_at(recs[1]["context"], pages[1].index("Important therapeutic uses")) == f"{AFI} > Rasnadi Kvatha Curna"
+
+
+def test_afi_blank_stays_when_a_second_uses_list_shows_a_hidden_formulation():
+    """Consecutive numbers, but two uses lists in between: a misread number or an
+    untitled formulation hides there, so the blank stays."""
+    pages = _rasnadi_pages("4:28", "%# garbled (Bhaisajyaratnavali, Vatavyadhyadhikara; 4.) 1. Bala (Rt.) 1 part "
+                                   "Important therapeutic uses : pakshaghata. ")
+    recs = annotate_context(_pages(AFI, pages))
+    assert header_at(recs[1]["context"], pages[1].index("Important therapeutic uses")) == AFI
 
 
 def test_afi_span_stops_before_the_next_groups_introduction():

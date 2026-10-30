@@ -67,7 +67,7 @@ _AFI_SOURCES = (r"(?i:bhaisajya|ast?angahrd|asfangahrd|ast?angasa|sahasrayog|ras
                 r"siddhayog|cakradatt|susruta|rasatarang|rasamrt|bhavaprak|vaidya|siddhabhai|ayurveda(?:prak|sa)|"
                 r"arkaprak|bharatabhai|caraka|rasaratnasam|rasahrdaya|dravyaguna|rasoddhar|rasayogasag|"
                 r"[bv]asavarajiy|rasatantra)")
-_AFI_NUM_TITLE_RE = re.compile(r"(?<![\d:.])\d{1,2}[ \t]?[:;.][ \t]?\d{1,3}[ \t]*(" + _AFI_UPPER_RUN + ")")
+_AFI_NUM_TITLE_RE = re.compile(r"(?<![\d:.])\d{1,2}[ \t]?[:;.][ \t]?\d{1,3}\.?[ \t]*(" + _AFI_UPPER_RUN + ")")   # "4:2. ARKADI…"
 _AFI_REF_TITLE_RE = re.compile("(" + _AFI_UPPER_RUN + r")\s*\(\s*" + _AFI_SOURCES)
 _AFI_SOURCE_REF_RE = re.compile(r"\(\s*" + _AFI_SOURCES)
 _AFI_MIN_TITLE_LETTERS = 4
@@ -344,7 +344,79 @@ def annotate_context(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             state["section"] = _apply_section(state["parts"], label)
         if items:
             state["item"] = items[-1][1]
+    _afi_recover_items(records)
     return records
+
+
+def _afi_section_numbers(seq: list[dict[str, Any]]) -> list[tuple[int, int] | None]:
+    """Section numbers of consecutive monograph spans; a title read without its number
+    takes it from its neighbours (between G:I-1 and G:I+1, or G:last and G+1:2)."""
+    nums = [tuple(map(int, s["number"].split(":"))) if s["number"] else None for s in seq]
+    for i in range(1, len(seq) - 1):
+        a, b = nums[i - 1], nums[i + 1]
+        if nums[i] is None and a and b:
+            if b == (a[0], a[1] + 2):
+                nums[i] = (a[0], a[1] + 1)
+            elif b == (a[0] + 1, 2):
+                nums[i] = (a[0] + 1, 1)
+    return nums
+
+
+def _afi_recover_items(records: list[dict[str, Any]]) -> None:
+    """Give blanked Formulary chunks back their monograph's name where the numbering proves it.
+
+    The header marks blank at every doubtful boundary, and most such blanks
+    fall inside a monograph whose title did parse. Typical causes: a citation
+    the two-column layout misplaced, or, in the second volume, the citation that
+    closes a verse block, well over 160 chars after the title. A blank inside a
+    monograph span (``afi_monograph_spans``) is lifted only when nothing else
+    can start there. The next title must carry the next section number (G:I
+    then G:I+1, or G+1:1 after a group end trimmed before its introduction), and
+    the span must hold at most one therapeutic-uses list, since a hidden or
+    misnumbered formulation would bring its own. Table pages stay blank.
+    """
+    afi = [r for r in records if r.get("context") and r["metadata"].get("text_name") == "Ayurvedic Formulary of India"]
+    if not afi:
+        return
+    pages = {(r["metadata"].get("source", ""), r["metadata"].get("page")): r for r in afi}
+    uses: dict[str, list[tuple[Any, int]]] = {}
+    for (source, page), record in pages.items():
+        uses.setdefault(source, []).extend((page, off) for off, _ in afi_uses_lists(record.get("text", "")))
+    by_source: dict[str, list[dict[str, Any]]] = {}
+    for span in afi_monograph_spans(afi):
+        by_source.setdefault(span["source"], []).append(span)
+
+    def end_key(span):
+        return None if span["end"] is None else (span["end"][0], _PAGE_END if span["end"][1] is None else span["end"][1])
+
+    def inside(span, pos):
+        return span["start"] <= pos and (span["end"] is None or pos < end_key(span))
+
+    for source, seq in by_source.items():
+        nums = _afi_section_numbers(seq)
+        for i, span in enumerate(seq[:-1]):
+            n, nxt = nums[i], nums[i + 1]
+            trimmed = span["end"] != seq[i + 1]["start"]
+            if not n or sum(inside(span, u) for u in uses.get(source, [])) > 1:
+                continue
+            if nxt != (n[0], n[1] + 1) and not (trimmed and nxt == (n[0] + 1, 1)):
+                continue
+            last = span["end"][0] if span["end"] else span["start"][0]
+            for page in range(span["start"][0], last + 1):
+                record = pages.get((source, page))
+                if record is None or len(_AFI_BARE_NUM_RE.findall(record["text"])) >= _AFI_TABLE_PAGE_NUMBERS:
+                    continue
+                ctx = record["context"]
+                ctx["items"] = [(off, span["title"] if not label and inside(span, (page, off)) else label)
+                                for off, label in ctx["items"]]
+                if not ctx["items"] and inside(span, (page, 0)):
+                    ctx["items"] = [(0, span["title"])]     # a whole page carried blank
+    for source in by_source:                                 # re-carry the item across pages
+        item = ""
+        for record in (r for r in afi if r["metadata"].get("source", "") == source):
+            record["context"]["item_in"] = item
+            if record["context"]["items"]:
+                item = record["context"]["items"][-1][1]
 
 
 _CHAPTER_MAX_STEP = 3
