@@ -32,8 +32,13 @@ topic:
 - **Formulary rule (v2): for treatment/management questions, the Formulary IS
   gold** when it has formulation monographs indicated for that disease, i.e. a
   monograph whose "Important therapeutic uses" list names it. Prescribing an
-  indicated formulation is treatment. Evidence must be a monograph whose title
-  and uses list sit in the same chunk. This doesn't extend to classification or
+  indicated formulation is treatment. Evidence is the whole monograph: every
+  chunk from its parsed title to the next parsed title (`afi_monograph_spans`).
+  The span is inclusive, so a citation the layout misplaced never splits a
+  formulation from its uses list. It ends early only before a new group's
+  introduction or the back matter. (Until 2026-10-29 evidence was only a chunk
+  holding both the title and the uses list; changed at the reviewer's request.)
+  This doesn't extend to classification or
   etiology-only questions, to the Pharmacopoeia's single-herb monographs, or past
   the scope rule in §3 (eval_024 names Sushruta, so it stays Sushruta-only).
   For these rows the supporting set lists **every** such monograph (a complete
