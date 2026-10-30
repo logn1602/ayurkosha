@@ -397,6 +397,7 @@
         "afi_part2_pdf_60_P0",
         "afi_part2_pdf_61_P0",
         "afi_part2_pdf_62_P0",
+        "afi_part2_pdf_100_P0",
         "afi_part2_pdf_183_P0",
         "afi_part2_pdf_234_P0",
         "afi_part2_pdf_235_P0",
@@ -610,8 +611,6 @@
         "afi_part1_pdf_339_P0",
         "afi_part1_pdf_339_P1",
         "afi_part2_pdf_41_P0",
-        "afi_part2_pdf_42_P0",
-        "afi_part2_pdf_43_P0",
         "afi_part2_pdf_55_P0",
         "afi_part2_pdf_56_P0",
         "afi_part2_pdf_74_P0",
@@ -654,7 +653,6 @@
         "afi_part2_pdf_267_P0",
         "afi_part2_pdf_268_P0",
         "afi_part2_pdf_269_P0",
-        "afi_part2_pdf_270_P0",
         "afi_part2_pdf_271_P0",
         "afi_part2_pdf_272_P0",
         "afi_part2_pdf_276_P0",
@@ -850,8 +848,6 @@
         "afi_part1_pdf_330_P0",
         "afi_part1_pdf_336_P1",
         "afi_part1_pdf_337_P0",
-        "afi_part2_pdf_41_P0",
-        "afi_part2_pdf_42_P0",
         "afi_part2_pdf_43_P0",
         "afi_part2_pdf_60_P0",
         "afi_part2_pdf_61_P0",
@@ -883,8 +879,7 @@
         "afi_part2_pdf_302_P0",
         "afi_part2_pdf_303_P0",
         "afi_part2_pdf_314_P0",
-        "afi_part2_pdf_315_P0",
-        "afi_part2_pdf_316_P0"
+        "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
     }
@@ -1032,9 +1027,7 @@
         "afi_part1_pdf_330_P0",
         "afi_part1_pdf_336_P1",
         "afi_part1_pdf_337_P0",
-        "afi_part2_pdf_41_P0",
         "afi_part2_pdf_42_P0",
-        "afi_part2_pdf_43_P0",
         "afi_part2_pdf_121_P0",
         "afi_part2_pdf_133_P0",
         "afi_part2_pdf_134_P0",
@@ -1046,7 +1039,6 @@
         "afi_part2_pdf_217_P0",
         "afi_part2_pdf_222_P0",
         "afi_part2_pdf_223_P0",
-        "afi_part2_pdf_224_P0",
         "afi_part2_pdf_236_P0",
         "afi_part2_pdf_237_P0",
         "afi_part2_pdf_243_P0",
@@ -1158,8 +1150,6 @@
         "afi_part1_pdf_330_P1",
         "afi_part1_pdf_336_P1",
         "afi_part1_pdf_337_P0",
-        "afi_part2_pdf_41_P0",
-        "afi_part2_pdf_42_P0",
         "afi_part2_pdf_43_P0",
         "afi_part2_pdf_72_P0",
         "afi_part2_pdf_73_P0",
@@ -1370,7 +1360,6 @@
         "afi_part1_pdf_339_P0",
         "afi_part2_pdf_41_P0",
         "afi_part2_pdf_42_P0",
-        "afi_part2_pdf_43_P0",
         "afi_part2_pdf_60_P0",
         "afi_part2_pdf_61_P0",
         "afi_part2_pdf_62_P0",
@@ -1382,7 +1371,6 @@
         "afi_part2_pdf_200_P0",
         "afi_part2_pdf_222_P0",
         "afi_part2_pdf_223_P0",
-        "afi_part2_pdf_224_P0",
         "afi_part2_pdf_239_P0",
         "afi_part2_pdf_240_P0",
         "afi_part2_pdf_263_P0",
@@ -1409,8 +1397,7 @@
         "afi_part2_pdf_309_P0",
         "afi_part2_pdf_313_P0",
         "afi_part2_pdf_314_P0",
-        "afi_part2_pdf_315_P0",
-        "afi_part2_pdf_316_P0"
+        "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
     }
@@ -1608,15 +1595,12 @@
         "afi_part1_pdf_337_P0",
         "afi_part1_pdf_338_P0",
         "afi_part1_pdf_338_P1",
-        "afi_part2_pdf_41_P0",
         "afi_part2_pdf_42_P0",
         "afi_part2_pdf_43_P0",
         "afi_part2_pdf_55_P0",
         "afi_part2_pdf_56_P0",
         "afi_part2_pdf_62_P0",
         "afi_part2_pdf_63_P0",
-        "afi_part2_pdf_64_P0",
-        "afi_part2_pdf_69_P0",
         "afi_part2_pdf_70_P0",
         "afi_part2_pdf_75_P0",
         "afi_part2_pdf_76_P0",
@@ -1636,7 +1620,6 @@
         "afi_part2_pdf_206_P0",
         "afi_part2_pdf_213_P0",
         "afi_part2_pdf_214_P0",
-        "afi_part2_pdf_215_P0",
         "afi_part2_pdf_238_P0",
         "afi_part2_pdf_239_P0",
         "afi_part2_pdf_240_P0",
@@ -1660,8 +1643,7 @@
         "afi_part2_pdf_303_P0",
         "afi_part2_pdf_304_P0",
         "afi_part2_pdf_314_P0",
-        "afi_part2_pdf_315_P0",
-        "afi_part2_pdf_316_P0"
+        "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
     }
@@ -1838,7 +1820,6 @@
         "afi_part1_pdf_328_P1",
         "afi_part1_pdf_329_P0",
         "afi_part1_pdf_330_P0",
-        "afi_part2_pdf_41_P0",
         "afi_part2_pdf_42_P0",
         "afi_part2_pdf_43_P0",
         "afi_part2_pdf_121_P0",
@@ -1859,8 +1840,7 @@
         "afi_part2_pdf_286_P0",
         "afi_part2_pdf_309_P0",
         "afi_part2_pdf_314_P0",
-        "afi_part2_pdf_315_P0",
-        "afi_part2_pdf_316_P0"
+        "afi_part2_pdf_315_P0"
       ],
       "reviewed_by": "logn1602"
     }
