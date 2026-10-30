@@ -19,6 +19,16 @@ Pinecone vector count must equal the local BM25 chunk count, and the stores
 must be the right generation (old: no context headers; new: headers). A
 mismatch, e.g. new stores with the old index, aborts.
 
+Each phase saves everything to a tracked folder, data/eval/runs/<phase>_<ts>/:
+every run's results + retrieval trace (ranked candidates per stage, per
+question; see src/evaluation/traces.py), per_question.md and comparison.json.
+Commit that folder: scripts/rescore.py can rescore it against any label file
+with no API calls, so the "before" run never needs the old index or stores
+again. Summaries and the per-question breakdown (rank of the first gold hit
+per question and config) are computed from the traces against the current
+labels; the "after" phase includes the latest "before" run, rescored the same
+way.
+
 Default is a DRY RUN: offline, prints the phase plan, the call estimate and
 the full budget (before + re-ingest + after). Pass --run to execute. Aborts
 on the first INVALID run (rerank skipped) or an exhausted Cohere quota.
@@ -44,7 +54,8 @@ except (AttributeError, ValueError):  # pragma: no cover
     pass
 
 from config.settings import settings
-from src.evaluation.run_eval import DEFAULT_DATASET, DEFAULT_OUTPUT_DIR, load_dataset, run_eval
+from src.evaluation.run_eval import DEFAULT_DATASET, PROJECT_ROOT, load_dataset, run_eval
+from src.evaluation.traces import load_labels, per_question_table, read_trace, rescore
 from src.ingestion import embedder
 
 CONFIGS = {
@@ -64,6 +75,7 @@ NEW_TEXT_FLAGS = ("apply_font_char_map", "bm25_fold_diacritics", "split_glued_oc
 REINGEST_EMBED_CALLS = 237
 TRIAL_CALLS_PER_MONTH = 1000
 METRICS = ("hit_rate", "recall_at_k", "mrr")
+RUNS_DIR = PROJECT_ROOT / "data" / "eval" / "runs"      # tracked: commit each phase's folder
 
 
 def runs_for(config: str, hyde_runs: int) -> int:
@@ -148,6 +160,34 @@ def _count_cached_queries(questions: list[str]) -> int:
     return sum(1 for q in questions if embedder._cache_key(q, "search_query") in cache)
 
 
+def load_phase_runs(phase_dir: Path) -> dict[str, list[tuple[dict, list[dict]]]]:
+    """{config name: [(run metadata, question traces), ...]} for a saved phase folder."""
+    runs: dict[str, list[tuple[dict, list[dict]]]] = {}
+    for path in sorted(Path(phase_dir).glob("*.jsonl")):
+        meta, traces = read_trace(path)
+        runs.setdefault(meta["config"]["name"], []).append((meta, traces))
+    return runs
+
+
+def latest_phase_dir(phase: str) -> Path | None:
+    dirs = sorted(p for p in RUNS_DIR.glob(f"{phase}_*") if p.is_dir())
+    return dirs[-1] if dirs else None
+
+
+def report(current: dict[str, list[tuple[dict, list[dict]]]], labels: dict[str, list[str]],
+           before: dict[str, list[tuple[dict, list[dict]]]] | None = None) -> tuple[dict, list[str]]:
+    """Rescored summaries + per-question breakdown for a phase (and the before phase, if given)."""
+    groups = ([(f"before:{name}", runs) for name, runs in before.items()] if before else []) \
+        + list(current.items())
+    summaries = {label: [rescore(meta, traces, labels)["summary"] for meta, traces in runs]
+                 for label, runs in groups}
+    columns = [(label, [traces for _, traces in runs]) for label, runs in groups]
+    comparisons = [("rrf", "rerank")] if {"rrf", "rerank"} <= set(current) else []
+    if before and "rerank" in before and "rerank" in current:
+        comparisons.append(("before:rerank", "rerank"))
+    return summaries, per_question_table(columns, labels, tuple(comparisons))
+
+
 def _summarize(rows: dict[str, list[dict]]) -> list[str]:
     lines = [f"{'config':<12} " + "  ".join(f"{m:>22}" for m in METRICS)]
     for name, summaries in rows.items():
@@ -158,11 +198,6 @@ def _summarize(rows: dict[str, list[dict]]) -> list[str]:
                          f"{statistics.mean(vals):.3f} ({min(vals):.3f}–{max(vals):.3f})")
         lines.append(f"{name:<12} " + "  ".join(f"{c:>22}" for c in cells))
     return lines
-
-
-def _latest(phase: str) -> dict | None:
-    files = sorted(Path(DEFAULT_OUTPUT_DIR).glob(f"comparison_{phase}_*.json"))
-    return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
 
 
 def main():
@@ -202,32 +237,37 @@ def main():
     if err:
         sys.exit(f"Aborting: {err}")
 
-    rows: dict[str, list[dict]] = {name: [] for name in configs}
+    before_dir = latest_phase_dir("before") if args.phase == "after" else None
+    phase_dir = RUNS_DIR / f"{args.phase}_{datetime.now():%Y%m%d_%H%M%S}"
     files: dict[str, list[str]] = {name: [] for name in configs}
     for round_no in range(1, max(runs_for(c, args.hyde_runs) for c in configs) + 1):
         for name in configs:
             if round_no > runs_for(name, args.hyde_runs):
                 continue
-            payload = run_eval(dataset_path=args.dataset, mode="retrieval", **CONFIGS[name])
+            payload = run_eval(dataset_path=args.dataset, output_dir=phase_dir, mode="retrieval",
+                               config_name=name, **CONFIGS[name])
             print(f"round {round_no} {name:<12} {payload['status']}  {payload['summary']['retrieval']}")
             if payload["status"] != "VALID":
                 sys.exit(f"Aborting: {name} run {round_no} is INVALID "
-                         f"({payload['summary']['rerank_skips']} rerank skips).")
-            rows[name].append(payload["summary"])
-            files[name].append(payload["saved_to"])
+                         f"({payload['summary']['rerank_skips']} rerank skips). Traces so far: {phase_dir}")
+            files[name].append(payload["trace_file"])
 
-    print(f"\nRESULTS ({args.phase}) — single run, or mean (min–max) over repeats")
-    print("\n".join(_summarize(rows)))
-    before = _latest("before") if args.phase == "after" else None
-    if before:
-        print("\nBEFORE (old index, old text) for comparison:")
-        print("\n".join(_summarize(before["summaries"])))
-    out = Path(DEFAULT_OUTPUT_DIR) / f"comparison_{args.phase}_{datetime.now():%Y%m%d_%H%M%S}.json"
-    out.write_text(json.dumps({"phase": args.phase, "index": settings.pinecone_index_name,
-                               "flags": {f: getattr(settings, f) for f in NEW_TEXT_FLAGS},
-                               "hyde_runs": args.hyde_runs, "summaries": rows, "files": files},
-                              ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\nSaved to: {out}")
+    labels = load_labels(args.dataset)
+    before = load_phase_runs(before_dir) if before_dir else None
+    summaries, table = report(load_phase_runs(phase_dir), labels, before)
+    print(f"\nRESULTS ({args.phase}{', with before = ' + before_dir.name if before_dir else ''}) "
+          "— rescored from traces against the current labels; single run, or mean (min–max) over repeats")
+    print("\n".join(_summarize(summaries)))
+    print("\nPER QUESTION — rank of the first gold hit\n")
+    print("\n".join(table))
+    (phase_dir / "per_question.md").write_text("\n".join(table) + "\n", encoding="utf-8")
+    (phase_dir / "comparison.json").write_text(json.dumps(
+        {"phase": args.phase, "index": settings.pinecone_index_name,
+         "flags": {f: getattr(settings, f) for f in NEW_TEXT_FLAGS}, "hyde_runs": args.hyde_runs,
+         "labels_file": args.dataset, "before_dir": str(before_dir) if before_dir else None,
+         "summaries": summaries, "trace_files": files}, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nSaved to {phase_dir}. Commit it so this run can always be rescored:")
+    print(f"  git add {phase_dir.relative_to(PROJECT_ROOT).as_posix()}")
 
 
 if __name__ == "__main__":

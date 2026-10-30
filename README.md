@@ -58,8 +58,9 @@ AyurKosha ships with a **30-question evaluation harness** (`scripts/run_eval.py`
 > *Retrieval figures are pending re-evaluation: an audit found gold-label and corpus-text issues (OCR/font-encoding noise) that affect them.*
 
 ```bash
-make eval-retrieval                   # offline, no API cost
+make eval-retrieval                   # retrieval metrics (Cohere + Pinecone; no Claude cost)
 python scripts/run_eval.py --judge    # adds LLM-judge answer scores
+python scripts/rescore.py data/eval/runs/<phase>_<ts>   # rescore saved runs offline, zero API calls
 ```
 
 ## Grounding & Safety

@@ -22,6 +22,11 @@ Which ranked list retrieval metrics score is set by ``pipeline``:
 MMR only runs when it is scored or when generation needs context, so
 retrieval-only "rrf"/"rerank" runs spend no MMR embed calls.
 
+Every run also writes a retrieval trace (src/evaluation/traces.py): a JSONL
+beside the JSON results, with the ranked candidates at each stage per
+question, so the run can be rescored later against any label file
+(scripts/rescore.py) without the index or stores it ran on.
+
 Build this in: Phase 6
 """
 
@@ -37,7 +42,8 @@ from config.settings import settings
 from src.context.builder import build_context
 from src.context.parent_expand import expand_to_parents
 from src.context.reorder import reorder_chunks
-from src.evaluation import generation_metrics, retrieval_metrics
+from src.evaluation import generation_metrics, retrieval_metrics, traces
+from src.evaluation.aggregate import aggregate
 from src.ingestion import embedder
 from src.ingestion.parent_store import load_parent_store
 from src.reranking.cohere_rerank import rerank_with_retry
@@ -98,6 +104,12 @@ def _retrieve(
     if pipeline == "rerank_mmr" or need_context:
         diverse = mmr_rerank(question, ranked, top_k=k)
     scored = diverse if pipeline == "rerank_mmr" else ranked
+    stages = {"fused": fused}
+    if pipeline != "rrf":
+        stages["rerank"] = ranked
+    if diverse is not None:
+        stages["mmr"] = diverse
+    scored_stage = {"rrf": "fused", "rerank": "rerank", "rerank_mmr": "mmr"}[pipeline]
 
     context_block, sources, ordered = "", [], []
     if need_context:
@@ -105,6 +117,9 @@ def _retrieve(
         context_block, sources = build_context(ordered)
     return {
         "scored": scored,          # ranked list for recall/precision/mrr
+        "scored_stage": scored_stage,
+        "stages": stages,          # every ranked list, for the retrieval trace
+        "hyde_passage": hyde_passage,
         "rerank_skipped": rerank_skipped,
         "context_block": context_block,
         "sources": sources,
@@ -120,8 +135,13 @@ def evaluate_item(
     parent_store,
     use_hyde: bool = False,
     pipeline: str = "rerank",
+    config_name: str = "rerank",
 ) -> dict[str, Any]:
-    """Evaluate one dataset item and return its per-question result record."""
+    """Evaluate one dataset item and return its per-question result record.
+
+    The record carries the retrieval trace under ``_trace``; run_eval moves it
+    to the trace file.
+    """
     question = item["question"]
     gold_sources = item.get("gold_sources", [])
     gold_answer = item.get("gold_answer", "")
@@ -134,6 +154,7 @@ def evaluate_item(
         "category": item.get("category"),
         "difficulty": item.get("difficulty"),
         "rerank_skipped": retrieved["rerank_skipped"],
+        "_trace": traces.question_trace(item, config_name, retrieved),
     }
 
     if mode in ("retrieval", "both"):
@@ -166,61 +187,19 @@ def evaluate_item(
     return record
 
 
-def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
-    """Average the numeric metrics across all per-question records."""
-    def _avg(section: str, field: str) -> float | None:
-        vals = [r[section][field] for r in results
-                if section in r and isinstance(r[section].get(field), (int, float))]
-        return round(sum(vals) / len(vals), 4) if vals else None
-
-    summary: dict[str, Any] = {
-        "n_questions": len(results),
-        "rerank_skips": sum(1 for r in results if r.get("rerank_skipped")),
-    }
-    if any("retrieval" in r for r in results):
-        summary["retrieval"] = {
-            "recall_at_k": _avg("retrieval", "recall_at_k"),
-            "precision_at_k": _avg("retrieval", "precision_at_k"),
-            "mrr": _avg("retrieval", "mrr"),
-            "hit_rate": _avg("retrieval", "hit"),
-        }
-    if any("generation" in r for r in results):
-        ok = [r for r in results if r.get("generation", {}).get("ok")]
-        summary["generation"] = {
-            "answered": len(ok),
-            "citation_accuracy": _avg_over(ok, "generation", "citation_accuracy"),
-            "grounding_proxy": _avg_over(ok, "generation", "grounding_proxy"),
-            "relevance_proxy": _avg_over(ok, "generation", "relevance_proxy"),
-            "safety_disclaimer_rate": _rate(ok, "generation", "has_safety_disclaimer"),
-        }
-    if any("judge" in r for r in results):
-        judged = [r for r in results if r.get("judge", {}).get("ok")]
-        summary["judge"] = {
-            "scored": len(judged),
-            "faithfulness": _avg_over(judged, "judge", "faithfulness"),
-            "relevance": _avg_over(judged, "judge", "relevance"),
-            "completeness": _avg_over(judged, "judge", "completeness"),
-        }
-    return summary
-
-
-def _avg_over(records, section: str, field: str) -> float | None:
-    vals = [r[section][field] for r in records
-            if isinstance(r.get(section, {}).get(field), (int, float))]
-    return round(sum(vals) / len(vals), 4) if vals else None
-
-
-def _rate(records, section: str, field: str) -> float | None:
-    vals = [bool(r[section][field]) for r in records if field in r.get(section, {})]
-    return round(sum(vals) / len(vals), 4) if vals else None
-
-
-def _save_results(payload: dict[str, Any], output_dir: str | Path) -> Path:
-    """Write the results payload to a timestamped JSON file."""
+def _results_path(output_dir: str | Path, config_name: str) -> Path:
+    """Unused timestamped path ``eval_<stamp>_<config>.json`` in ``output_dir``."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = output_dir / f"eval_{stamp}.json"
+    stem = f"eval_{datetime.now():%Y%m%d_%H%M%S}_{config_name}"
+    path, n = output_dir / f"{stem}.json", 2
+    while path.exists() or path.with_suffix(".jsonl").exists():
+        path, n = output_dir / f"{stem}_{n}.json", n + 1
+    return path
+
+
+def _save_results(payload: dict[str, Any], path: Path) -> Path:
+    """Write the results payload to ``path``."""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
     return path
@@ -235,8 +214,12 @@ def run_eval(
     use_hyde: bool = False,
     embed_cache: bool = True,
     pipeline: str = "rerank",
+    config_name: str | None = None,
 ) -> dict[str, Any]:
-    """Run the evaluation suite and save timestamped results.
+    """Run the evaluation suite and save timestamped results + retrieval trace.
+
+    ``config_name`` labels the run in file names and traces (default: the
+    pipeline, plus "+hyde").
 
     With ``embed_cache`` (default), Cohere embeddings are served from / saved
     to data/cache/embedding_cache.json, so reruns over the same questions
@@ -251,6 +234,7 @@ def run_eval(
     if pipeline not in PIPELINES:
         raise ValueError(f"pipeline must be one of {PIPELINES}, got {pipeline!r}")
     k = k or settings.top_k_final
+    config_name = config_name or pipeline + ("+hyde" if use_hyde else "")
     dataset = load_dataset(dataset_path)
     parent_store = load_parent_store()
 
@@ -260,7 +244,7 @@ def run_eval(
         embedder.enable_embedding_cache()
     try:
         results = [evaluate_item(item, k, mode, judge, parent_store,
-                                 use_hyde=use_hyde, pipeline=pipeline)
+                                 use_hyde=use_hyde, pipeline=pipeline, config_name=config_name)
                    for item in dataset]
     finally:
         # Save even on a crash (e.g. quota exhausted) so finished work is kept.
@@ -268,13 +252,17 @@ def run_eval(
             embedder.save_embedding_cache()
             embedder.disable_embedding_cache()
 
-    summary = _aggregate(results)
+    question_traces = [r.pop("_trace") for r in results]
+    summary = aggregate(results)
     if summary["rerank_skips"]:
         logger.warning("%d/%d question(s) skipped rerank after retries — run is INVALID.",
                        summary["rerank_skips"], len(results))
+    status = "INVALID" if summary["rerank_skips"] else "VALID"
+    config = {"name": config_name, "pipeline": pipeline, "use_hyde": use_hyde, "mode": mode, "k": k, "judge": judge}
     payload = {
-        "status": "INVALID" if summary["rerank_skips"] else "VALID",
+        "status": status,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "config_name": config_name,
         "mode": mode,
         "pipeline": pipeline,
         "k": k,
@@ -283,7 +271,13 @@ def run_eval(
         "summary": summary,
         "results": results,
     }
-    saved = _save_results(payload, output_dir)
-    logger.info("Saved eval results to %s", saved)
+    path = _results_path(output_dir, config_name)
+    trace_path = traces.write_trace(
+        path.with_suffix(".jsonl"),
+        traces.run_metadata(config, dataset_path, len(dataset), status, summary),
+        question_traces)
+    payload["trace_file"] = str(trace_path)
+    saved = _save_results(payload, path)
+    logger.info("Saved eval results to %s (trace %s)", saved, trace_path.name)
     payload["saved_to"] = str(saved)
     return payload
