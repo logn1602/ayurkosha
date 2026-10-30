@@ -14,8 +14,9 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
 - All other rows are the agent's v1 proposals, approved in the reviewer's row review on 2026-10-29.
 - eval_003 and eval_008 were re-checked at the reviewer's request and decided as recorded below.
 - Evidence came from plain text search of the corpus (parent chunks), never from retrieval or eval
-  output. Formulary evidence is a monograph whose title and "Important therapeutic uses" list sit in
-  the same chunk.
+  output. Formulary evidence for the labels was a monograph whose title and "Important therapeutic
+  uses" list sit in the same chunk. The supporting sets for the treatment rows now hold whole
+  monographs instead (see "Complete Formulary supporting sets" below).
 - Supporting ids are **parent chunk ids**, also stored per item in `provenance.supporting_chunk_ids`.
 - **19/30** questions changed label versus the original (bm25-keyword-evidence) set.
 
