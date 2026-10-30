@@ -38,6 +38,16 @@ def test_full_budget_fits_with_margin():
     assert b["total"] <= 0.6 * rc.TRIAL_CALLS_PER_MONTH
 
 
+def test_reingest_plan_quotes_the_same_comparison_budget():
+    spec = importlib.util.spec_from_file_location(
+        "reingest", Path(__file__).resolve().parents[1] / "scripts" / "reingest.py")
+    reingest = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(reingest)
+    b = rc.full_budget(30, cached_queries=0)
+    assert reingest.COMPARISON_CALLS == b["before"] + b["after"]
+    assert b["reingest"] + reingest.COMPARISON_CALLS == b["total"]
+
+
 @pytest.mark.parametrize("phase, vectors, chunks, headers, ok", [
     ("before", 46827, 46826, False, True),    # old index + old stores (1 stray vector)
     ("before", 46827, 22718, True, False),    # new stores promoted already

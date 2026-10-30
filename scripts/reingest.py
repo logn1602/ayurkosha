@@ -55,7 +55,7 @@ from src.ingestion.pipeline import PROJECT_ROOT, build_corpus, run_ingestion
 CACHE_DIR = PROJECT_ROOT / "data" / "cache"
 STORE_FILES = (bm25_store.DEFAULT_INDEX_PATH.name, parent_store.DEFAULT_STORE_PATH.name)
 TRIAL_CALLS_PER_MONTH = 1000
-COMPARISON_CALLS = 420          # scripts/run_comparison.py estimate, 4 configs x 3 runs
+COMPARISON_CALLS = 330          # before 60 + after 270: scripts/run_comparison.py full_budget()
 FLAGS = ("apply_font_char_map", "bm25_fold_diacritics", "split_glued_ocr_words", "contextual_chunk_headers",
          "exclude_charaka", "exclude_ah_srikantha_murthy", "exclude_ah_sanskrit_commentaries")
 
