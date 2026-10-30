@@ -143,7 +143,7 @@ def evaluate_item(
     to the trace file.
     """
     question = item["question"]
-    gold_sources = item.get("gold_sources", [])
+    gold_works = item.get("gold_works", [])
     gold_answer = item.get("gold_answer", "")
 
     retrieved = _retrieve(question, k, parent_store, use_hyde=use_hyde, pipeline=pipeline,
@@ -159,10 +159,9 @@ def evaluate_item(
 
     if mode in ("retrieval", "both"):
         record["retrieval"] = retrieval_metrics.score_retrieval(
-            retrieved["scored"], gold_sources, k
+            retrieved["scored"], gold_works, k
         )
-        passage = retrieval_metrics.score_passages(
-            retrieved["scored"], (item.get("provenance") or {}).get("supporting_chunk_ids") or [], k)
+        passage = retrieval_metrics.score_passages(retrieved["scored"], item.get("gold_passages") or [], k)
         if passage is not None:
             record["passage"] = passage
 

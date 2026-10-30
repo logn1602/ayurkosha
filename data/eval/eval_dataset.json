@@ -3,8 +3,11 @@
     "id": "eval_001",
     "question": "What are the Rasa, Guna, Virya, and Vipaka of Ashwagandha?",
     "gold_answer": "Ashwagandha (Withania somnifera): Rasa - Tikta, Katu, Madhura; Guna - Laghu, Snigdha; Virya - Ushna; Vipaka - Madhura; Karma - Balya, Rasayana, Vata-Kapha hara.",
-    "gold_sources": [
+    "gold_works": [
       "api"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_40_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -23,9 +26,13 @@
     "id": "eval_002",
     "question": "What are the Rasa, Guna, Virya, and Vipaka of Bibhitaka?",
     "gold_answer": "Bibhitaka (Terminalia bellirica): Rasa - Kashaya; Guna - Laghu, Ruksha; Virya - Ushna; Vipaka - Madhura; Karma - Kapha-Pitta hara, Chakshushya.",
-    "gold_sources": [
+    "gold_works": [
       "api",
       "ashtanga_hridaya"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_57_P0",
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_163_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -45,10 +52,16 @@
     "id": "eval_003",
     "question": "What are the properties and therapeutic actions of Pippali?",
     "gold_answer": "Pippali (Piper longum): Rasa - Katu; Guna - Laghu, Snigdha, Tikshna; Virya - Ushna (Anushna per some); Vipaka - Madhura; Karma - Deepana, Vata-Kapha hara, Rasayana.",
-    "gold_sources": [
+    "gold_works": [
       "api",
       "ashtanga_hridaya",
       "sushruta"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_959_P0",
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_164_P0",
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_488_P0",
+      "sushruta_samhita_vol_1_pdf_599_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -70,8 +83,12 @@
     "id": "eval_004",
     "question": "What are the therapeutic actions of Punarnava?",
     "gold_answer": "Punarnava (Boerhavia diffusa): Rasa - Madhura, Tikta, Kashaya; Virya - Ushna; Vipaka - Madhura; Karma - Shothahara (anti-oedema), Mutrala (diuretic), Vatahara.",
-    "gold_sources": [
+    "gold_works": [
       "api"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_724_P0",
+      "api_all_volume_pdf_1295_P1"
     ],
     "category": "pharmacopoeia",
     "difficulty": "easy",
@@ -91,9 +108,13 @@
     "id": "eval_005",
     "question": "What is the classical action of Brahmi described as Medhya?",
     "gold_answer": "Brahmi (Bacopa monnieri): Rasa - Tikta, Kashaya; Virya - Sheeta; Vipaka - Madhura; Karma - Medhya (nootropic/intellect-promoting), Rasayana.",
-    "gold_sources": [
+    "gold_works": [
       "api",
       "sushruta"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_278_P0",
+      "sushruta_samhita_vol_2_pdf_580_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "easy",
@@ -113,8 +134,12 @@
     "id": "eval_006",
     "question": "What are the properties of Gokshura and its action on the urinary system?",
     "gold_answer": "Gokshura (Tribulus terrestris): Rasa - Madhura; Guna - Guru, Snigdha; Virya - Sheeta; Vipaka - Madhura; Karma - Mutrala (diuretic), Vatahara, Balya.",
-    "gold_sources": [
+    "gold_works": [
       "api"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_78_P0",
+      "api_all_volume_pdf_80_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -134,8 +159,11 @@
     "id": "eval_007",
     "question": "What are the properties and actions of Guduchi?",
     "gold_answer": "Guduchi (Tinospora cordifolia): Rasa - Tikta, Kashaya; Guna - Guru, Snigdha; Virya - Ushna; Vipaka - Madhura; Karma - Rasayana, Deepana, Tridoshahara, Jwaraghna.",
-    "gold_sources": [
+    "gold_works": [
       "api"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_84_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -154,9 +182,13 @@
     "id": "eval_008",
     "question": "What are the properties and actions of Shatavari?",
     "gold_answer": "Shatavari (Asparagus racemosus): Rasa - Madhura, Tikta; Guna - Guru, Snigdha; Virya - Sheeta; Vipaka - Madhura; Karma - Rasayana, Stanyajanana, Vata-Pitta hara.",
-    "gold_sources": [
+    "gold_works": [
       "api",
       "sushruta"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_984_P0",
+      "sushruta_samhita_vol_1_pdf_614_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -176,9 +208,13 @@
     "id": "eval_009",
     "question": "What are the Rasa and Vipaka of Haritaki?",
     "gold_answer": "Haritaki (Terminalia chebula): predominantly Kashaya rasa (five rasas except Lavana); Guna - Laghu, Ruksha; Virya - Ushna; Vipaka - Madhura; Karma - Rasayana, Anulomana, Tridoshahara.",
-    "gold_sources": [
+    "gold_works": [
       "api",
       "ashtanga_hridaya"
+    ],
+    "gold_passages": [
+      "api_all_volume_pdf_93_P0",
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_487_P0"
     ],
     "category": "pharmacopoeia",
     "difficulty": "medium",
@@ -198,8 +234,11 @@
     "id": "eval_010",
     "question": "What are the ingredients and indications of Yogaraja Guggulu?",
     "gold_answer": "Yogaraja Guggulu: purified Guggulu combined with Triphala, Trikatu, Chitraka and many carminative/Vata-pacifying herbs; indicated for Vata disorders, Amavata, and arthritis.",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_121_P0"
     ],
     "category": "formulation",
     "difficulty": "medium",
@@ -218,8 +257,11 @@
     "id": "eval_011",
     "question": "What are the ingredients and dose of Amavatari Rasa?",
     "gold_answer": "Amavatari Rasa: Shuddha Parada, Shuddha Gandhaka, Triphala (Haritaki, Bibhitaka, Amalaki), Chitraka, Shuddha Guggulu, triturated with castor oil; dose about 750 mg; indicated for Amavata.",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part2_pdf_234_P0"
     ],
     "category": "formulation",
     "difficulty": "medium",
@@ -238,8 +280,11 @@
     "id": "eval_012",
     "question": "What are the ingredients of Sitopaladi Churna and what is it used for?",
     "gold_answer": "Sitopaladi Churna: Sitopala (sugar candy), Vamshalochana (bamboo silica), Pippali, Ela (cardamom), and Twak (cinnamon); used for cough and respiratory disorders.",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_168_P0"
     ],
     "category": "formulation",
     "difficulty": "medium",
@@ -258,8 +303,11 @@
     "id": "eval_013",
     "question": "What is Kaishora Guggulu used for?",
     "gold_answer": "Kaishora Guggulu: purified Guggulu with Triphala, Guduchi, Trikatu and Trivrit; used for blood purification, gout (Vatarakta), and skin disorders.",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_119_P0"
     ],
     "category": "formulation",
     "difficulty": "medium",
@@ -278,8 +326,11 @@
     "id": "eval_014",
     "question": "What is the principal herb and indication of Rasnadi Kwatha Churna?",
     "gold_answer": "Rasnadi Kwatha Churna: a decoction powder with Rasna as the principal herb combined with many Vata-pacifying herbs; indicated for Amavata and Vata disorders.",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_112_P0"
     ],
     "category": "formulation",
     "difficulty": "easy",
@@ -298,8 +349,11 @@
     "id": "eval_015",
     "question": "What is Vyoshadi Guggulu indicated for?",
     "gold_answer": "Vyoshadi Guggulu: Guggulu with Vyosha (Trikatu) and other herbs; indicated for Kapha disorders, Medoroga (obesity), and Amavata.",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_122_P0"
     ],
     "category": "formulation",
     "difficulty": "medium",
@@ -318,9 +372,14 @@
     "id": "eval_016",
     "question": "What are the three ingredients of Triphala and its uses?",
     "gold_answer": "Triphala: equal parts of Haritaki, Bibhitaka, and Amalaki; used as a mild laxative, Rasayana, and for eye health and digestion.",
-    "gold_sources": [
+    "gold_works": [
       "afi",
       "sushruta"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_162_P0",
+      "sushruta_samhita_vol_1_pdf_442_P0",
+      "sushruta_samhita_vol_1_pdf_503_P0"
     ],
     "category": "formulation",
     "difficulty": "easy",
@@ -341,8 +400,61 @@
     "id": "eval_017",
     "question": "Which classical formulations are indicated for Amavata?",
     "gold_answer": "The Ayurvedic Formulary of India lists Amavata among the therapeutic uses of Amavatari Rasa, Rasnadi Kvatha Curna, Vatari Guggulu, Vasaguducyadi Kvatha Curna, Vyosadi Guggulu, Brhat Saindhavadya Taila, Svarnabhupati Rasa, Draksadi Gutika, Anandabhairava Rasa and Nimbadi Curna; Yogaraja Guggulu and Amavatari Rasa are drawn from Bhaisajya Ratnavali's Amavata chapter (Amavatadhikara).",
-    "gold_sources": [
+    "gold_works": [
       "afi"
+    ],
+    "gold_passages": [
+      "afi_part1_pdf_91_P0",
+      "afi_part1_pdf_91_P1",
+      "afi_part1_pdf_92_P0",
+      "afi_part1_pdf_92_P1",
+      "afi_part1_pdf_112_P0",
+      "afi_part1_pdf_112_P1",
+      "afi_part1_pdf_113_P0",
+      "afi_part1_pdf_120_P1",
+      "afi_part1_pdf_121_P0",
+      "afi_part1_pdf_121_P1",
+      "afi_part1_pdf_122_P0",
+      "afi_part1_pdf_122_P1",
+      "afi_part1_pdf_123_P0",
+      "afi_part1_pdf_123_P1",
+      "afi_part1_pdf_131_P0",
+      "afi_part1_pdf_158_P0",
+      "afi_part1_pdf_164_P0",
+      "afi_part1_pdf_165_P0",
+      "afi_part1_pdf_165_P1",
+      "afi_part1_pdf_166_P0",
+      "afi_part1_pdf_166_P1",
+      "afi_part1_pdf_167_P0",
+      "afi_part1_pdf_167_P1",
+      "afi_part1_pdf_184_P0",
+      "afi_part1_pdf_184_P1",
+      "afi_part1_pdf_199_P0",
+      "afi_part1_pdf_233_P1",
+      "afi_part1_pdf_234_P0",
+      "afi_part1_pdf_246_P0",
+      "afi_part1_pdf_246_P1",
+      "afi_part1_pdf_269_P0",
+      "afi_part1_pdf_269_P1",
+      "afi_part1_pdf_270_P0",
+      "afi_part1_pdf_310_P0",
+      "afi_part1_pdf_319_P0",
+      "afi_part1_pdf_319_P1",
+      "afi_part1_pdf_328_P1",
+      "afi_part1_pdf_329_P0",
+      "afi_part1_pdf_330_P0",
+      "afi_part2_pdf_57_P0",
+      "afi_part2_pdf_58_P0",
+      "afi_part2_pdf_59_P0",
+      "afi_part2_pdf_60_P0",
+      "afi_part2_pdf_61_P0",
+      "afi_part2_pdf_62_P0",
+      "afi_part2_pdf_100_P0",
+      "afi_part2_pdf_183_P0",
+      "afi_part2_pdf_234_P0",
+      "afi_part2_pdf_235_P0",
+      "afi_part2_pdf_297_P0",
+      "afi_part2_pdf_298_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -411,9 +523,13 @@
     "id": "eval_018",
     "question": "What is the initial line of treatment for Jwara (fever) in Ayurveda?",
     "gold_answer": "Jwara: initial management is Langhana (fasting) and Deepana-Pachana to digest Ama; heavy food is avoided in the early Ama stage.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_203_P0",
+      "sushruta_samhita_vol_3_pdf_204_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -691,9 +807,14 @@
     "id": "eval_019",
     "question": "How is Prameha classified and managed in Ayurveda?",
     "gold_answer": "Prameha is classified into 20 types by dosha (Kaphaja, Pittaja, Vataja); management uses Apatarpana (lightening) for the obese and Santarpana for the emaciated, with specific herbs and lifestyle.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_2_pdf_100_P0",
+      "sushruta_samhita_vol_2_pdf_427_P0",
+      "sushruta_samhita_vol_2_pdf_434_P0"
     ],
     "category": "clinical",
     "difficulty": "hard",
@@ -888,9 +1009,13 @@
     "id": "eval_020",
     "question": "What is the cause and treatment of Grahani in Ayurveda?",
     "gold_answer": "Grahani results from impaired Agni (digestive fire); treatment restores Agni through Deepana-Pachana, Takra (buttermilk), and appropriate diet.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_256_P0",
+      "sushruta_samhita_vol_3_pdf_257_P0"
     ],
     "category": "clinical",
     "difficulty": "hard",
@@ -1077,9 +1202,12 @@
     "id": "eval_021",
     "question": "How is Atisara (diarrhoea) treated according to its stage?",
     "gold_answer": "Atisara: in the early Ama stage, Deepana-Pachana is used rather than immediate Stambhana (astringents); Grahi/astringent measures follow once Ama is digested.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_253_P0"
     ],
     "category": "clinical",
     "difficulty": "hard",
@@ -1197,9 +1325,13 @@
     "id": "eval_022",
     "question": "What is the Ayurvedic approach to Pandu (anaemia)?",
     "gold_answer": "Pandu: treatment includes Deepana, iron preparations (Lauha), and nourishing, Pitta-pacifying measures.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_290_P0",
+      "sushruta_samhita_vol_3_pdf_296_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -1406,9 +1538,12 @@
     "id": "eval_023",
     "question": "How is Kasa (cough) treated in Ayurveda?",
     "gold_answer": "Kasa has five types by dosha; treatment includes formulations such as Sitopaladi Churna, expectorants, and dosha-specific measures.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_3_pdf_347_P0"
     ],
     "category": "clinical",
     "difficulty": "medium",
@@ -1652,8 +1787,11 @@
     "id": "eval_024",
     "question": "What are the four therapeutic modalities for Arsha (haemorrhoids) in Sushruta?",
     "gold_answer": "Arsha: four modalities - Bheshaja (medicine), Kshara (caustic application), Agni (thermal cautery), and Shastra (surgical excision); Sushruta emphasises para-surgical and surgical methods.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_2_pdf_371_P0"
     ],
     "category": "classical",
     "difficulty": "medium",
@@ -1672,9 +1810,13 @@
     "id": "eval_025",
     "question": "How is Kushtha (skin disease) managed in classical Ayurveda?",
     "gold_answer": "Kushtha, a Raktapradoshaja disorder, is treated with Shodhana - especially Raktamokshana (bloodletting) and Virechana - along with Tikta (bitter) herbs.",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "afi"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_2_pdf_415_P0",
+      "sushruta_samhita_vol_2_pdf_416_P0"
     ],
     "category": "classical",
     "difficulty": "medium",
@@ -1849,9 +1991,13 @@
     "id": "eval_026",
     "question": "What is Vamana Karma and when is it indicated?",
     "gold_answer": "Vamana is the Panchakarma procedure of therapeutic emesis to eliminate aggravated Kapha; it is preceded by Snehana and Swedana and indicated in Kapha disorders.",
-    "gold_sources": [
+    "gold_works": [
       "ashtanga_hridaya",
       "sushruta"
+    ],
+    "gold_passages": [
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_311_P0",
+      "sushruta_samhita_vol_2_pdf_621_P0"
     ],
     "category": "classical",
     "difficulty": "easy",
@@ -1871,9 +2017,13 @@
     "id": "eval_027",
     "question": "What is Virechana Karma and what does it eliminate?",
     "gold_answer": "Virechana is therapeutic purgation, a Panchakarma procedure to eliminate aggravated Pitta; it is preceded by oleation (Snehana) and fomentation (Swedana).",
-    "gold_sources": [
+    "gold_works": [
       "ashtanga_hridaya",
       "sushruta"
+    ],
+    "gold_passages": [
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_310_P0",
+      "sushruta_samhita_vol_2_pdf_625_P0"
     ],
     "category": "classical",
     "difficulty": "easy",
@@ -1893,9 +2043,13 @@
     "id": "eval_028",
     "question": "Why is Basti considered the foremost treatment for Vata?",
     "gold_answer": "Basti (medicated enema) is regarded as the prime treatment for Vata dosha; its two main types are Anuvasana (oil enema) and Asthapana/Niruha (decoction enema).",
-    "gold_sources": [
+    "gold_works": [
       "sushruta",
       "ashtanga_hridaya"
+    ],
+    "gold_passages": [
+      "sushruta_samhita_vol_2_pdf_645_P0",
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_53_P0"
     ],
     "category": "classical",
     "difficulty": "medium",
@@ -1915,9 +2069,13 @@
     "id": "eval_029",
     "question": "What is Nasya Karma and for which disorders is it used?",
     "gold_answer": "Nasya is the nasal instillation of medicine, used for disorders of the region above the clavicle (head, neck, and sense organs).",
-    "gold_sources": [
+    "gold_works": [
       "ashtanga_hridaya",
       "sushruta"
+    ],
+    "gold_passages": [
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_345_P0",
+      "sushruta_samhita_vol_2_pdf_714_P0"
     ],
     "category": "classical",
     "difficulty": "easy",
@@ -1937,9 +2095,14 @@
     "id": "eval_030",
     "question": "What does Dinacharya (daily regimen) include in Ayurveda?",
     "gold_answer": "Dinacharya, the daily regimen for health, includes early waking (Brahma muhurta), oral hygiene, Abhyanga (oil massage), exercise, bathing, and balanced diet and conduct.",
-    "gold_sources": [
+    "gold_works": [
       "ashtanga_hridaya",
       "sushruta"
+    ],
+    "gold_passages": [
+      "ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0",
+      "sushruta_samhita_vol_2_pdf_535_P0",
+      "sushruta_samhita_vol_2_pdf_536_P0"
     ],
     "category": "classical",
     "difficulty": "easy",

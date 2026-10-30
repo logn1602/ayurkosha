@@ -9,7 +9,7 @@ Run: python -m pytest tests/test_eval_dataset.py
 import json
 from pathlib import Path
 
-from src.evaluation.retrieval_metrics import _CANONICAL_BY_LOWER, work_key
+from src.evaluation.retrieval_metrics import _CANONICAL_BY_LOWER, parse_support_id, work_key
 
 EVAL_DIR = Path(__file__).resolve().parents[1] / "data" / "eval"
 DATASET = json.loads((EVAL_DIR / "eval_dataset.json").read_text(encoding="utf-8"))
@@ -30,9 +30,9 @@ def test_enums_and_unique_ids():
     for item in DATASET:
         assert item["category"] in ITEM["properties"]["category"]["enum"]
         assert item["difficulty"] in ITEM["properties"]["difficulty"]["enum"]
-        allowed = ITEM["properties"]["gold_sources"]["items"]["enum"]
-        assert item["gold_sources"] and set(item["gold_sources"]) <= set(allowed), item["id"]
-        assert len(item["gold_sources"]) == len(set(item["gold_sources"])), item["id"]
+        allowed = ITEM["properties"]["gold_works"]["items"]["enum"]
+        assert item["gold_works"] and set(item["gold_works"]) <= set(allowed), item["id"]
+        assert len(item["gold_works"]) == len(set(item["gold_works"])), item["id"]
 
 
 def test_provenance_records():
@@ -55,10 +55,31 @@ def test_reviewer_recorded_only_after_confirmation():
             assert prov["reviewed_by"], item["id"]
 
 
+def test_gold_passages_are_evidenced_parents_of_gold_works():
+    for item in DATASET:
+        assert item["gold_passages"], item["id"]
+        assert set(item["gold_passages"]) <= set(item["provenance"]["supporting_chunk_ids"]), item["id"]
+        works = {work_key(w) for w in item["gold_works"]}
+        for pid in item["gold_passages"]:
+            parsed = parse_support_id(pid)
+            assert parsed and work_key(parsed[0]) in works, (item["id"], pid)
+
+
+def test_formulary_sets_are_passage_gold_only_where_formulations_are_asked_for():
+    """eval_017 asks for formulations; 018-023/025 ask for a line of treatment or an
+    approach, so their AFI monograph sets stay work-level evidence (LABELING_CRITERIA.md)."""
+    rows = {item["id"]: item for item in DATASET}
+    assert all(p.startswith("afi") for p in rows["eval_017"]["gold_passages"])
+    for qid in ("eval_018", "eval_019", "eval_020", "eval_021", "eval_022", "eval_023", "eval_025"):
+        assert "afi" in rows[qid]["gold_works"], qid
+        assert not any(p.startswith("afi") for p in rows[qid]["gold_passages"]), qid
+        assert any(c.startswith("afi") for c in rows[qid]["provenance"]["supporting_chunk_ids"]), qid
+
+
 def test_gold_labels_resolve_to_canonical_works():
     canonical = set(_CANONICAL_BY_LOWER.values())
     for item in DATASET:
-        for label in item["gold_sources"]:
+        for label in item["gold_works"]:
             assert work_key(label) in canonical, (item["id"], label)
 
 

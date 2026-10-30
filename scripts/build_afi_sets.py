@@ -141,6 +141,9 @@ def main() -> int:
         for qid, ids in results.items():
             prov = rows[qid]["provenance"]
             prov["supporting_chunk_ids"] = [c for c in prov["supporting_chunk_ids"] if not c.startswith("afi")] + ids
+            passages = rows[qid]["gold_passages"]
+            if any(c.startswith("afi") for c in passages):      # eval_017: the AFI set is its passage gold
+                rows[qid]["gold_passages"] = [c for c in passages if not c.startswith("afi")] + ids
         DATASET.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"wrote {DATASET}")
     return 0

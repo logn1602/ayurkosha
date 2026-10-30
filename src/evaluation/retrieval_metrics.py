@@ -2,7 +2,7 @@
 AyurKosha — Retrieval Quality Metrics
 Measures Recall@k, MRR, Precision@k against a gold standard.
 
-The eval dataset's ``gold_sources`` are *work-level* labels (e.g.
+The eval dataset's ``gold_works`` are *work-level* labels (e.g.
 "charaka-chikitsa-ch29", "afi-vol1", "api-vol1-monograph") — they name a
 classical work / pharmacopoeia volume, not an exact chunk_id. So retrieval
 relevance here is judged at the **work level**: a retrieved chunk is
@@ -55,9 +55,9 @@ def chunk_work_key(chunk: dict[str, Any]) -> str:
     return work_key(meta.get("text_name") or meta.get("source"))
 
 
-def relevant_keys(gold_sources: list[str]) -> set[str]:
-    """Canonical work keys for a question's gold sources."""
-    return {work_key(g) for g in gold_sources if g}
+def relevant_keys(gold_works: list[str]) -> set[str]:
+    """Canonical work keys for a question's gold works."""
+    return {work_key(g) for g in gold_works if g}
 
 
 def recall_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
@@ -95,14 +95,14 @@ def mrr(retrieved: list[str], relevant: set[str]) -> float:
 
 def score_retrieval(
     retrieved_chunks: list[dict[str, Any]],
-    gold_sources: list[str],
+    gold_works: list[str],
     k: int,
 ) -> dict[str, float]:
     """Compute all retrieval metrics for one question's ranked chunk list.
 
     Args:
         retrieved_chunks: Ranked result dicts (best-first) with metadata.
-        gold_sources: The question's gold_sources labels.
+        gold_works: The question's work-level gold labels.
         k: Cutoff for recall@k / precision@k.
 
     Returns:
@@ -115,7 +115,7 @@ def score_retrieval(
             but only k deep for rerank_mmr, so it isn't comparable across them.
     """
     retrieved_keys = [chunk_work_key(c) for c in retrieved_chunks]
-    relevant = relevant_keys(gold_sources)
+    relevant = relevant_keys(gold_works)
     recall = recall_at_k(retrieved_keys, relevant, k)
     return {
         "recall_at_k": recall,
@@ -129,10 +129,10 @@ def score_retrieval(
 # ── passage level ─────────────────────────────────────────────────────
 # Work-level relevance is the lenient bound: any chunk of a gold work counts.
 # Passage level is the strict bound: a retrieved chunk is a hit only if its
-# parent is one of the question's supporting passages
-# (provenance.supporting_chunk_ids), or it lies within PASSAGE_PAGE_WINDOW
-# pages of one in the same source file. Page numbers restart per file
-# (Sushruta vol 1 p535 is not vol 2 p535), so "same work" means same file.
+# parent is one of the question's gold passages (``gold_passages``), or it
+# lies within PASSAGE_PAGE_WINDOW pages of one in the same source file. Page
+# numbers restart per file (Sushruta vol 1 p535 is not vol 2 p535), so "same
+# work" means same file.
 
 PASSAGE_PAGE_WINDOW = 1
 _SUPPORT_ID_RE = re.compile(r"^(?P<stem>.+)_(?P<page>\d+)_P\d+$")

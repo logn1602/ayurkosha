@@ -71,7 +71,8 @@ def question_trace(item: dict[str, Any], config_name: str, retrieved: dict[str, 
         "type": "question",
         "id": item.get("id"),
         "question": item.get("question"),
-        "gold_sources": item.get("gold_sources", []),
+        "gold_works": item.get("gold_works", []),
+        "gold_passages": item.get("gold_passages", []),
         "config": config_name,
         "scored_stage": retrieved.get("scored_stage"),
         "scored_n": len(retrieved.get("scored") or []),
@@ -119,16 +120,20 @@ def read_trace(path: str | Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
 
 def load_labels(path: str | Path) -> dict[str, list[str]]:
-    """{question id: gold_sources} from an eval dataset file."""
+    """{question id: gold_works} (work-level gold) from an eval dataset file."""
     with open(path, encoding="utf-8") as f:
-        return {item["id"]: item.get("gold_sources", []) for item in json.load(f)}
+        return {item["id"]: item.get("gold_works", []) for item in json.load(f)}
 
 
-def load_supporting(path: str | Path) -> dict[str, list[str]]:
-    """{question id: supporting parent chunk ids} (provenance) from an eval dataset file."""
+def load_gold_passages(path: str | Path) -> dict[str, list[str]]:
+    """{question id: gold_passages} (passage-level gold, parent chunk ids) from an eval dataset file.
+
+    Not provenance.supporting_chunk_ids: that is the labels' evidence, and for
+    the treatment rows it holds whole Formulary monograph sets that stay
+    work-level gold only (see LABELING_CRITERIA.md).
+    """
     with open(path, encoding="utf-8") as f:
-        return {item["id"]: (item.get("provenance") or {}).get("supporting_chunk_ids") or []
-                for item in json.load(f)}
+        return {item["id"]: item.get("gold_passages") or [] for item in json.load(f)}
 
 
 def scored_chunks(trace: dict[str, Any]) -> list[dict[str, Any]]:
@@ -140,9 +145,9 @@ def scored_chunks(trace: dict[str, Any]) -> list[dict[str, Any]]:
             for c in cands]
 
 
-def first_gold_rank(trace: dict[str, Any], gold_sources: list[str]) -> int | None:
+def first_gold_rank(trace: dict[str, Any], gold_works: list[str]) -> int | None:
     """1-based rank of the first gold-work chunk in the scored list, or None."""
-    relevant = retrieval_metrics.relevant_keys(gold_sources)
+    relevant = retrieval_metrics.relevant_keys(gold_works)
     for rank, chunk in enumerate(scored_chunks(trace), start=1):
         if retrieval_metrics.chunk_work_key(chunk) in relevant:
             return rank

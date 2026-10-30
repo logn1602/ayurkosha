@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "AyurKosha eval dataset",
-  "description": "List of eval questions. gold_sources are work-level labels; see LABELING_CRITERIA.md.",
+  "description": "List of eval questions. gold_works are work-level labels and gold_passages the passage-level gold (parent chunk ids); see LABELING_CRITERIA.md.",
   "type": "array",
   "items": {
     "type": "object",
@@ -9,7 +9,8 @@
       "id",
       "question",
       "gold_answer",
-      "gold_sources",
+      "gold_works",
+      "gold_passages",
       "category",
       "difficulty",
       "provenance"
@@ -26,7 +27,7 @@
       "gold_answer": {
         "type": "string"
       },
-      "gold_sources": {
+      "gold_works": {
         "type": "array",
         "items": {
           "enum": [
@@ -38,6 +39,14 @@
           ]
         },
         "uniqueItems": true
+      },
+      "gold_passages": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true,
+        "description": "parent chunk ids the passage-level metric scores against"
       },
       "category": {
         "enum": [

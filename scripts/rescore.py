@@ -25,7 +25,7 @@ except (AttributeError, ValueError):  # pragma: no cover
     pass
 
 from src.evaluation.run_eval import DEFAULT_DATASET
-from src.evaluation.traces import (FULL_LIST_MRR_NA, labels_sha256, load_labels, load_supporting,
+from src.evaluation.traces import (FULL_LIST_MRR_NA, labels_sha256, load_gold_passages, load_labels,
                                    per_question_table, read_trace, rescore, summary_table)
 
 
@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     labels = load_labels(args.labels)
-    supporting = load_supporting(args.labels)
+    supporting = load_gold_passages(args.labels)
     sha = labels_sha256(args.labels)
     files = trace_files(args.paths)
     if not files:

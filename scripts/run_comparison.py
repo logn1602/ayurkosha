@@ -54,7 +54,7 @@ except (AttributeError, ValueError):  # pragma: no cover
 
 from config.settings import settings
 from src.evaluation.run_eval import DEFAULT_DATASET, PROJECT_ROOT, load_dataset, run_eval
-from src.evaluation.traces import (load_labels, load_supporting, per_question_table, read_trace, rescore,
+from src.evaluation.traces import (load_gold_passages, load_labels, per_question_table, read_trace, rescore,
                                    summary_table)
 from src.ingestion import embedder
 
@@ -249,7 +249,7 @@ def main():
                          f"({payload['summary']['rerank_skips']} rerank skips). Traces so far: {phase_dir}")
             files[name].append(payload["trace_file"])
 
-    labels, supporting = load_labels(args.dataset), load_supporting(args.dataset)
+    labels, supporting = load_labels(args.dataset), load_gold_passages(args.dataset)
     before = load_phase_runs(before_dir) if before_dir else None
     summaries, summary_lines, table = report(load_phase_runs(phase_dir), labels, before, supporting)
     doc = [f"# Comparison: {args.phase}{' (with ' + before_dir.name + ')' if before_dir else ''}", "",

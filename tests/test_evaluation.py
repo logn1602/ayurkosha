@@ -140,7 +140,7 @@ def _run_with_skips(monkeypatch, tmp_path, skipped_flags):
     import json
     from src.evaluation import run_eval as re_mod
 
-    dataset = [{"id": f"q{i}", "question": f"question {i}", "gold_sources": []}
+    dataset = [{"id": f"q{i}", "question": f"question {i}", "gold_works": []}
                for i in range(len(skipped_flags))]
     path = tmp_path / "ds.json"
     path.write_text(json.dumps(dataset), encoding="utf-8")

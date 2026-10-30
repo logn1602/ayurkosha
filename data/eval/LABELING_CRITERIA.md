@@ -3,10 +3,14 @@
 v2 (2026-10-29): adds the reviewer's Formulary rule for treatment/management
 questions (§2) and the review-status provenance methods (§5).
 
-How `gold_sources` in `eval_dataset.json` are assigned. Retrieval metrics are
-scored at the **work level** (`src/evaluation/retrieval_metrics.py`): a retrieved
-chunk counts as relevant when its work is one of the question's gold works. So a
-gold label is a claim that this work answers the question.
+How the gold labels in `eval_dataset.json` are assigned. Each item has two:
+- `gold_works`: the **work-level** gold. A retrieved chunk counts as relevant
+  when its work is one of these (`src/evaluation/retrieval_metrics.py`), so a
+  label is a claim that this work answers the question.
+- `gold_passages`: the **passage-level** gold, parent chunk ids the strict
+  metric scores against (§2a). It is a subset of
+  `provenance.supporting_chunk_ids`, the evidence behind the labels, but not
+  always all of it.
 
 ## 1. The rule
 
@@ -42,8 +46,8 @@ topic:
   etiology-only questions, to the Pharmacopoeia's single-herb monographs, or past
   the scope rule in §3 (eval_024 names Sushruta, so it stays Sushruta-only).
   For these rows the supporting set lists **every** such monograph (a complete
-  set, see `relabel_review.md`), so the passage-level metric can credit any
-  indicated formulation.
+  set, see `relabel_review.md`). That set is evidence for the work-level label.
+  Only eval_017 also scores passages against it (§2a).
 - **Group-level statements.** A property stated jointly for a group (for example
   "the following pot-herbs are heat-making in potency…") is **borderline**: it's
   recorded in the review notes but not made gold unless the question is about the
@@ -52,6 +56,24 @@ topic:
   answer but isn't one.
 - **Retrieval output.** Labels must never be derived from what the system
   retrieves, or from eval results; that would make the eval measure itself.
+
+## 2a. Passage-level gold (`gold_passages`)
+
+By default a row's passage gold is its evidence, `provenance.supporting_chunk_ids`.
+The exception, decided by the reviewer on 2026-10-30:
+
+- **eval_018–023 and eval_025: Sushruta chapter passages only.** The Formulary
+  stays in their `gold_works`, so any Formulary chunk still counts at the work
+  level, but not at the passage level, for two reasons:
+  - Formulations don't answer these questions. They ask for a line of
+    treatment, an approach or a classification, and a monograph lists
+    indications without describing any of that.
+  - The complete monograph sets are too large to be a strict test. They cover
+    8.6–21.0% of the Formulary's 903 pages with text (16.3–32.8% within ±1 page),
+    or 10.1–28.3% of its 4,090 chunks (19.1–41.1% within ±1). For Jvara, a random
+    Formulary chunk would count as a passage hit 41% of the time.
+- **eval_017 keeps its Formulary set as passage gold:** it asks for formulations.
+  The set is 51 parents: 4.2% of Formulary pages, 5.9% of its chunks.
 
 ## 3. Scope
 
@@ -83,7 +105,7 @@ Every item carries a `provenance` object (see `eval_dataset.schema.json`):
 | `criteria_version` | version of this document applied, or `null` for legacy labels |
 | `labeled_on` | ISO date the labels were assigned |
 | `source_commit` | commit holding the proposal the labels come from |
-| `supporting_chunk_ids` | parent chunk ids that substantively answer the question (empty for legacy labels) |
+| `supporting_chunk_ids` | parent chunk ids that substantively answer the question: the evidence for `gold_works` (empty for legacy labels). `gold_passages` is the subset the passage metric uses |
 | `reviewed_by` | who confirmed the labels; `null` while review is pending |
 
 Proposals are written to `relabel_review.md` first. The reviewer (logn1602)

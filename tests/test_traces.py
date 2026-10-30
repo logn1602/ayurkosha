@@ -14,7 +14,7 @@ import pytest
 
 from src.evaluation import run_eval as re_mod
 from src.evaluation import traces
-from src.evaluation.traces import (labels_sha256, load_labels, load_supporting, per_question_table, read_trace,
+from src.evaluation.traces import (labels_sha256, load_labels, load_gold_passages, per_question_table, read_trace,
                                    rescore, summary_table)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,12 +30,12 @@ SEMANTIC = [_chunk("api_1", "api_all_volume.pdf", 40, 0.9), _chunk("afi_1", "afi
 KEYWORD = [_chunk("ss_1", "sushruta_samhita_vol_2.pdf", 371, 12.0), _chunk("afi_2", "afi_part1.pdf", 113, 9.0),
            _chunk("api_2", "api_all_volume.pdf", 41, 5.0)]
 DATASET = [
-    {"id": "q1", "question": "properties of Asvagandha?", "gold_sources": ["api"],
-     "provenance": {"supporting_chunk_ids": ["api_all_volume_pdf_40_P0"]}},                  # api_1's page
-    {"id": "q2", "question": "four modalities for Arsha?", "gold_sources": ["sushruta"],
-     "provenance": {"supporting_chunk_ids": ["sushruta_samhita_vol_2_pdf_370_P0"]}},         # ss_1 is p371 (+1)
-    {"id": "q3", "question": "what is Dinacarya?", "gold_sources": ["ashtanga_hridaya"],   # never retrieved
-     "provenance": {"supporting_chunk_ids": ["ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0"]}},
+    {"id": "q1", "question": "properties of Asvagandha?", "gold_works": ["api"],
+     "gold_passages": ["api_all_volume_pdf_40_P0"]},                                       # api_1's page
+    {"id": "q2", "question": "four modalities for Arsha?", "gold_works": ["sushruta"],
+     "gold_passages": ["sushruta_samhita_vol_2_pdf_370_P0"]},                              # ss_1 is p371 (+1)
+    {"id": "q3", "question": "what is Dinacarya?", "gold_works": ["ashtanga_hridaya"],     # never retrieved
+     "gold_passages": ["ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0"]},
 ]
 
 
@@ -92,7 +92,7 @@ def test_trace_records_run_metadata_and_every_stage(fake_stack):
 def test_rescoring_a_saved_run_reproduces_its_scores_exactly(fake_stack, pipeline, use_hyde):
     dataset, out = fake_stack
     payload, meta, qtraces = _run(dataset, out, pipeline, use_hyde)
-    result = rescore(meta, qtraces, load_labels(dataset), supporting=load_supporting(dataset))
+    result = rescore(meta, qtraces, load_labels(dataset), supporting=load_gold_passages(dataset))
     assert "passage" in payload["summary"]
     assert result["summary"] == payload["summary"]                  # exact, incl. rounding and passage level
     for record in payload["results"]:
@@ -103,7 +103,7 @@ def test_rescoring_against_other_labels_changes_scores(fake_stack, tmp_path):
     dataset, out = fake_stack
     payload, meta, qtraces = _run(dataset, out, "rerank")
     other = tmp_path / "other.json"
-    other.write_text(json.dumps([dict(q, gold_sources=["ashtanga_hridaya"]) for q in DATASET]), encoding="utf-8")
+    other.write_text(json.dumps([dict(q, gold_works=["ashtanga_hridaya"]) for q in DATASET]), encoding="utf-8")
     assert rescore(meta, qtraces, load_labels(other))["summary"]["retrieval"]["hit_rate"] == 0.0
     assert payload["summary"]["retrieval"]["hit_rate"] > 0
 
@@ -157,7 +157,7 @@ def test_comparison_report_includes_before_columns(fake_stack, tmp_path):
         for name in names:
             re_mod.run_eval(dataset, d, mode="retrieval", k=2, pipeline=name, config_name=name)
     summaries, summary_lines, table = rc.report(rc.load_phase_runs(after_dir), load_labels(dataset),
-                                                rc.load_phase_runs(before_dir), load_supporting(dataset))
+                                                rc.load_phase_runs(before_dir), load_gold_passages(dataset))
     assert set(summaries) == {"before:rrf", "before:rerank", "rrf", "rerank"}
     assert summary_lines[0] == ("| config | Hit@2 work | Recall@2 work | MRR@2 work | Hit@2 passage | "
                                 "Recall@2 passage | MRR@2 passage | MRR@15 work |")
@@ -171,7 +171,7 @@ def test_comparison_report_includes_before_columns(fake_stack, tmp_path):
 def _synthetic_trace(qid, sources, stage):
     cands = [{"chunk_id": f"{qid}_{i}", "work": None, "source": src, "text_name": None, "page": i, "score": None}
              for i, src in enumerate(sources)]
-    return {"type": "question", "id": qid, "question": qid, "gold_sources": [], "config": stage,
+    return {"type": "question", "id": qid, "question": qid, "gold_works": [], "config": stage,
             "scored_stage": stage, "scored_n": len(cands), "rerank_skipped": False, "stages": {stage: cands}}
 
 
@@ -263,6 +263,6 @@ def test_work_level_is_lenient_and_passage_level_strict(fake_stack):
 def test_per_question_table_at_passage_level(fake_stack):
     dataset, out = fake_stack
     _, _, rr = _run(dataset, out, "rerank")
-    lines = per_question_table([("rerank", [rr])], load_labels(dataset), supporting=load_supporting(dataset))
+    lines = per_question_table([("rerank", [rr])], load_labels(dataset), supporting=load_gold_passages(dataset))
     assert lines[2].startswith("| q1 | 1 passages |")
     assert "supporting passage" in lines[-1]

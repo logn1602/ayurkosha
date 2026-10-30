@@ -18,6 +18,8 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
   uses" list sit in the same chunk. The supporting sets for the treatment rows now hold whole
   monographs instead (see "Complete Formulary supporting sets" below).
 - Supporting ids are **parent chunk ids**, also stored per item in `provenance.supporting_chunk_ids`.
+  The passage metric scores against `gold_passages`. For eval_018–023 and eval_025 that holds only
+  the Sushruta passages: their Formulary sets are work-level evidence (LABELING_CRITERIA.md §2a).
 - **19/30** questions changed label versus the original (bm25-keyword-evidence) set.
 
 | ID | Question | Previous gold | Applied gold | Reason | Supporting chunk ids | Notes |
