@@ -36,6 +36,9 @@ topic:
   and uses list sit in the same chunk. This doesn't extend to classification or
   etiology-only questions, to the Pharmacopoeia's single-herb monographs, or past
   the scope rule in §3 (eval_024 names Sushruta, so it stays Sushruta-only).
+  For these rows the supporting set lists **every** such monograph (a complete
+  set, see `relabel_review.md`), so the passage-level metric can credit any
+  indicated formulation.
 - **Group-level statements.** A property stated jointly for a group (for example
   "the following pot-herbs are heat-making in potency…") is **borderline**: it's
   recorded in the review notes but not made gold unless the question is about the
