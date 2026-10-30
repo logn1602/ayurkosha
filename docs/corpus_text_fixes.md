@@ -363,10 +363,13 @@ chunk (the most in Vidyanath and API, the least where there's no structure).
   are therefore optimistic; C is mostly Latin text.
 - **No Claude calls.** BM25, the parent store, OCR splitting, headers and the font
   map are all local.
-- **Quota fit (trial key, 1,000 calls/month):**
-  - B (425) + the clean comparison (~420, see `scripts/run_comparison.py`) ≈ 845,
-    which fits only with little room for retries.
-  - C (238) + 420 ≈ 660 leaves margin.
+- **Quota fit (trial key, 1,000 calls/month), for the chosen scenario C:**
+  - The dry run gives 237 re-ingest calls.
+  - The comparison (`scripts/run_comparison.py`) runs each deterministic config
+    once and only HyDE three times: `before` (old index; rrf, rerank) = 60, and
+    `after` (rrf, rerank, rerank_mmr, rerank_hyde ×3) = 270.
+  - **Total 60 + 237 + 270 = 567, leaving a 433-call (43%) margin**, plus 90 Claude
+    Haiku calls for HyDE.
 - **Procedure: `scripts/reingest.py`, blue/green.** This corrects earlier notes here
   that suggested an in-place rebuild with `skip_existing=False` and
   `delete_by_source`.
