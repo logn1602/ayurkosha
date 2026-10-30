@@ -189,14 +189,14 @@ def report(current: dict[str, list[tuple[dict, list[dict]]]], labels: dict[str, 
 
 
 def _summarize(rows: dict[str, list[dict]]) -> list[str]:
-    lines = [f"{'config':<12} " + "  ".join(f"{m:>22}" for m in METRICS)]
+    lines = [f"{'config':<16} " + "  ".join(f"{m:>22}" for m in METRICS)]
     for name, summaries in rows.items():
         cells = []
         for m in METRICS:
             vals = [s["retrieval"][m] for s in summaries]
             cells.append(f"{vals[0]:.3f}" if len(vals) == 1 else
                          f"{statistics.mean(vals):.3f} ({min(vals):.3f}–{max(vals):.3f})")
-        lines.append(f"{name:<12} " + "  ".join(f"{c:>22}" for c in cells))
+        lines.append(f"{name:<16} " + "  ".join(f"{c:>22}" for c in cells))
     return lines
 
 
