@@ -116,7 +116,7 @@ def _with_keys(tokens: list[str], diacritic_tokens: frozenset[str] = frozenset()
         if _is_devanagari(token) or token in DOMAIN_ACRONYMS:
             continue
         key = romanization_key(token)
-        if key != token and wants_romanization_key(token, diacritic_tokens):
+        if key != token and wants_romanization_key(token, diacritic_tokens, key):
             out.append(key)
     return out
 

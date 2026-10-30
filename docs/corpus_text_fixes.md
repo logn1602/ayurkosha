@@ -141,8 +141,20 @@ words but only 6 of 54 Sanskrit terms checked. Of those six, pandu, rasa and pit
 key to themselves; krishna is a dictionary term, so it's keyed anyway; and
 shiva/chakra aren't medical terms. The rule is
 `synonym_loader.wants_romanization_key`, used for documents, queries and
-dictionary lookups alike. The simpler of the two options was chosen: restricting
-keys rather than indexing romanized forms as a separate BM25 field.
+dictionary lookups alike. One more guard: an *unrecognized* word (neither
+dictionary Sanskrit nor written with diacritics, e.g. an OCR form like
+"braches") keeps its key only if the key isn't itself a common English word
+("braces"). The simpler of the two options was chosen: restricting keys rather
+than indexing romanized forms as a separate BM25 field.
+
+BM25 vocabulary on the 22,718 chunks that will be indexed:
+
+| Key rule | Vocab | Tokens | Keys landing on an English word |
+|---|---|---|---|
+| Folding only, no keys | 90,937 | 1,262,040 | — |
+| Keys on every token (b1b7330) | 104,396 | 1,498,929 | merges **329** English pairs (ache/ace, arch/arc, …) |
+| Sanskrit-like tokens only (d76eb1d) | 102,084 | 1,375,500 | 108 (unrecognized words, e.g. braches→braces) |
+| **+ unrecognized-word guard (current)** | **101,986** | **1,371,577** | **12**, all from diacritic or dictionary words (keyed by design) |
 
 `tests/test_romanization.py` pins this down: an "Ashwagandha" query retrieves a
 chunk that only says "Aśvagandhā" (and doesn't with folding off), while "ship"

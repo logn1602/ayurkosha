@@ -116,10 +116,16 @@ def _variant_key(word: str) -> str:
     return romanization_key(_fold_lower(word))
 
 
-def _sanskrit_like(token: str, sanskrit: frozenset[str], diacritic_tokens=frozenset()) -> bool:
+def _sanskrit_like(token: str, sanskrit: frozenset[str], diacritic_tokens=frozenset(),
+                   key: str | None = None) -> bool:
     from src.utils.transliterate import english_words
 
-    return token in diacritic_tokens or token in sanskrit or token not in english_words()
+    if token in diacritic_tokens or token in sanskrit:
+        return True
+    english = english_words()
+    # An unrecognized word (OCR form, rare spelling) is keyed only if its key
+    # doesn't land on a common English word ("braches" -> "braces").
+    return token not in english and (key is None or key not in english)
 
 
 def _collect_sanskrit_terms(*dictionaries: dict) -> frozenset[str]:
@@ -139,8 +145,9 @@ def _build_key_index(index: dict[str, frozenset[str]], sanskrit: frozenset[str])
     """Re-key the Sanskrit-like part of the variant index by ``_variant_key`` (merging on collision)."""
     keyed: dict[str, set[str]] = {}
     for word, variants in index.items():
-        if _sanskrit_like(_fold_lower(word), sanskrit):
-            keyed.setdefault(_variant_key(word), set()).update(variants)
+        key = _variant_key(word)
+        if _sanskrit_like(_fold_lower(word), sanskrit, key=key):
+            keyed.setdefault(key, set()).update(variants)
     return {key: frozenset(values) for key, values in keyed.items()}
 
 
@@ -150,16 +157,17 @@ def sanskrit_terms() -> frozenset[str]:
     return _sanskrit_terms
 
 
-def wants_romanization_key(token: str, diacritic_tokens=frozenset()) -> bool:
+def wants_romanization_key(token: str, diacritic_tokens=frozenset(), key: str | None = None) -> bool:
     """True for Sanskrit-like tokens, the only ones that get romanization keys.
 
     A (folded, lowercase) token qualifies if it came from a word written with
-    IAST diacritics (``diacritic_tokens``), is a Sanskrit term from the synonym
-    dictionaries, or is not a common English word. Plain English is excluded,
-    so "ship" never becomes "sip".
+    IAST diacritics (``diacritic_tokens``) or is a Sanskrit term from the
+    synonym dictionaries; or, failing those, if it is not a common English
+    word and its ``key`` isn't one either. Plain English is excluded, so
+    "ship" never becomes "sip", nor an odd "braches" become "braces".
     """
     load_synonym_index()
-    return _sanskrit_like(token, _sanskrit_terms, diacritic_tokens)
+    return _sanskrit_like(token, _sanskrit_terms, diacritic_tokens, key)
 
 
 def load_synonym_index(force_reload: bool = False) -> dict[str, frozenset[str]]:
@@ -206,8 +214,10 @@ def get_synonyms(term: str) -> set[str]:
         return set()
     index = load_synonym_index()
     matches = set(index.get(term.lower(), ()))
-    if settings.bm25_fold_diacritics and wants_romanization_key(_fold_lower(term)):
-        matches |= _synonym_key_index.get(_variant_key(term), frozenset())
+    if settings.bm25_fold_diacritics:
+        key = _variant_key(term)
+        if wants_romanization_key(_fold_lower(term), key=key):
+            matches |= _synonym_key_index.get(key, frozenset())
     if not matches:
         return {term}
     return matches | {term}

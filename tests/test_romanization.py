@@ -102,3 +102,11 @@ def test_which_tokens_get_keys(folding):
     assert wants_romanization_key("krishna")                      # dictionary Sanskrit term (also common in English)
     assert wants_romanization_key("satavari")                     # not an English word
     assert wants_romanization_key("ship", frozenset({"ship"}))    # written with diacritics in the source
+
+
+def test_unknown_word_whose_key_is_english_gets_no_key(folding):
+    from src.ingestion.synonym_loader import wants_romanization_key
+    from src.utils.transliterate import english_words
+    assert "braches" not in english_words() and "braces" in english_words()
+    assert not wants_romanization_key("braches", key="braces")
+    assert "braces" not in tokenize_ayurvedic("braches", stem=False)
