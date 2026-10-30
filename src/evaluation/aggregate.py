@@ -31,6 +31,13 @@ def aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
             "mrr_at_k": _avg("retrieval", "mrr_at_k"),
             "hit_rate": _avg("retrieval", "hit"),
         }
+    if any("passage" in r for r in results):
+        summary["passage"] = {
+            "questions": sum(1 for r in results if "passage" in r),
+            "hit_rate": _avg("passage", "hit"),
+            "recall_at_k": _avg("passage", "recall_at_k"),
+            "mrr_at_k": _avg("passage", "mrr_at_k"),
+        }
     if any("generation" in r for r in results):
         ok = [r for r in results if r.get("generation", {}).get("ok")]
         summary["generation"] = {

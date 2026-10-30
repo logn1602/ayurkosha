@@ -19,6 +19,7 @@ Build this in: Phase 6
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from src.ingestion.metadata import TEXT_NAME_BY_KEYWORD, infer_text_name
@@ -122,4 +123,80 @@ def score_retrieval(
         "mrr": mrr(retrieved_keys, relevant),
         "mrr_at_k": mrr(retrieved_keys[:k], relevant),
         "hit": 1.0 if recall > 0 else 0.0,
+    }
+
+
+# ── passage level ─────────────────────────────────────────────────────
+# Work-level relevance is the lenient bound: any chunk of a gold work counts.
+# Passage level is the strict bound: a retrieved chunk is a hit only if its
+# parent is one of the question's supporting passages
+# (provenance.supporting_chunk_ids), or it lies within PASSAGE_PAGE_WINDOW
+# pages of one in the same source file. Page numbers restart per file
+# (Sushruta vol 1 p535 is not vol 2 p535), so "same work" means same file.
+
+PASSAGE_PAGE_WINDOW = 1
+_SUPPORT_ID_RE = re.compile(r"^(?P<stem>.+)_(?P<page>\d+)_P\d+$")
+_CHILD_SUFFIX_RE = re.compile(r"_C\d+$")
+_ID_UNSAFE_RE = re.compile(r"[^A-Za-z0-9]+")      # as chunkers._sanitize_id
+
+
+def _source_stem(source: str | None) -> str:
+    return _ID_UNSAFE_RE.sub("_", source or "").strip("_")
+
+
+def parse_support_id(parent_id: str) -> tuple[str, int] | None:
+    """("api_all_volume_pdf", 40) from "api_all_volume_pdf_40_P0", or None."""
+    m = _SUPPORT_ID_RE.match(parent_id or "")
+    return (m.group("stem"), int(m.group("page"))) if m else None
+
+
+def _chunk_parent_id(chunk: dict[str, Any]) -> str | None:
+    parent = chunk.get("parent_id") or (chunk.get("metadata") or {}).get("parent_id")
+    if parent:
+        return parent
+    cid = chunk.get("chunk_id") or ""
+    return _CHILD_SUFFIX_RE.sub("", cid) if _CHILD_SUFFIX_RE.search(cid) else None
+
+
+def covered_passages(chunk: dict[str, Any], supporting_ids: list[str],
+                     window: int = PASSAGE_PAGE_WINDOW) -> set[str]:
+    """The supporting passages a retrieved chunk counts as hitting."""
+    meta = chunk.get("metadata") or {}
+    parent, stem, page = _chunk_parent_id(chunk), _source_stem(meta.get("source")), meta.get("page")
+    page = int(float(page)) if page is not None else None
+    covered = set()
+    for pid in supporting_ids:
+        parsed = parse_support_id(pid)
+        if parent == pid or (parsed and page is not None and stem == parsed[0] and abs(page - parsed[1]) <= window):
+            covered.add(pid)
+    return covered
+
+
+def first_passage_rank(retrieved_chunks: list[dict[str, Any]], supporting_ids: list[str]) -> int | None:
+    """1-based rank of the first retrieved chunk that hits a supporting passage, or None."""
+    for rank, chunk in enumerate(retrieved_chunks, start=1):
+        if covered_passages(chunk, supporting_ids):
+            return rank
+    return None
+
+
+def score_passages(
+    retrieved_chunks: list[dict[str, Any]],
+    supporting_ids: list[str],
+    k: int,
+) -> dict[str, float] | None:
+    """Passage-level {"hit", "recall_at_k", "mrr_at_k"}; None without supporting ids.
+
+    ``recall_at_k`` is the share of supporting passages covered by the top-k,
+    so it is capped at k / len(supporting_ids) for large supporting sets.
+    """
+    if not supporting_ids:
+        return None
+    top = retrieved_chunks[:k]
+    covered = set().union(*(covered_passages(c, supporting_ids) for c in top)) if top else set()
+    first = first_passage_rank(top, supporting_ids)
+    return {
+        "hit": 1.0 if covered else 0.0,
+        "recall_at_k": len(covered) / len(set(supporting_ids)),
+        "mrr_at_k": 1.0 / first if first else 0.0,
     }

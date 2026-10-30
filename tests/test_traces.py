@@ -14,8 +14,8 @@ import pytest
 
 from src.evaluation import run_eval as re_mod
 from src.evaluation import traces
-from src.evaluation.traces import (labels_sha256, load_labels, per_question_table, read_trace, rescore,
-                                   summary_table)
+from src.evaluation.traces import (labels_sha256, load_labels, load_supporting, per_question_table, read_trace,
+                                   rescore, summary_table)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,9 +30,12 @@ SEMANTIC = [_chunk("api_1", "api_all_volume.pdf", 40, 0.9), _chunk("afi_1", "afi
 KEYWORD = [_chunk("ss_1", "sushruta_samhita_vol_2.pdf", 371, 12.0), _chunk("afi_2", "afi_part1.pdf", 113, 9.0),
            _chunk("api_2", "api_all_volume.pdf", 41, 5.0)]
 DATASET = [
-    {"id": "q1", "question": "properties of Asvagandha?", "gold_sources": ["api"]},
-    {"id": "q2", "question": "four modalities for Arsha?", "gold_sources": ["sushruta"]},
-    {"id": "q3", "question": "what is Dinacarya?", "gold_sources": ["ashtanga_hridaya"]},   # never retrieved
+    {"id": "q1", "question": "properties of Asvagandha?", "gold_sources": ["api"],
+     "provenance": {"supporting_chunk_ids": ["api_all_volume_pdf_40_P0"]}},                  # api_1's page
+    {"id": "q2", "question": "four modalities for Arsha?", "gold_sources": ["sushruta"],
+     "provenance": {"supporting_chunk_ids": ["sushruta_samhita_vol_2_pdf_370_P0"]}},         # ss_1 is p371 (+1)
+    {"id": "q3", "question": "what is Dinacarya?", "gold_sources": ["ashtanga_hridaya"],   # never retrieved
+     "provenance": {"supporting_chunk_ids": ["ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0"]}},
 ]
 
 
@@ -78,7 +81,7 @@ def test_trace_records_run_metadata_and_every_stage(fake_stack):
     assert (q1["id"], q1["config"], q1["scored_stage"]) == ("q1", "rerank_mmr", "mmr")
     assert set(q1["stages"]) == {"fused", "rerank", "mmr"}
     top = q1["stages"]["fused"][0]
-    assert set(top) == {"chunk_id", "work", "source", "text_name", "page", "score", "retrievers"}
+    assert set(top) == {"chunk_id", "parent_id", "work", "source", "text_name", "page", "score", "retrievers"}
     assert top["chunk_id"] == "ss_1" and top["work"] == "Sushruta Samhita" and top["page"] == 371
     assert top["retrievers"] == ["semantic", "keyword"]            # found by both
     assert q1["stages"]["rerank"][0]["score"] == 1.0                # stage score = rerank_score
@@ -89,8 +92,9 @@ def test_trace_records_run_metadata_and_every_stage(fake_stack):
 def test_rescoring_a_saved_run_reproduces_its_scores_exactly(fake_stack, pipeline, use_hyde):
     dataset, out = fake_stack
     payload, meta, qtraces = _run(dataset, out, pipeline, use_hyde)
-    result = rescore(meta, qtraces, load_labels(dataset))
-    assert result["summary"] == payload["summary"]                  # exact, including rounding
+    result = rescore(meta, qtraces, load_labels(dataset), supporting=load_supporting(dataset))
+    assert "passage" in payload["summary"]
+    assert result["summary"] == payload["summary"]                  # exact, incl. rounding and passage level
     for record in payload["results"]:
         assert {k: result["per_question"][record["id"]][k] for k in record["retrieval"]} == record["retrieval"]
 
@@ -153,10 +157,13 @@ def test_comparison_report_includes_before_columns(fake_stack, tmp_path):
         for name in names:
             re_mod.run_eval(dataset, d, mode="retrieval", k=2, pipeline=name, config_name=name)
     summaries, summary_lines, table = rc.report(rc.load_phase_runs(after_dir), load_labels(dataset),
-                                                rc.load_phase_runs(before_dir))
+                                                rc.load_phase_runs(before_dir), load_supporting(dataset))
     assert set(summaries) == {"before:rrf", "before:rerank", "rrf", "rerank"}
-    assert summary_lines[0] == "| config | Hit@2 | Recall@2 | MRR@2 | MRR@15 |"
-    assert "before:rerank" in table[0] and "rerank vs before:rerank" in table[0]
+    assert summary_lines[0] == ("| config | Hit@2 work | Recall@2 work | MRR@2 work | Hit@2 passage | "
+                                "Recall@2 passage | MRR@2 passage | MRR@15 work |")
+    header = next(line for line in table if line.startswith("| id"))
+    assert "before:rerank" in header and "rerank vs before:rerank" in header
+    assert any(line.startswith("### Passage level") for line in table)        # dataset has supporting ids
 
 
 # ── MRR@k: one cutoff for every config ────────────────────────────────
@@ -192,9 +199,10 @@ def test_summary_table_headlines_mrr_at_6_and_marks_mrr_at_15_na_for_mmr():
     groups = [(p, [(_meta(p), rescore(_meta(p), [_synthetic_trace("q1", lst, "rerank" if p == "rerank" else "mmr")],
                                      labels)["summary"])]) for p, lst in lists.items()]
     lines = summary_table(groups)
-    assert lines[0] == "| config | Hit@6 | Recall@6 | MRR@6 | MRR@15 |"
-    assert lines[2] == "| rerank | 1.000 | 1.000 | 1.000 | 1.000 |"
-    assert lines[3] == "| rerank_mmr | 1.000 | 1.000 | 1.000 | n/a |"
+    assert lines[0] == ("| config | Hit@6 work | Recall@6 work | MRR@6 work | Hit@6 passage | "
+                        "Recall@6 passage | MRR@6 passage | MRR@15 work |")
+    assert lines[2] == "| rerank | 1.000 | 1.000 | 1.000 | n/a | n/a | n/a | 1.000 |"      # no supporting set given
+    assert lines[3] == "| rerank_mmr | 1.000 | 1.000 | 1.000 | n/a | n/a | n/a | n/a |"
 
 
 def test_eval_runs_score_mrr_at_k_on_the_cutoff_for_every_pipeline(fake_stack):
@@ -208,3 +216,53 @@ def test_eval_runs_score_mrr_at_k_on_the_cutoff_for_every_pipeline(fake_stack):
             rank = traces.first_gold_rank(t, labels[t["id"]])
             expected = 1 / rank if rank and rank <= k else 0.0
             assert by_id[t["id"]]["mrr_at_k"] == expected, (pipeline, t["id"], rank)
+
+
+# ── passage level: strict bound ───────────────────────────────────────
+
+from src.evaluation import retrieval_metrics as rm
+
+
+def _pchunk(cid, source, page, parent=None):
+    return {"chunk_id": cid, "parent_id": parent, "metadata": {"source": source, "page": page}}
+
+
+def test_passage_hit_rules():
+    support = ["api_all_volume_pdf_40_P0"]
+    assert rm.covered_passages(_pchunk("x_C1", "afi_part1.pdf", 1, parent="api_all_volume_pdf_40_P0"), support)
+    assert rm.covered_passages(_pchunk("x", "api_all_volume.pdf", 40), support)            # same page, other parent
+    assert rm.covered_passages(_pchunk("x", "api_all_volume.pdf", 41), support)            # +1 page
+    assert rm.covered_passages(_pchunk("x", "api_all_volume.pdf", 39.0), support)          # -1 page, float page
+    assert not rm.covered_passages(_pchunk("x", "api_all_volume.pdf", 42), support)        # +2 pages
+    assert not rm.covered_passages(_pchunk("x", "afi_part1.pdf", 40), support)             # same page, other file
+    # parent id derived from the child id when not stored
+    assert rm.covered_passages({"chunk_id": "api_all_volume_pdf_40_P0_C3", "metadata": {}}, support)
+
+
+def test_passage_scores_recall_share_and_mrr_cutoff():
+    support = ["sushruta_samhita_vol_2_pdf_371_P0", "sushruta_samhita_vol_2_pdf_416_P0"]
+    ranked = [_pchunk(f"c{i}", "afi_part1.pdf", i) for i in range(7)] + [_pchunk("ss", "sushruta_samhita_vol_2.pdf", 372)]
+    assert rm.score_passages(ranked, support, k=6) == {"hit": 0.0, "recall_at_k": 0.0, "mrr_at_k": 0.0}
+    assert rm.first_passage_rank(ranked, support) == 8                                    # past the @6 cutoff
+    ranked[1] = _pchunk("ss371", "sushruta_samhita_vol_2.pdf", 371)
+    assert rm.score_passages(ranked, support, k=6) == {"hit": 1.0, "recall_at_k": 0.5, "mrr_at_k": 0.5}
+    assert rm.score_passages(ranked, [], k=6) is None
+
+
+def test_work_level_is_lenient_and_passage_level_strict(fake_stack):
+    dataset, out = fake_stack
+    payload, meta, qtraces = _run(dataset, out, "rrf")
+    work, passage = payload["summary"]["retrieval"], payload["summary"]["passage"]
+    assert passage["questions"] == 3
+    assert passage["hit_rate"] <= work["hit_rate"] and passage["mrr_at_k"] <= work["mrr_at_k"]
+    by_id = {r["id"]: r for r in payload["results"]}
+    assert by_id["q2"]["passage"]["hit"] == 1.0                    # ss_1 is p371, supporting passage p370
+    assert by_id["q3"]["passage"]["hit"] == 0.0
+
+
+def test_per_question_table_at_passage_level(fake_stack):
+    dataset, out = fake_stack
+    _, _, rr = _run(dataset, out, "rerank")
+    lines = per_question_table([("rerank", [rr])], load_labels(dataset), supporting=load_supporting(dataset))
+    assert lines[2].startswith("| q1 | 1 passages |")
+    assert "supporting passage" in lines[-1]

@@ -161,6 +161,10 @@ def evaluate_item(
         record["retrieval"] = retrieval_metrics.score_retrieval(
             retrieved["scored"], gold_sources, k
         )
+        passage = retrieval_metrics.score_passages(
+            retrieved["scored"], (item.get("provenance") or {}).get("supporting_chunk_ids") or [], k)
+        if passage is not None:
+            record["passage"] = passage
 
     if mode in ("generation", "both"):
         from src.generation.generator import generate_answer

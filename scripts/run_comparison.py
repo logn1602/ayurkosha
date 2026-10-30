@@ -54,7 +54,8 @@ except (AttributeError, ValueError):  # pragma: no cover
 
 from config.settings import settings
 from src.evaluation.run_eval import DEFAULT_DATASET, PROJECT_ROOT, load_dataset, run_eval
-from src.evaluation.traces import load_labels, per_question_table, read_trace, rescore, summary_table
+from src.evaluation.traces import (load_labels, load_supporting, per_question_table, read_trace, rescore,
+                                   summary_table)
 from src.ingestion import embedder
 
 CONFIGS = {
@@ -173,20 +174,27 @@ def latest_phase_dir(phase: str) -> Path | None:
 
 
 def report(current: dict[str, list[tuple[dict, list[dict]]]], labels: dict[str, list[str]],
-           before: dict[str, list[tuple[dict, list[dict]]]] | None = None) -> tuple[dict, list[str], list[str]]:
-    """Rescored summaries, the summary table (Hit@6 / Recall@6 / MRR@6, plus MRR@15) and the
-    per-question breakdown for a phase (and the before phase, if given)."""
+           before: dict[str, list[tuple[dict, list[dict]]]] | None = None,
+           supporting: dict[str, list[str]] | None = None) -> tuple[dict, list[str], list[str]]:
+    """Rescored summaries, the summary table (Hit@6 / Recall@6 / MRR@6 at work and passage
+    level, plus MRR@15) and the per-question breakdowns (work, then passage) for a phase
+    (and the before phase, if given)."""
     groups = ([(f"before:{name}", runs) for name, runs in before.items()] if before else []) \
         + list(current.items())
-    scored = [(label, [(meta, rescore(meta, traces, labels)["summary"]) for meta, traces in runs])
-              for label, runs in groups]
+    scored = [(label, [(meta, rescore(meta, traces, labels, supporting=supporting)["summary"])
+                       for meta, traces in runs]) for label, runs in groups]
     summaries = {label: [{**summary, "pipeline": meta["config"]["pipeline"]} for meta, summary in runs]
                  for label, runs in scored}
     columns = [(label, [traces for _, traces in runs]) for label, runs in groups]
     comparisons = [("rrf", "rerank")] if {"rrf", "rerank"} <= set(current) else []
     if before and "rerank" in before and "rerank" in current:
         comparisons.append(("before:rerank", "rerank"))
-    return summaries, summary_table(scored), per_question_table(columns, labels, tuple(comparisons))
+    work = per_question_table(columns, labels, tuple(comparisons))
+    tables = ["### Work level: rank of the first gold-work chunk", "", *work]
+    if supporting:
+        passage = per_question_table(columns, labels, tuple(comparisons), supporting=supporting)
+        tables += ["", "### Passage level: rank of the first chunk on a supporting passage", "", *passage]
+    return summaries, summary_table(scored), tables
 
 
 def main():
@@ -241,9 +249,9 @@ def main():
                          f"({payload['summary']['rerank_skips']} rerank skips). Traces so far: {phase_dir}")
             files[name].append(payload["trace_file"])
 
-    labels = load_labels(args.dataset)
+    labels, supporting = load_labels(args.dataset), load_supporting(args.dataset)
     before = load_phase_runs(before_dir) if before_dir else None
-    summaries, summary_lines, table = report(load_phase_runs(phase_dir), labels, before)
+    summaries, summary_lines, table = report(load_phase_runs(phase_dir), labels, before, supporting)
     doc = [f"# Comparison: {args.phase}{' (with ' + before_dir.name + ')' if before_dir else ''}", "",
            "## Summary", "",
            "Rescored from the saved traces against the current labels; single run, "

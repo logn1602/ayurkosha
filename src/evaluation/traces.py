@@ -53,6 +53,7 @@ def candidate(chunk: dict[str, Any], stage: str) -> dict[str, Any]:
     meta = chunk.get("metadata") or {}
     out = {
         "chunk_id": chunk.get("chunk_id"),
+        "parent_id": chunk.get("parent_id") or meta.get("parent_id"),
         "work": retrieval_metrics.chunk_work_key(chunk),
         "source": meta.get("source"),
         "text_name": meta.get("text_name"),
@@ -123,11 +124,19 @@ def load_labels(path: str | Path) -> dict[str, list[str]]:
         return {item["id"]: item.get("gold_sources", []) for item in json.load(f)}
 
 
+def load_supporting(path: str | Path) -> dict[str, list[str]]:
+    """{question id: supporting parent chunk ids} (provenance) from an eval dataset file."""
+    with open(path, encoding="utf-8") as f:
+        return {item["id"]: (item.get("provenance") or {}).get("supporting_chunk_ids") or []
+                for item in json.load(f)}
+
+
 def scored_chunks(trace: dict[str, Any]) -> list[dict[str, Any]]:
     """The exact ranked list the run's metrics were computed on, as chunk-like dicts."""
     stage = trace.get("scored_stage")
     cands = (trace.get("stages") or {}).get(stage, [])[: trace.get("scored_n", 0)]
-    return [{"chunk_id": c["chunk_id"], "metadata": {"text_name": c.get("text_name"), "source": c.get("source")}}
+    return [{"chunk_id": c["chunk_id"], "parent_id": c.get("parent_id"),
+             "metadata": {"text_name": c.get("text_name"), "source": c.get("source"), "page": c.get("page")}}
             for c in cands]
 
 
@@ -140,12 +149,18 @@ def first_gold_rank(trace: dict[str, Any], gold_sources: list[str]) -> int | Non
     return None
 
 
+def first_passage_rank(trace: dict[str, Any], supporting_ids: list[str]) -> int | None:
+    """1-based rank of the first scored chunk hitting a supporting passage, or None."""
+    return retrieval_metrics.first_passage_rank(scored_chunks(trace), supporting_ids)
+
+
 def rescore(meta: dict[str, Any], traces: list[dict[str, Any]], labels: dict[str, list[str]],
-            k: int | None = None) -> dict[str, Any]:
+            k: int | None = None, supporting: dict[str, list[str]] | None = None) -> dict[str, Any]:
     """Recompute retrieval metrics for a saved run against ``labels``.
 
-    Questions missing from ``labels`` are skipped (and listed). Returns
-    {"summary", "per_question", "missing"}.
+    With ``supporting`` ({id: supporting parent ids}), also passage-level
+    metrics. Questions missing from ``labels`` are skipped (and listed).
+    Returns {"summary", "per_question", "missing"}.
     """
     k = k or meta["config"]["k"]
     records, per_question, missing = [], {}, []
@@ -153,10 +168,16 @@ def rescore(meta: dict[str, Any], traces: list[dict[str, Any]], labels: dict[str
         if t["id"] not in labels:
             missing.append(t["id"])
             continue
-        gold = labels[t["id"]]
-        metrics = retrieval_metrics.score_retrieval(scored_chunks(t), gold, k)
-        records.append({"id": t["id"], "rerank_skipped": t.get("rerank_skipped", False), "retrieval": metrics})
+        gold, chunks = labels[t["id"]], scored_chunks(t)
+        metrics = retrieval_metrics.score_retrieval(chunks, gold, k)
+        record = {"id": t["id"], "rerank_skipped": t.get("rerank_skipped", False), "retrieval": metrics}
         per_question[t["id"]] = {**metrics, "first_gold_rank": first_gold_rank(t, gold)}
+        passage = retrieval_metrics.score_passages(chunks, (supporting or {}).get(t["id"]) or [], k)
+        if passage is not None:
+            record["passage"] = passage
+            per_question[t["id"]]["passage"] = {
+                **passage, "first_rank": first_passage_rank(t, supporting[t["id"]])}
+        records.append(record)
     return {"summary": aggregate(records), "per_question": per_question, "missing": missing}
 
 
@@ -184,17 +205,23 @@ def summary_table(groups: list[tuple[str, list[tuple[dict[str, Any], dict[str, A
     k = metas[0]["config"]["k"] if metas else settings.top_k_final
     n = ((metas[0].get("retrieval_params") or {}).get("rerank_first_pass_n") if metas else None) \
         or settings.rerank_first_pass_n
-    lines = [f"| config | Hit@{k} | Recall@{k} | MRR@{k} | MRR@{n} |", "|---|---|---|---|---|"]
+    lines = [f"| config | Hit@{k} work | Recall@{k} work | MRR@{k} work | Hit@{k} passage | "
+             f"Recall@{k} passage | MRR@{k} passage | MRR@{n} work |", "|---|---|---|---|---|---|---|---|"]
     for label, runs in groups:
-        def vals(key):
-            return [s["retrieval"][key] for _, s in runs
-                    if isinstance((s.get("retrieval") or {}).get(key), (int, float))]
-        full = "n/a" if any(m["config"]["pipeline"] in FULL_LIST_MRR_NA for m, _ in runs) else _fmt(vals("mrr"))
-        lines.append(f"| {label} | {_fmt(vals('hit_rate'))} | {_fmt(vals('recall_at_k'))} | "
-                     f"{_fmt(vals('mrr_at_k'))} | {full} |")
-    lines.append(f"\nMRR@{k} is the headline MRR: reciprocal rank of the first gold hit within the top {k}, "
-                 f"the same cutoff as Hit@{k} and Recall@{k} for every config. MRR@{n} uses the whole "
-                 f"{n}-deep scored list; n/a for rerank_mmr, whose list is only {k} long.")
+        def vals(section, key):
+            return [s[section][key] for _, s in runs
+                    if isinstance((s.get(section) or {}).get(key), (int, float))]
+        full = ("n/a" if any(m["config"]["pipeline"] in FULL_LIST_MRR_NA for m, _ in runs)
+                else _fmt(vals("retrieval", "mrr")))
+        lines.append(f"| {label} | {_fmt(vals('retrieval', 'hit_rate'))} | {_fmt(vals('retrieval', 'recall_at_k'))} | "
+                     f"{_fmt(vals('retrieval', 'mrr_at_k'))} | {_fmt(vals('passage', 'hit_rate'))} | "
+                     f"{_fmt(vals('passage', 'recall_at_k'))} | {_fmt(vals('passage', 'mrr_at_k'))} | {full} |")
+    lines.append(f"\n**Work level** (lenient bound): any chunk of a gold work counts. **Passage level** (strict "
+                 f"bound): a chunk counts only if its parent is a supporting passage, or it is within "
+                 f"±{retrieval_metrics.PASSAGE_PAGE_WINDOW} page of one in the same source file; passage "
+                 f"Recall@{k} is the share of supporting passages covered, capped at {k}/(set size) for large "
+                 f"sets. MRR@{k} is the headline MRR at both levels (first hit within the top {k}). "
+                 f"MRR@{n} uses the whole {n}-deep scored list; n/a for rerank_mmr, whose list is only {k} long.")
     return lines
 
 
@@ -216,25 +243,38 @@ def _compare_cell(base: int | None, other: int | None) -> str:
 
 
 def per_question_table(columns: list[tuple[str, list[list[dict[str, Any]]]]], labels: dict[str, list[str]],
-                       comparisons: tuple[tuple[str, str], ...] = ()) -> list[str]:
+                       comparisons: tuple[tuple[str, str], ...] = (),
+                       supporting: dict[str, list[str]] | None = None) -> list[str]:
     """Markdown table: rank of the first gold hit per question, per column.
 
-    ``columns`` is [(label, [question traces of run 1, run 2, ...])]; repeated
-    runs (HyDE) show as r1/r2/r3. ``comparisons`` [(base, other)] add a column
-    marking where ``other`` ranks gold better (+) or worse (-) than ``base``
-    (single-run columns only).
+    Work level by default; with ``supporting`` ({id: supporting parent ids}),
+    passage level instead (rank of the first chunk hitting a supporting
+    passage). ``columns`` is [(label, [question traces of run 1, run 2, ...])];
+    repeated runs (HyDE) show as r1/r2/r3. ``comparisons`` [(base, other)] add
+    a column marking where ``other`` ranks the hit better (+) or worse (-)
+    than ``base`` (single-run columns only).
     """
+    def rank_of(t):
+        if supporting is not None:
+            return first_passage_rank(t, supporting.get(t["id"]) or [])
+        return first_gold_rank(t, labels[t["id"]])
+
+    def gold_cell(qid):
+        if supporting is not None:
+            return f"{len(supporting.get(qid) or [])} passages"
+        return ", ".join(labels[qid])
+
     ranks: dict[str, dict[str, list[int | None]]] = {}
     for label, runs in columns:
         for run in runs:
             for t in run:
                 if t["id"] in labels:
-                    ranks.setdefault(t["id"], {}).setdefault(label, []).append(first_gold_rank(t, labels[t["id"]]))
-    head =["id", "gold"] + [label for label, _ in columns] + [f"{o} vs {b}" for b, o in comparisons]
+                    ranks.setdefault(t["id"], {}).setdefault(label, []).append(rank_of(t))
+    head = ["id", "gold"] + [label for label, _ in columns] + [f"{o} vs {b}" for b, o in comparisons]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     tally = {c: {"+": 0, "-": 0, "=": 0, ".": 0} for c in comparisons}
     for qid in sorted(ranks):
-        row = [qid, ", ".join(labels[qid])] + [_rank_cell(ranks[qid].get(label, [])) for label, _ in columns]
+        row = [qid, gold_cell(qid)] + [_rank_cell(ranks[qid].get(label, [])) for label, _ in columns]
         for c in comparisons:
             base, other = (ranks[qid].get(x, [None])[0] for x in c)
             mark = _compare_cell(base, other)
@@ -243,6 +283,8 @@ def per_question_table(columns: list[tuple[str, list[list[dict[str, Any]]]]], la
         lines.append("| " + " | ".join(row) + " |")
     for (b, o), t in tally.items():
         lines.append(f"\n{o} vs {b}: better {t['+']}, worse {t['-']}, same {t['=']}, neither finds gold {t['.']}")
-    lines.append("\nCells: rank of the first gold-work chunk in the scored list (1 = top; '-' = not in it). "
+    what = ("chunk hitting a supporting passage (parent id, or ±1 page in the same file)"
+            if supporting is not None else "gold-work chunk")
+    lines.append(f"\nCells: rank of the first {what} in the scored list (1 = top; '-' = not in it). "
                  "Hit@k and MRR@k count only ranks <= k; the full-list MRR counts every rank.")
     return lines
