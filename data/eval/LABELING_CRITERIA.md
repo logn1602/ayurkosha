@@ -84,11 +84,15 @@ holds every parent chunk of that chapter, and `gold_chapters` records the span.
   `docs/corpus_text_fixes.md`).
 - Every cited page lies inside its span. eval_019 cites three chapters (the
   pathology in Nidana 6, the treatment in Cikitsa 11 and 12) and gets all three.
+- eval_019 also gets **Cikitsa 13 (Madhumeha)**, added by the reviewer on
+  2026-10-30 with no cited page. Madhumeha is one of the 20 Prameha types, so its
+  treatment chapter answers "how is Prameha managed". It is listed in
+  `REVIEWER_CHAPTERS` in `scripts/build_chapter_passages.py`.
 
 | Row | Chapter | Pages | Parents |
 |---|---|---|---|
 | eval_018 Jvara | Uttaratantra 39 | vol 3 p190–232 (43) | 84 |
-| eval_019 Prameha | Nidana 6 + Cikitsa 11 + 12 | vol 2 p98–104, 427–433, 434–440 (7+7+7) | 9+7+10 |
+| eval_019 Prameha | Nidana 6 + Cikitsa 11 + 12 + 13 (Madhumeha) | vol 2 p98–104, 427–433, 434–440, 441–446 (7+7+7+6) | 9+7+10+7 |
 | eval_020 Grahani | Uttaratantra 40 | vol 3 p233–257 (25) | 49 |
 | eval_021 Atisara | Uttaratantra 40 | vol 3 p233–257 (25) | 49 |
 | eval_022 Pandu | Uttaratantra 44 | vol 3 p290–297 (8) | 15 |

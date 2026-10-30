@@ -41,6 +41,12 @@ DATASET = Path("data/eval/eval_dataset.json")
 ROWS = ("eval_018", "eval_019", "eval_020", "eval_021", "eval_022", "eval_023", "eval_024", "eval_025")
 MAX_CHAPTER_PAGES = 25
 SINGLE_TOPIC = {("sushruta_samhita_vol_3.pdf", "Uttaratantra, Chapter 39")}     # Jvara: one disease throughout
+# Chapters the reviewer added without a cited page (2026-10-30).
+REVIEWER_CHAPTERS = {
+    # Madhumeha is one of the 20 Prameha types, so its treatment chapter answers
+    # "how is Prameha managed".
+    "eval_019": [("sushruta_samhita_vol_2.pdf", "Chikitsasthana, Chapter 13")],
+}
 _PART_RE = re.compile(r"_P(\d+)$")
 
 
@@ -72,6 +78,11 @@ def _page(pid: str) -> int:
     return parse_support_id(pid)[1]
 
 
+def _order(pid: str) -> tuple[int, int]:
+    """Page, then parent index: a stable order for the ids written to the dataset."""
+    return _page(pid), int(_PART_RE.search(pid).group(1))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--write", action="store_true", help="update the dataset's gold_passages and gold_chapters")
@@ -93,9 +104,11 @@ def main() -> int:
                 notes.append(f"p{page} holds {dict(counts)}; taken as {chapter}")
             if (source, chapter) not in chapters:
                 chapters.append((source, chapter))
+        added = [c for c in REVIEWER_CHAPTERS.get(qid, []) if c not in chapters]
+        chapters += added
         spans, passages, page_level = [], [], False
         for source, chapter in chapters:
-            ids = sorted(by_chapter[(source, chapter)], key=_page)
+            ids = sorted(by_chapter[(source, chapter)], key=_order)
             first, last = _page(ids[0]), _page(ids[-1])
             inside = all(first <= parse_support_id(c)[1] <= last for c in cited
                          if parse_support_id(c)[0] == source[:-4] + "_pdf" and by_page[(source, parse_support_id(c)[1])]
@@ -107,8 +120,10 @@ def main() -> int:
             passages += ids
             flag = " (over the cap: page-level gold)" if too_long else \
                 " (over the cap, single-topic: chapter-level)" if n_pages > MAX_CHAPTER_PAGES else ""
+            cited_note = "added by the reviewer, no cited page" if (source, chapter) in added else \
+                f"cited pages inside: {inside}"
             print(f"{qid} {source[:22]} {chapter:28} p{first}-{last}: {n_pages} pages, {len(ids)} parents; "
-                  f"cited pages inside: {inside}{flag}")
+                  f"{cited_note}{flag}")
         for note in notes:
             print(f"{qid}   note: {note}")
         if args.write and not page_level:
