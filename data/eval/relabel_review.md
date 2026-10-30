@@ -1,8 +1,10 @@
 # Eval Relabel Review
 
-**Status: applied to `eval_dataset.json` on 2026-10-29, PENDING row-by-row human review.**
-Every item's provenance reads `agent-proposed from corpus text, human-reviewed: pending` with `reviewed_by: null` until the reviewer
-confirms. Labels follow [`LABELING_CRITERIA.md`](LABELING_CRITERIA.md) **v2**.
+**Status: reviewed by logn1602 on 2026-10-29.** All rows approved except **eval_003** and
+**eval_008**, which await the reviewer's decision on the re-check findings (see the section below).
+Approved rows carry provenance `agent-proposed from corpus text, human-reviewed` with `reviewed_by: logn1602`;
+the two held rows stay `…: pending` with `reviewed_by: null`. Labels follow
+[`LABELING_CRITERIA.md`](LABELING_CRITERIA.md) **v2**.
 
 Reviewer decisions so far (these are the reviewer's, not row approvals):
 - The **v2 Formulary rule**
@@ -10,7 +12,8 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
   indicated for the disease). 7 rows were re-checked and gained `afi` under it; `eval_024`
   stays Sushruta-only because the question names Sushruta.
 - `eval_017` was reworded by the reviewer to "Which classical formulations are indicated for Amavata?" (gold: Formulary).
-- **All other label choices are the agent's v1 proposals and have not been reviewed yet.**
+- All other rows are the agent's v1 proposals, approved in the reviewer's row review on 2026-10-29
+(except eval_003 and eval_008).
 - Evidence came from plain text search of the corpus (parent chunks), never from retrieval or eval
   output. Formulary evidence is a monograph whose title and "Important therapeutic uses" list sit in
   the same chunk.
@@ -50,7 +53,7 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
 | eval_029 | What is Nasya Karma and for which disorders is it used? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 20 gives the nasya types and indications; SS Cikitsā 40 gives the kinds of nasya and doses. | `ashtanga_hridaya_vidyanath_illustrated_pdf_345_P0`<br>`sushruta_samhita_vol_2_pdf_714_P0` |  |
 | eval_030 | What does Dinacharya (daily regimen) include in Ayurveda? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 2 (Dinacaryā) and SS Cikitsā 24 (hygiene: tooth-brushing, collyrium, etc.) both cover the daily regimen. | `ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0`<br>`sushruta_samhita_vol_2_pdf_535_P0`<br>`sushruta_samhita_vol_2_pdf_536_P0` | SS never uses the word "dinacharya" but covers the topic in full. |
 
-## Re-check requested by the reviewer: eval_003, eval_008 (awaiting decision; labels unchanged)
+## Re-check requested by the reviewer: eval_003, eval_008 (awaiting decision; labels unchanged, provenance pending)
 
 Both re-checks are in Sushruta Sūtrasthāna ch. 46 (vol 1, pp. 558–660), found by plain text search.
 

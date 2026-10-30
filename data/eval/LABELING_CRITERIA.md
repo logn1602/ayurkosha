@@ -81,7 +81,7 @@ Every item carries a `provenance` object (see `eval_dataset.schema.json`):
 | `supporting_chunk_ids` | parent chunk ids that substantively answer the question (empty for legacy labels) |
 | `reviewed_by` | who confirmed the labels; `null` while review is pending |
 
-Proposals are written to `relabel_review.md` first. The current labels were
-applied at the reviewer's request before row-by-row review, so their provenance
-stays `…: pending` with `reviewed_by: null` until the reviewer confirms them
-(enforced by `tests/test_eval_dataset.py`).
+Proposals are written to `relabel_review.md` first. The reviewer (logn1602)
+confirmed 28 rows on 2026-10-29. eval_003 and eval_008 stay `…: pending` with
+`reviewed_by: null` until the re-check decision (enforced by
+`tests/test_eval_dataset.py`).
