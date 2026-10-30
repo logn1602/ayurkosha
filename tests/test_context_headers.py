@@ -9,7 +9,8 @@ import pytest
 
 from config.settings import settings
 from src.ingestion.chunkers import chunk_record
-from src.ingestion.context_headers import annotate_context, contextual_text, header_at
+from src.ingestion.context_headers import (afi_monograph_spans, afi_uses_lists, annotate_context,
+                                            contextual_text, header_at)
 
 API = "Ayurvedic Pharmacopoeia of India"
 AFI = "Ayurvedic Formulary of India"
@@ -138,6 +139,23 @@ def test_rerank_sends_header_plus_text(monkeypatch):
     ("ksaya; daurbalya. 3:17PUGA KHANDA (Bhaisajyaratnavali, Sularogadhik", "Puga Khanda"),
     # garbled number: the title is found by its source reference
     ("fe LASUNADI GHRTA (Astangahrdaya, Cikitsasthana, Adhyaya 14; 22-25.) तुला", "Lasunadi Ghrta"),
+    # one heading split by OCR
+    ("ksaya. 12:4 KASTURYADI (VAYU) GUTIKA (Sahasrayoga, Gutikaprakarana; 8.) text", "Kasturyadi (Vayu) Gutika"),
+    ("agnimandya. 10:3 AROSOGHNi VATI (Siddhayogasangraha Arsodhikara) Nimbaphala (Sd.) 24 g.", "Arosoghni Vati"),
+    # a garbled verse (second volume) right before its citation is not a title
+    ("16:8 KANTAVALLABHA RASA ered VST APT fata | Waa eared ad Wg aaoda aH BOT II (Vasavarajiyam, "
+     "Ksayaprakarana) Special Method of preparation", "Kantavallabha Rasa"),
+    ("16:35 PRATAPALANKESVARA RASA Usgramdatdedaas ATT sam | WaATIA HaCaT Aaa: Fa: WAeht ESSCP ECE "
+     "(Yogaratnakara; Strirogacikitsa; 868) Sdta (Suddha parada)", "Pratapalankesvara Rasa"),
+    # ... but a numbered list entry after junk still is
+    ("evaporate. APR wWN = 21. TUTTHA SODHANA (Rasamrta, Adhyaya 3; 74.) text", "Tuttha Sodhana"),
+    ("16:3 AMRTA RASA sat diaatrared ara | wey seated SA Fat Aaled TINS Il\n(Bhaisajya ratnavali, "
+     "Jvaratisaradhikara, 49-51)\nHingula", "Amrta Rasa"),                # a danda read as "Il"
+    # a lowercase OCR slip inside a word, and a capital that starts the next word
+    ("16:22 HEMAGARBHA POTTALi RASA\nqaqa waar fea", "Hemagarbha Pottali Rasa"),
+    ("10:7. BOLADI VATi\n(Siddhayogasangraha, Strirogadhikara)\nHirabola", "Boladi Vati"),
+    ("10:9 MAHASANKHA VATIi\nqgraafegare", "Mahasankha Vati"),
+    ("18:1 ABHRAKA BHASMA Acceptable variety (A)", "Abhraka Bhasma"),
 ])
 def test_afi_titles_found_in_ocr_variants(text, title):
     rec = annotate_context(_pages(AFI, [text]))[0]
@@ -192,3 +210,72 @@ def test_api_plant_part_with_ampersand():
         "70. Tamalaki (Rt. St.& Lf.)\nTĀMALAKĪ (Root, Stem & Leaf)\nTāmalakī consists of root, stem and leaf "
         "of Phyllanthus urinaria (Fam. Euphorbiaceae)"]))
     assert _header_end(recs[0]) == f"{API} > Tamalaki (Rt. St.& Lf.)"
+
+
+# ── Formulary spans for evidence sets: inclusive, unlike the headers ──
+
+def _span_at(spans, page, offset):
+    def key(pos):
+        return (pos[0], float("inf") if pos[1] is None else pos[1])
+    return next((s for s in spans if key(s["start"]) <= (page, offset) and (s["end"] is None or (page, offset) < key(s["end"]))),
+                None)
+
+
+def test_afi_misplaced_citation_does_not_split_a_formulation_from_its_uses_list():
+    """The two-column layout moved a citation into the ingredient list. The header goes
+    blank there (conservative), but the formulation's span runs on to the next title,
+    so its therapeutic-uses list on the next page stays with it."""
+    pages = [
+        "4:27 RASNADI KVATHA CURNA (Bhaisajyaratnavali, Amavatadhikara; 98-100.) 1. Rasna (Rt.) 1 part "
+        "2. Eranda (Rt.) 1 part 3. Sunthi (Rz.) 1 part 4. Devadaru (Ht. Wd.) 1 part 5. Guduci (St.) 1 part "
+        "6. Punarnava (Rt.) 1 part (Cakradatta, Amavatacikitsa; 58.) 7. Sati (Rz.) 1 part",
+        "8. Vaca (Rz.) 1 part Dosage : 12 g. Important therapeutic uses : amavata; vataroga. "
+        "4:28 RASNADI KVATHA CURNA (MAHA) (Sarngadharasamhita, Madhyamakhanda, Adhyaya 2; 90.) 1. Rasna",
+    ]
+    recs = annotate_context(_pages(AFI, pages))
+    uses_at = pages[1].index("Important therapeutic uses")
+    assert header_at(recs[1]["context"], uses_at) == AFI                 # header: blank after the citation
+    spans = afi_monograph_spans(recs)
+    assert [(s["number"], s["title"]) for s in spans] == [("4:27", "Rasnadi Kvatha Curna"),
+                                                           ("4:28", "Rasnadi Kvatha Curna")]
+    assert _span_at(spans, 2, uses_at) is spans[0]                        # span: the uses list is 4:27's
+    assert spans[0]["end"] == (2, pages[1].index("4:28"))
+
+
+def test_afi_span_stops_before_the_next_groups_introduction():
+    pages = [
+        "5:12 SIMHANADA GUGGULU (Bhaisajyaratnavali, Amavatadhikara; 130-131.) 1. Triphala 3 parts "
+        "Dosage : 3 g. Important therapeutic uses : amavata; vatarakta.",
+        "GHRTA (SNEHAKALPA) Definition: Ghrtas are preparations in which ghee is boiled with kasayas.",
+        "List of ghrtas: Kasisadi Ghrta, Jatyadi Ghrta (Bhaisajyaratnavali, Jvaradhikara) "
+        "6:1 AMRTA GHRTA (Cakradatta, Amavatacikitsa; 58.) 1. Amrta (St.)",
+    ]
+    spans = afi_monograph_spans(annotate_context(_pages(AFI, pages)))
+    assert spans[0]["title"] == "Simhanada Guggulu" and spans[0]["end"] == (1, None)   # ends with its page
+    assert _span_at(spans, 2, 10) is None                                 # the group introduction is no one's
+
+
+@pytest.mark.parametrize("next_title, end_page", [
+    ("8:1 ASANA TAILA", 2),        # next group's first: the untitled 7:41 on page 2 is still group 7
+    ("8:3 ASANABILVADI TAILA", 1),  # 8:1 and 8:2 unreadable too: page 2's list can't be assigned
+])
+def test_afi_span_at_a_group_change_keeps_only_lists_it_can_assign(next_title, end_page):
+    pages = [
+        "7:40 HUTABHUGADI CURNA (Bhaisajyaratnavali, Agnimandyadhikara; 12.) 1. Citraka (Rt.) 1 part "
+        "Important therapeutic uses : agnimandya; pandu.",
+        "%# unreadable title 1. Asana (St. Bk.) 1 part Important therapeutic uses : kustha; prameha.",
+        "TAILA (SNEHAKALPA) Definition: Tailas are preparations in which oil is boiled with kasayas.",
+        f"{next_title} (Sahasrayoga, Tailaprakarana; 45.) 1. Asana (St. Bk.) 1 part "
+        "Important therapeutic uses : vatavyadhi.",
+    ]
+    spans = afi_monograph_spans(annotate_context(_pages(AFI, pages)))
+    assert spans[0]["end"] == (end_page, None)
+    assert _span_at(spans, 3, 10) is None                                 # never the introduction
+
+
+def test_afi_uses_list_ignores_references_and_ingredient_names():
+    text = ("Important therapeutic uses : 7. Kustha (Rt.) 8.7 g. amavata; sotha "
+            "(Bhaisajyaratnavali, Jvaradhikara; 12-15) Dosage : 3 g.")
+    [(offset, uses)] = afi_uses_lists(text)
+    assert offset == text.index("therapeutic") and "amavata" in uses
+    assert "Kustha" not in uses and "Jvara" not in uses                   # the herb, and the chapter name

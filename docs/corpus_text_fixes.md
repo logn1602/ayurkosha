@@ -327,23 +327,46 @@ formulation's name. The fix:
     anupāna or uses before its first title);
   - on index and summary-table pages (≥ 12 bare section numbers; monograph pages
     have ≤ 9).
+- **OCR traps in titles** (found while building the inclusive spans below):
+  - The second volume renders Devanagari verses as Latin garbage. The run before
+    a verse's closing citation looked like a title ("aaoda aH BOT II
+    (Vasavarajiyam…"), so a garbage name ran over the rest of the monograph. A
+    title found by its reference is rejected if it holds a danda read as "II"/"Il"
+    or a "W" (not an IAST letter), or follows mixed-case junk ("HaCaT"), unless a
+    list number ("21.") sits right before it.
+  - A title word may carry one lowercase slip ("VATi", "POTTALi RASA",
+    "PALASABiJADI") but never ends right before a lowercase letter: that capital
+    starts the next word ("BHASMA A|cceptable", "RASA B|haisajyaratnavali").
+  - A heading split by OCR is joined ("12:4 KASTURYADI (VAYU) GUTIKA",
+    "18:6 TRIVANGA! BHASMA").
 
-Item-level coverage over 4,090 chunks went from 91.1% to **43.8%**:
+  These changed 36 chunk headers: 31 truncated or split names completed, 4
+  garbage names blanked, 1 new title (Boladi Vati).
+
+Item-level coverage over 4,090 chunks went from 91.1% to **43.7%**:
 
 | Chunks now | Count | Share | Named before |
 |---|---|---|---|
-| named | 1,790 | 43.8% | 1,786 (925 unchanged, 861 renamed) |
+| named | 1,786 | 43.7% | 1,782 (925 unchanged, 857 renamed) |
 | blank: non-monograph page (front matter, glossary, appendix, garbage OCR) | 1,206 | 29.5% | 897 (wrong before) |
 | blank: index / summary-table page | 467 | 11.4% | 467 (wrong before) |
-| blank: formulation content, title unreadable (**miss**) | 435 | 10.6% | 416 |
-| blank: verse / OCR-noise chunk on a monograph page | 192 | 4.7% | 161 |
+| blank: formulation content, title unreadable (**miss**) | 438 | 10.7% | 419 |
+| blank: verse / OCR-noise chunk on a monograph page | 193 | 4.7% | 162 |
 
-The old 91% was mostly carry-forward error: at least 1,364 of its 3,726 named
-chunks sat on non-monograph pages, and 861 are renamed. Spot check of 10 changed
-headers: 7 correct, 2 straddle a monograph boundary (the header names the
-monograph at the chunk's midpoint), and 1 was wrong (a summary-table page), which
-the table-page rule now blanks. The remaining misses (10.6%) are formulation
-content whose title OCR made unreadable.
+The old 91% was mostly carry-forward error. 1,364 of its 3,726 named chunks sat on
+non-monograph or index pages, so those blanks are correct. Of the chunks named
+now, 857 had a different name before. Spot check of 10 changed headers: 7
+correct, 2 straddle a monograph boundary (the header names the monograph at the
+chunk's midpoint), and 1 was wrong (a summary-table page), which the table-page
+rule now blanks. The real loss is the misses (10.7%): formulation content whose
+title OCR made unreadable.
+
+**Evidence sets use different boundaries.** A blank header is safe, but a
+supporting set that stops at a doubtful boundary drops real evidence. So
+`afi_monograph_spans` keeps a formulation whole. It runs from its parsed title
+to the next parsed title, across pages, through orphan or misplaced citations.
+It stops early only before a new group's introduction or the back matter, and
+always after the formulation's uses list. See `data/eval/LABELING_CRITERIA.md`.
 
 ### Pharmacopoeia item headers: carry-forward audit 2026-10-29
 

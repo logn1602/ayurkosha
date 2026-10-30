@@ -57,7 +57,11 @@ _API_OPENING_WINDOW = 400     # an opening sentence this close after a title bel
 # after its number "G:I" (OCR writes "16:3", "1 : 9", "1 ; 14", "3:17PUGA" and
 # often drops the "(" that follows) or, when OCR garbled the number ("fe LASUNADI
 # GHRTA", "=e | YOGARAJA GUGGULU"), right before its classical source reference.
-_AFI_UPPER_RUN = r"[A-Z][A-Z\-']*(?:[ \t]+[A-Z][A-Z\-']*)*"
+# A title word may carry one lowercase OCR slip ("VATi", "PALASABiJADI") but never
+# ends just before a lowercase letter: that capital starts the next, mixed-case
+# word ("BHASMA A|cceptable variety", "RASA B|haisajyaratnavali").
+_AFI_WORD = r"[A-Z](?:[A-Z\-']|[a-z](?![a-z]))*(?![a-z])"
+_AFI_UPPER_RUN = _AFI_WORD + r"(?:[ \t]+" + _AFI_WORD + r")*"
 # Classical works the Formulary cites, from the reference heads that follow its titles.
 _AFI_SOURCES = (r"(?i:bhaisajya|ast?angahrd|asfangahrd|ast?angasa|sahasrayog|rasendra|yogaratnak|sar\w{0,2}gadhar|"
                 r"siddhayog|cakradatt|susruta|rasatarang|rasamrt|bhavaprak|vaidya|siddhabhai|ayurveda(?:prak|sa)|"
@@ -68,6 +72,18 @@ _AFI_REF_TITLE_RE = re.compile("(" + _AFI_UPPER_RUN + r")\s*\(\s*" + _AFI_SOURCE
 _AFI_SOURCE_REF_RE = re.compile(r"\(\s*" + _AFI_SOURCES)
 _AFI_MIN_TITLE_LETTERS = 4
 _AFI_MAX_TITLE_WORDS = 6          # longer upper-case runs are index lists, not titles
+# The second volume's OCR renders Devanagari verses as Latin garbage, and the run
+# right before a verse's closing citation can look like a title ("aaoda aH BOT II
+# (Vasavarajiyam…"). A title found by its reference is rejected when it contains
+# a danda read as "II" or a "W" (not an IAST letter), or follows mixed-case junk
+# ("HaCaT"), unless a list number ("21.") sits right before it.
+_AFI_TITLE_GARBAGE_RE = re.compile(r"(?i:\b(?:II|IL|LI|LL)\b)|W")
+_AFI_JUNK_BEFORE_RE = re.compile(r"[a-z][A-Z]")
+_AFI_JUNK_WINDOW = 25
+_AFI_LIST_NUMBER_RE = re.compile(r"\d{1,3}\s?[.:]\s?\d{0,3}\s*$")
+# A title found by its reference just after a numbered one is the same heading
+# split by OCR: "12:4 KASTURYADI (VAYU) GUTIKA", "10:3 AROSOGHNi VATI".
+_AFI_SPLIT_TITLE_GAP = re.compile(r"[A-Za-z ()!']{0,15}")
 # A monograph name only carries onto a page that continues a monograph: one
 # showing ingredient quantities, dose, anupana or uses before its first title.
 # Index, glossary and appendix pages (about 150 after the last monograph) don't.
@@ -82,6 +98,18 @@ _AFI_TABLE_PAGE_NUMBERS = 12
 # title couldn't be parsed (or a reference the two-column layout stranded).
 # Either way the previous name must not carry on: the item goes blank there.
 _AFI_TITLE_WINDOW = 160
+# "Important therapeutic uses : amavata; vataroga." OCR drops the "s" or the colon,
+# and the two-column layout can interleave the list with ingredient lines. The
+# appendix heading "Therapeutic use wise …" is not a uses list.
+_AFI_USES_RE = re.compile(r"therapeutic\s+uses?\b(?!\s*wise)", re.I)
+_AFI_USES_WINDOW = 400
+_AFI_FIELD_RE = re.compile(r"Dosage|Anup\w*na|Method\s+of|Precaution|therapeutic\s+uses?\b", re.I)
+# Inside that window, source references and ingredients name diseases too:
+# "(Bhaisajyaratnavali, Jvaradhikara; …)", "Amavatacikitsa", and the herb in
+# "7. Kustha (Rt.) 8.7 g." They are cut out before the list is read.
+_AFI_NOT_USES_RE = re.compile(r"\([^()]{21,}\)|\([^()]*$|\w*(?:dhikara|cikitsa\w*)\b|\b\d{1,2}\.\s*[A-Z]\w*|"
+                              r"\w+\s*\((?:Rt|Fr|Ft|Lf|Pl|Sd|Rz|Fl|St|Ht|Exd|Gl|Stmn|Dr|Bk|Wd|Tr)\b[^)]*\)")
+_AFI_NUMBER_RE = re.compile(r"(\d{1,2})[ \t]?[:;.][ \t]?(\d{1,3})")
 _AFI_GROUP_RE = re.compile(r"\bGROUP\s+No\.?\s*(\d{1,2})\s*[—-]*\s*([A-Z][A-Z\-]+(?:\s[A-Z][A-Z\-]+)?)")
 _SS_CHAPTER_RE = re.compile(r"\bCHAP(?:TER|[.,])?\s*([IVXLC]{1,8})\b\.?", re.I)   # "Chap,VI." occurs too
 # Only a *heading* ("CHAPTER XLIV.", "CHIKITSASTHANAM") or the running head
@@ -116,7 +144,7 @@ _MINOR_WORDS = {"and", "of", "the", "in", "for", "with"}
 
 
 def _title(s: str) -> str:
-    words = [w.capitalize() if w.isupper() else w for w in s.split()]
+    words = [(w[0] + w[1:].capitalize() if w[0] == "(" else w.capitalize()) if w.isupper() else w for w in s.split()]
     return " ".join(w.lower() if i and w.lower() in _MINOR_WORDS else w for i, w in enumerate(words))
 
 
@@ -147,12 +175,24 @@ def _afi_titles(text: str) -> list[tuple[int, str]]:
         return (sum(c.isupper() for c in run) >= _AFI_MIN_TITLE_LETTERS
                 and len(run.split()) <= _AFI_MAX_TITLE_WORDS)
 
-    found = [(m.start(), m.group(1)) for m in _AFI_NUM_TITLE_RE.finditer(text) if ok(m.group(1))]
+    numbered = [[m.start(), m.start(1), m.end(1)] for m in _AFI_NUM_TITLE_RE.finditer(text) if ok(m.group(1))]
     spans = [(m.start(), m.end()) for m in _AFI_NUM_TITLE_RE.finditer(text)]
+    found = list(numbered)
     for m in _AFI_REF_TITLE_RE.finditer(text):
-        if ok(m.group(1)) and not any(a <= m.start(1) < b for a, b in spans):
-            found.append((m.start(1), m.group(1)))
-    return sorted((off, _title(" ".join(run.split()))) for off, run in found)
+        start, end = m.start(1), m.end(1)
+        if not ok(m.group(1)) or any(a <= start < b for a, b in spans):
+            continue
+        split = next((t for t in numbered if t[2] <= start and _AFI_SPLIT_TITLE_GAP.fullmatch(text, t[2], start)), None)
+        if split:
+            split[2] = end
+            continue
+        before = text[max(0, start - _AFI_JUNK_WINDOW): start]
+        if (text[start - 1: start].isalpha() or _AFI_TITLE_GARBAGE_RE.search(m.group(1))
+                or (_AFI_JUNK_BEFORE_RE.search(before) and not _AFI_LIST_NUMBER_RE.search(before))):
+            continue
+        found.append([start, start, end])
+    return sorted((off, _title(re.sub(r"II\b", "I", " ".join(re.sub(r"[^A-Za-z ()'\-]", "", text[a:b]).upper().split()))))
+                  for off, a, b in found)                     # "VATIi" -> "VATI"
 
 
 def _afi_items(text: str) -> list[tuple[int, str]]:
@@ -168,6 +208,83 @@ def _afi_items(text: str) -> list[tuple[int, str]]:
     if not _AFI_CONTENT_RE.search(text[:first]):
         blanks.append((0, ""))
     return sorted(set(titles + blanks), key=lambda mark: (mark[0], mark[1] != ""))
+
+
+def afi_uses_lists(text: str) -> list[tuple[int, str]]:
+    """(offset, list text) of each therapeutic-uses list on a Formulary page.
+
+    The list runs to the next field (Dosage, Anupana, …), the next title, or
+    400 chars, with source references and ingredient entries cut out.
+    """
+    titles = [off for off, _ in _afi_titles(text)]
+    out = []
+    for m in _AFI_USES_RE.finditer(text):
+        limit = min([off for off in titles if off > m.end()] + [m.end() + _AFI_USES_WINDOW])
+        window = text[m.end(): limit]
+        field = _AFI_FIELD_RE.search(window)
+        out.append((m.start(), _AFI_NOT_USES_RE.sub(" ", window[: field.start()] if field else window)))
+    return out
+
+
+_PAGE_END = float("inf")
+
+
+def afi_monograph_spans(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Formulary monographs as inclusive spans, for evidence sets (not for headers).
+
+    Header marks (``_afi_items``) blank at every doubtful boundary. A supporting
+    set must instead keep a formulation whole, from its title through its
+    therapeutic-uses list. So a formulation runs from its parsed title to the
+    next parsed title in the same file, across pages. Nothing else ends it: not a
+    source reference with no title before it (a citation the two-column layout
+    moved into an ingredient list), not a page without monograph content.
+
+    Two section ends do trim it, and both lie after its uses list. If the next
+    title opens a new group (a higher group number, or item 1), the text before
+    that title ends in the group's introduction. If the next title lies past
+    the file's last uses list, the text ends in back matter (appendices, index).
+    The formulation then runs through the page of the last uses list before
+    that title: untitled formulations of the same group stay inside it, as they
+    do within a group. The exception is when the next title is not the new
+    group's first (G+1:1), because that group's first titles are unreadable too.
+    Then the lists in between can't be assigned to either group, so the
+    formulation ends with the page of its own uses list.
+
+    Records are page records in reading order. Each span is a dict with
+    "source", "title", "number" ("4:27", or None when only the title was read),
+    "start" and "end". Start and end are (page, offset); the end is exclusive.
+    An end offset of None means the end of that page, and an end of None means
+    the end of the file.
+    """
+    by_source: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        meta = record.get("metadata", {})
+        if meta.get("text_name") == "Ayurvedic Formulary of India":
+            by_source.setdefault(meta.get("source", ""), []).append(record)
+    spans = []
+    for source, pages in by_source.items():
+        titles, uses = [], []
+        for record in pages:
+            page, text = record["metadata"].get("page"), record.get("text", "")
+            for off, title in _afi_titles(text):
+                number = _AFI_NUMBER_RE.match(text, off)       # None for a title found by its reference
+                titles.append(((page, off), title, (int(number.group(1)), int(number.group(2))) if number else None))
+            uses += [(page, off) for off, _ in afi_uses_lists(text)]
+        group = 0
+        for i, (start, title, number) in enumerate(titles):
+            group = max(group, number[0]) if number else group
+            nxt = titles[i + 1] if i + 1 < len(titles) else None
+            end = nxt[0] if nxt else None
+            new_group = nxt and nxt[2] and (nxt[2][0] > group or nxt[2][1] == 1)
+            back_matter = nxt and uses and nxt[0] > uses[-1]
+            if new_group or back_matter:
+                inside = [u for u in uses if start <= u < nxt[0]] or [start]
+                clean = back_matter or nxt[2] == (group + 1, 1)
+                last = inside[-1] if clean else inside[0]
+                end = min(nxt[0], (last[0], _PAGE_END))
+            spans.append({"source": source, "title": title, "number": number and f"{number[0]}:{number[1]}",
+                          "start": start, "end": end and (end[0], None if end[1] == _PAGE_END else end[1])})
+    return spans
 
 
 def _marks(text: str, text_name: str | None) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
