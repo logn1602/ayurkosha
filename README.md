@@ -43,7 +43,7 @@ AyurKosha ships with a **30-question evaluation harness** (`scripts/run_eval.py`
 |---|---|
 | Hit rate (gold source in top-6) | **0.87** |
 | Recall@6 | **0.68** |
-| MRR | **0.61** |
+| MRR@15 (full reranked list; MRR@6 to be reported after re-evaluation) | **0.61** |
 
 **Answer quality** — Claude LLM-as-judge, 0–10, across 30 questions:
 

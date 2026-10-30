@@ -14,7 +14,8 @@ import pytest
 
 from src.evaluation import run_eval as re_mod
 from src.evaluation import traces
-from src.evaluation.traces import labels_sha256, load_labels, per_question_table, read_trace, rescore
+from src.evaluation.traces import (labels_sha256, load_labels, per_question_table, read_trace, rescore,
+                                   summary_table)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -151,6 +152,59 @@ def test_comparison_report_includes_before_columns(fake_stack, tmp_path):
     for d, names in ((before_dir, ("rrf", "rerank")), (after_dir, ("rrf", "rerank"))):
         for name in names:
             re_mod.run_eval(dataset, d, mode="retrieval", k=2, pipeline=name, config_name=name)
-    summaries, table = rc.report(rc.load_phase_runs(after_dir), load_labels(dataset), rc.load_phase_runs(before_dir))
+    summaries, summary_lines, table = rc.report(rc.load_phase_runs(after_dir), load_labels(dataset),
+                                                rc.load_phase_runs(before_dir))
     assert set(summaries) == {"before:rrf", "before:rerank", "rrf", "rerank"}
+    assert summary_lines[0] == "| config | Hit@2 | Recall@2 | MRR@2 | MRR@15 |"
     assert "before:rerank" in table[0] and "rerank vs before:rerank" in table[0]
+
+
+# ── MRR@k: one cutoff for every config ────────────────────────────────
+
+def _synthetic_trace(qid, sources, stage):
+    cands = [{"chunk_id": f"{qid}_{i}", "work": None, "source": src, "text_name": None, "page": i, "score": None}
+             for i, src in enumerate(sources)]
+    return {"type": "question", "id": qid, "question": qid, "gold_sources": [], "config": stage,
+            "scored_stage": stage, "scored_n": len(cands), "rerank_skipped": False, "stages": {stage: cands}}
+
+
+def _meta(pipeline):
+    return {"config": {"name": pipeline, "pipeline": pipeline, "k": 6}, "retrieval_params": {"rerank_first_pass_n": 15}}
+
+
+def test_rerank_and_rerank_mmr_are_scored_on_the_same_cutoff():
+    """MRR@6 cuts both lists at 6, although rerank scores 15 candidates and rerank_mmr 6."""
+    filler = ["afi_part1.pdf"] * 15
+    rerank_list = filler[:8] + ["api_all_volume.pdf"] + filler[9:]          # gold at rank 9 of 15
+    mmr_list = filler[:2] + ["api_all_volume.pdf"] + filler[3:6]            # gold at rank 3 of 6
+    labels = {"q1": ["api"]}
+    rr = rescore(_meta("rerank"), [_synthetic_trace("q1", rerank_list, "rerank")], labels)["per_question"]["q1"]
+    mm = rescore(_meta("rerank_mmr"), [_synthetic_trace("q1", mmr_list, "mmr")], labels)["per_question"]["q1"]
+    assert rr["mrr_at_k"] == 0.0 and rr["hit"] == 0.0           # rank 9 is past the @6 cutoff ...
+    assert rr["mrr"] == pytest.approx(1 / 9)                     # ... but counts in the full-list MRR@15
+    assert mm["mrr_at_k"] == pytest.approx(1 / 3) and mm["hit"] == 1.0
+    assert mm["mrr"] == mm["mrr_at_k"]                           # a 6-deep list: full-list MRR = MRR@6
+
+
+def test_summary_table_headlines_mrr_at_6_and_marks_mrr_at_15_na_for_mmr():
+    labels = {"q1": ["api"]}
+    lists = {"rerank": ["api_all_volume.pdf"] + ["afi_part1.pdf"] * 14, "rerank_mmr": ["api_all_volume.pdf"] * 6}
+    groups = [(p, [(_meta(p), rescore(_meta(p), [_synthetic_trace("q1", lst, "rerank" if p == "rerank" else "mmr")],
+                                     labels)["summary"])]) for p, lst in lists.items()]
+    lines = summary_table(groups)
+    assert lines[0] == "| config | Hit@6 | Recall@6 | MRR@6 | MRR@15 |"
+    assert lines[2] == "| rerank | 1.000 | 1.000 | 1.000 | 1.000 |"
+    assert lines[3] == "| rerank_mmr | 1.000 | 1.000 | 1.000 | n/a |"
+
+
+def test_eval_runs_score_mrr_at_k_on_the_cutoff_for_every_pipeline(fake_stack):
+    dataset, out = fake_stack
+    labels = load_labels(dataset)
+    for pipeline in ("rrf", "rerank", "rerank_mmr"):
+        payload, meta, qtraces = _run(dataset, out, pipeline)
+        k = meta["config"]["k"]
+        by_id = {r["id"]: r["retrieval"] for r in payload["results"]}
+        for t in qtraces:
+            rank = traces.first_gold_rank(t, labels[t["id"]])
+            expected = 1 / rank if rank and rank <= k else 0.0
+            assert by_id[t["id"]]["mrr_at_k"] == expected, (pipeline, t["id"], rank)

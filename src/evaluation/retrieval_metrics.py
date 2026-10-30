@@ -105,8 +105,13 @@ def score_retrieval(
         k: Cutoff for recall@k / precision@k.
 
     Returns:
-        {"recall_at_k", "precision_at_k", "mrr", "hit"} where ``hit`` is 1.0
-        if any gold work was retrieved in the top-k at all.
+        {"recall_at_k", "precision_at_k", "mrr", "mrr_at_k", "hit"}:
+          - ``hit`` is 1.0 if any gold work is in the top-k;
+          - ``mrr_at_k`` is the reciprocal rank of the first gold work within
+            the top-k (0 past the cutoff): the same cutoff for every pipeline,
+            and the headline MRR;
+          - ``mrr`` uses the whole scored list, 15 deep for rrf/rerank (MRR@15)
+            but only k deep for rerank_mmr, so it isn't comparable across them.
     """
     retrieved_keys = [chunk_work_key(c) for c in retrieved_chunks]
     relevant = relevant_keys(gold_sources)
@@ -115,5 +120,6 @@ def score_retrieval(
         "recall_at_k": recall,
         "precision_at_k": precision_at_k(retrieved_keys, relevant, k),
         "mrr": mrr(retrieved_keys, relevant),
+        "mrr_at_k": mrr(retrieved_keys[:k], relevant),
         "hit": 1.0 if recall > 0 else 0.0,
     }

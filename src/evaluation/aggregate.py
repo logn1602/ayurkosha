@@ -28,6 +28,7 @@ def aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
             "recall_at_k": _avg("retrieval", "recall_at_k"),
             "precision_at_k": _avg("retrieval", "precision_at_k"),
             "mrr": _avg("retrieval", "mrr"),
+            "mrr_at_k": _avg("retrieval", "mrr_at_k"),
             "hit_rate": _avg("retrieval", "hit"),
         }
     if any("generation" in r for r in results):

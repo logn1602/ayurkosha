@@ -160,6 +160,44 @@ def rescore(meta: dict[str, Any], traces: list[dict[str, Any]], labels: dict[str
     return {"summary": aggregate(records), "per_question": per_question, "missing": missing}
 
 
+# ── summary table ─────────────────────────────────────────────────────
+
+# Pipelines whose scored list is only k deep, so full-list MRR = MRR@k there.
+FULL_LIST_MRR_NA = frozenset({"rerank_mmr"})
+
+
+def _fmt(vals: list[float]) -> str:
+    if not vals:
+        return "n/a"
+    if len(vals) == 1:
+        return f"{vals[0]:.3f}"
+    return f"{sum(vals) / len(vals):.3f} ({min(vals):.3f}–{max(vals):.3f})"
+
+
+def summary_table(groups: list[tuple[str, list[tuple[dict[str, Any], dict[str, Any]]]]]) -> list[str]:
+    """Markdown table of Hit@k, Recall@k, MRR@k (headline) and full-list MRR@n per config.
+
+    ``groups`` is [(label, [(run metadata, summary), ...])]; repeated runs show
+    as mean (min–max). MRR@n is n/a for rerank_mmr, whose scored list is k deep.
+    """
+    metas = [meta for _, runs in groups for meta, _ in runs]
+    k = metas[0]["config"]["k"] if metas else settings.top_k_final
+    n = ((metas[0].get("retrieval_params") or {}).get("rerank_first_pass_n") if metas else None) \
+        or settings.rerank_first_pass_n
+    lines = [f"| config | Hit@{k} | Recall@{k} | MRR@{k} | MRR@{n} |", "|---|---|---|---|---|"]
+    for label, runs in groups:
+        def vals(key):
+            return [s["retrieval"][key] for _, s in runs
+                    if isinstance((s.get("retrieval") or {}).get(key), (int, float))]
+        full = "n/a" if any(m["config"]["pipeline"] in FULL_LIST_MRR_NA for m, _ in runs) else _fmt(vals("mrr"))
+        lines.append(f"| {label} | {_fmt(vals('hit_rate'))} | {_fmt(vals('recall_at_k'))} | "
+                     f"{_fmt(vals('mrr_at_k'))} | {full} |")
+    lines.append(f"\nMRR@{k} is the headline MRR: reciprocal rank of the first gold hit within the top {k}, "
+                 f"the same cutoff as Hit@{k} and Recall@{k} for every config. MRR@{n} uses the whole "
+                 f"{n}-deep scored list; n/a for rerank_mmr, whose list is only {k} long.")
+    return lines
+
+
 # ── per-question breakdown ────────────────────────────────────────────
 
 def _rank_cell(ranks: list[int | None]) -> str:
@@ -206,5 +244,5 @@ def per_question_table(columns: list[tuple[str, list[list[dict[str, Any]]]]], la
     for (b, o), t in tally.items():
         lines.append(f"\n{o} vs {b}: better {t['+']}, worse {t['-']}, same {t['=']}, neither finds gold {t['.']}")
     lines.append("\nCells: rank of the first gold-work chunk in the scored list (1 = top; '-' = not in it). "
-                 "Hit@k counts ranks <= k.")
+                 "Hit@k and MRR@k count only ranks <= k; the full-list MRR counts every rank.")
     return lines

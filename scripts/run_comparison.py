@@ -41,7 +41,6 @@ Run: python scripts/run_comparison.py --phase before          # plan only
 import argparse
 import json
 import logging
-import statistics
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -55,7 +54,7 @@ except (AttributeError, ValueError):  # pragma: no cover
 
 from config.settings import settings
 from src.evaluation.run_eval import DEFAULT_DATASET, PROJECT_ROOT, load_dataset, run_eval
-from src.evaluation.traces import load_labels, per_question_table, read_trace, rescore
+from src.evaluation.traces import load_labels, per_question_table, read_trace, rescore, summary_table
 from src.ingestion import embedder
 
 CONFIGS = {
@@ -74,7 +73,6 @@ NEW_TEXT_FLAGS = ("apply_font_char_map", "bm25_fold_diacritics", "split_glued_oc
 # From the scripts/reingest.py dry run on 2026-10-29 (7 files, 22,718 chunks).
 REINGEST_EMBED_CALLS = 237
 TRIAL_CALLS_PER_MONTH = 1000
-METRICS = ("hit_rate", "recall_at_k", "mrr")
 RUNS_DIR = PROJECT_ROOT / "data" / "eval" / "runs"      # tracked: commit each phase's folder
 
 
@@ -175,29 +173,20 @@ def latest_phase_dir(phase: str) -> Path | None:
 
 
 def report(current: dict[str, list[tuple[dict, list[dict]]]], labels: dict[str, list[str]],
-           before: dict[str, list[tuple[dict, list[dict]]]] | None = None) -> tuple[dict, list[str]]:
-    """Rescored summaries + per-question breakdown for a phase (and the before phase, if given)."""
+           before: dict[str, list[tuple[dict, list[dict]]]] | None = None) -> tuple[dict, list[str], list[str]]:
+    """Rescored summaries, the summary table (Hit@6 / Recall@6 / MRR@6, plus MRR@15) and the
+    per-question breakdown for a phase (and the before phase, if given)."""
     groups = ([(f"before:{name}", runs) for name, runs in before.items()] if before else []) \
         + list(current.items())
-    summaries = {label: [rescore(meta, traces, labels)["summary"] for meta, traces in runs]
-                 for label, runs in groups}
+    scored = [(label, [(meta, rescore(meta, traces, labels)["summary"]) for meta, traces in runs])
+              for label, runs in groups]
+    summaries = {label: [{**summary, "pipeline": meta["config"]["pipeline"]} for meta, summary in runs]
+                 for label, runs in scored}
     columns = [(label, [traces for _, traces in runs]) for label, runs in groups]
     comparisons = [("rrf", "rerank")] if {"rrf", "rerank"} <= set(current) else []
     if before and "rerank" in before and "rerank" in current:
         comparisons.append(("before:rerank", "rerank"))
-    return summaries, per_question_table(columns, labels, tuple(comparisons))
-
-
-def _summarize(rows: dict[str, list[dict]]) -> list[str]:
-    lines = [f"{'config':<16} " + "  ".join(f"{m:>22}" for m in METRICS)]
-    for name, summaries in rows.items():
-        cells = []
-        for m in METRICS:
-            vals = [s["retrieval"][m] for s in summaries]
-            cells.append(f"{vals[0]:.3f}" if len(vals) == 1 else
-                         f"{statistics.mean(vals):.3f} ({min(vals):.3f}–{max(vals):.3f})")
-        lines.append(f"{name:<16} " + "  ".join(f"{c:>22}" for c in cells))
-    return lines
+    return summaries, summary_table(scored), per_question_table(columns, labels, tuple(comparisons))
 
 
 def main():
@@ -254,13 +243,14 @@ def main():
 
     labels = load_labels(args.dataset)
     before = load_phase_runs(before_dir) if before_dir else None
-    summaries, table = report(load_phase_runs(phase_dir), labels, before)
-    print(f"\nRESULTS ({args.phase}{', with before = ' + before_dir.name if before_dir else ''}) "
-          "— rescored from traces against the current labels; single run, or mean (min–max) over repeats")
-    print("\n".join(_summarize(summaries)))
-    print("\nPER QUESTION — rank of the first gold hit\n")
-    print("\n".join(table))
-    (phase_dir / "per_question.md").write_text("\n".join(table) + "\n", encoding="utf-8")
+    summaries, summary_lines, table = report(load_phase_runs(phase_dir), labels, before)
+    doc = [f"# Comparison: {args.phase}{' (with ' + before_dir.name + ')' if before_dir else ''}", "",
+           "## Summary", "",
+           "Rescored from the saved traces against the current labels; single run, "
+           "or mean (min–max) over repeats.", "", *summary_lines, "",
+           "## Per question: rank of the first gold hit", "", *table]
+    print("\n" + "\n".join(doc))
+    (phase_dir / "per_question.md").write_text("\n".join(doc) + "\n", encoding="utf-8")
     (phase_dir / "comparison.json").write_text(json.dumps(
         {"phase": args.phase, "index": settings.pinecone_index_name,
          "flags": {f: getattr(settings, f) for f in NEW_TEXT_FLAGS}, "hyde_runs": args.hyde_runs,

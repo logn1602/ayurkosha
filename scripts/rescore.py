@@ -1,7 +1,8 @@
 """
 AyurKosha — Rescore Saved Retrieval Runs
-Recomputes Hit@k, Recall@k and MRR from saved retrieval traces (the JSONL each
-eval run writes; see src/evaluation/traces.py) against any label file.
+Recomputes Hit@k, Recall@k and MRR@k (the headline MRR, k = 6), plus the
+full-list MRR@15 (n/a for rerank_mmr), from saved retrieval traces (the JSONL
+each eval run writes; see src/evaluation/traces.py) against any label file.
 
 Zero API calls, and it needs neither the index nor the local stores the runs
 used, so e.g. the "before" comparison can be rescored after labels change.
@@ -22,7 +23,8 @@ except (AttributeError, ValueError):  # pragma: no cover
     pass
 
 from src.evaluation.run_eval import DEFAULT_DATASET
-from src.evaluation.traces import labels_sha256, load_labels, per_question_table, read_trace, rescore
+from src.evaluation.traces import (FULL_LIST_MRR_NA, labels_sha256, load_labels, per_question_table,
+                                   read_trace, rescore, summary_table)
 
 
 def trace_files(paths: list[str]) -> list[Path]:
@@ -48,20 +50,26 @@ def main(argv: list[str] | None = None) -> int:
         print("No trace files found.", file=sys.stderr)
         return 1
 
-    columns = []
+    columns, groups = [], []
     print(f"Labels: {args.labels} (sha256 {sha[:12]})\n")
     for path in files:
         meta, traces = read_trace(path)
         result = rescore(meta, traces, labels, args.k)
         k = args.k or meta["config"]["k"]
+        n = (meta.get("retrieval_params") or {}).get("rerank_first_pass_n", 15)
         r = result["summary"].get("retrieval", {})
+        full = "n/a" if meta["config"]["pipeline"] in FULL_LIST_MRR_NA else r.get("mrr")
         same = "same labels" if meta["labels_sha256"] == sha else "DIFFERENT labels from the run"
         print(f"{path.name}  [{meta['config']['name']}, index {meta['index']}, {meta['timestamp']}, {same}]")
-        print(f"  Hit@{k} {r.get('hit_rate')}  Recall@{k} {r.get('recall_at_k')}  MRR {r.get('mrr')}"
-              f"  (as run: {meta['summary'].get('retrieval')})")
+        print(f"  Hit@{k} {r.get('hit_rate')}  Recall@{k} {r.get('recall_at_k')}  MRR@{k} {r.get('mrr_at_k')}"
+              f"  MRR@{n} {full}  (as run: {meta['summary'].get('retrieval')})")
         if result["missing"]:
             print(f"  skipped {len(result['missing'])} question(s) not in the label file: {result['missing']}")
-        columns.append((f"{meta['config']['name']}@{meta['timestamp'][5:16]}", [traces]))
+        label = f"{meta['config']['name']}@{meta['timestamp'][5:16]}"
+        columns.append((label, [traces]))
+        groups.append((label, [({**meta, "config": {**meta["config"], "k": k}}, result["summary"])]))
+    print()
+    print("\n".join(summary_table(groups)))
     if args.per_question:
         print()
         print("\n".join(per_question_table(columns, labels)))
