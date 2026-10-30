@@ -49,3 +49,30 @@ Reviewer decisions so far (these are the reviewer's, not row approvals):
 | eval_028 | Why is Basti considered the foremost treatment for Vata? | sushruta | sushruta, ashtanga_hridaya | SS Cikitsā 35 holds vasti the best of all measures and explains why; AH Sūtrasthāna 1 names vasti the best treatment for Vāta. | `sushruta_samhita_vol_2_pdf_645_P0`<br>`ashtanga_hridaya_vidyanath_illustrated_pdf_53_P0` |  |
 | eval_029 | What is Nasya Karma and for which disorders is it used? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 20 gives the nasya types and indications; SS Cikitsā 40 gives the kinds of nasya and doses. | `ashtanga_hridaya_vidyanath_illustrated_pdf_345_P0`<br>`sushruta_samhita_vol_2_pdf_714_P0` |  |
 | eval_030 | What does Dinacharya (daily regimen) include in Ayurveda? | ashtanga_hridaya, sushruta | ashtanga_hridaya, sushruta | AH Sūtrasthāna 2 (Dinacaryā) and SS Cikitsā 24 (hygiene: tooth-brushing, collyrium, etc.) both cover the daily regimen. | `ashtanga_hridaya_vidyanath_illustrated_pdf_62_P0`<br>`sushruta_samhita_vol_2_pdf_535_P0`<br>`sushruta_samhita_vol_2_pdf_536_P0` | SS never uses the word "dinacharya" but covers the topic in full. |
+
+## Re-check requested by the reviewer: eval_003, eval_008 (awaiting decision; labels unchanged)
+
+Both re-checks are in Sushruta Sūtrasthāna ch. 46 (vol 1, pp. 558–660), found by plain text search.
+
+**eval_003 (Pippalī, properties).** Present. In the "spices and herbs" group, p599
+(`sushruta_samhita_vol_1_pdf_599_P0`): *"the unripe or immature Pippali is heavy of digestion,
+sweet in taste, cooling in potency and generates Kapham. Dried Pippali subdues the Vayu and Kapham,
+acts as a spermatopoietic and slightly soothes the Pittam."* This is a Pippalī-specific fresh-vs-dry
+entry, the same kind as AH p164/p488. Per the reviewer's rule, the action would be to **add
+`sushruta`** with that chunk id.
+
+**eval_008 (Śatāvarī, properties).** The SS passage (pp613–614, `sushruta_samhita_vol_1_pdf_614_P0`)
+is in **"The Bulb Group … edible bulbous plants (Kandas)"** and describes the **root (tuber)**:
+*"The Shatavari has a sweet and bitter taste and is spermatopoietic. It subdues the Vayu and Pittam,
+the one belonging to the large-sized species being palatable and appetising and tonic. The latter
+improves the intellect and proves curative in cases of mesenteric diarrhoea (Grahani) and piles, and
+is spermatopoietic, rejuvenating, restorative, and cooling in its potency."* One more sentence covers
+the sprouts: *"The under-sprouts of this creeper (large-sized Shatavari) have a bitter taste and subdue
+the Pittam and Kapham."* AH p149 (`ashtanga_hridaya_vidyanath_illustrated_pdf_149_P0`) is
+**sprouts only**, as a vegetable: *"Sprouts of satavari … tikta rasa and aphrodisiac … mitigates all the
+three dosas."*
+
+So the two passages aren't the same case: SS describes the root, the part the API monograph covers
+("Satavari (Rt.)"), plus a sentence on sprouts; AH describes only the sprouts. Options:
+(a) keep as proposed, SS in (root) and AH out (sprouts); (b) both in (diet-chapter descriptions
+count); (c) both out (diet-chapter food descriptions don't count).
