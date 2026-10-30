@@ -337,8 +337,8 @@
   },
   {
     "id": "eval_017",
-    "question": "Which classical formulations are indicated for Āmavāta?",
-    "gold_answer": "The Ayurvedic Formulary of India lists Āmavāta among the therapeutic uses of Yogarāja Guggulu and Āmavātāri Rasa (both from Bhaiṣajya Ratnāvalī, Āmavātādhikāra), Vātāri Guggulu, Mahā Rāsnādi Kvātha Cūrṇa, Vāsāguḍūcyādi Kvātha Cūrṇa, Vyoṣādi Guggulu, Ānandabhairava Rasa and Nimbādi Cūrṇa.",
+    "question": "Which classical formulations are indicated for Amavata?",
+    "gold_answer": "The Ayurvedic Formulary of India lists Amavata among the therapeutic uses of Yogaraja Guggulu and Amavatari Rasa (both from Bhaisajya Ratnavali, Amavatadhikara), Vatari Guggulu, Maha Rasnadi Kvatha Curna, Vasaguducyadi Kvatha Curna, Vyosadi Guggulu, Anandabhairava Rasa and Nimbadi Curna.",
     "gold_sources": [
       "afi"
     ],

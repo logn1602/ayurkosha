@@ -60,3 +60,10 @@ def test_gold_labels_resolve_to_canonical_works():
     for item in DATASET:
         for label in item["gold_sources"]:
             assert work_key(label) in canonical, (item["id"], label)
+
+
+def test_questions_are_plain_ascii():
+    """The 'before' run tokenizes queries the old way, which splits words at
+    diacritics ("Āmavāta" -> "m", "vata"), so questions must be plain ASCII."""
+    offenders = [item["id"] for item in DATASET if not item["question"].isascii()]
+    assert not offenders, offenders

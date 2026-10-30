@@ -52,7 +52,7 @@ topic:
 - If no work substantively answers a question, the question is **flagged** for
   rewording or removal instead of being given a weak label. (eval_017 was flagged
   this way and reworded by the reviewer to "Which classical formulations are
-  indicated for Āmavāta?")
+  indicated for Amavata?")
 
 ## 4. Corpus caveats (as of 2026-10-29)
 

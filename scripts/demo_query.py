@@ -35,7 +35,7 @@ from api.schemas import QueryRequest
 
 BAR = "=" * 68
 RULE = "-" * 68
-DEFAULT_QUESTION = "Which classical formulations are indicated for Āmavāta?"
+DEFAULT_QUESTION = "Which classical formulations are indicated for Amavata?"
 
 
 def main():
