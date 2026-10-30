@@ -64,6 +64,6 @@ def test_gold_labels_resolve_to_canonical_works():
 
 def test_questions_are_plain_ascii():
     """The 'before' run tokenizes queries the old way, which splits words at
-    diacritics ("Āmavāta" -> "m", "vata"), so questions must be plain ASCII."""
+    diacritics ("Āmavāta" -> "mav", "ta"), so questions must be plain ASCII."""
     offenders = [item["id"] for item in DATASET if not item["question"].isascii()]
     assert not offenders, offenders
